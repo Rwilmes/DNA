@@ -92,6 +92,7 @@ public class RandomBatch extends BatchGenerator {
 				this.er, this.ew);
 
 		for (BatchGenerator bg : this.bgs) {
+			System.out.println(bg);
 			b.addAll(bg.generate(g).getAllUpdates());
 		}
 

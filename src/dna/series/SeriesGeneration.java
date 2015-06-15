@@ -3,6 +3,7 @@ package dna.series;
 import java.io.File;
 import java.io.IOException;
 
+import dna.graph.Graph;
 import dna.io.ZipWriter;
 import dna.io.filesystem.Dir;
 import dna.io.filesystem.Files;
@@ -40,6 +41,7 @@ import dna.series.data.NodeValueList;
 import dna.series.data.SeriesData;
 import dna.series.data.Value;
 import dna.series.lists.ValueList;
+import dna.test.GVISTEST;
 import dna.updates.batch.Batch;
 import dna.updates.batch.BatchSanitization;
 import dna.updates.batch.BatchSanitizationStats;
@@ -439,7 +441,12 @@ public class SeriesGeneration {
 
 		// generate graph
 		Log.info("    generating graph");
-		series.setGraph(series.getGraphGenerator().generate());
+		
+		Graph g = series.getGraphGenerator().generate();
+		series.setGraph(g);
+		
+		GVISTEST.init(g);
+		
 		for (IMetric m : series.getMetrics()) {
 			m.setGraph(series.getGraph());
 		}
