@@ -1,16 +1,18 @@
 package dna.graph.generators.network;
 
-import java.util.Date;
+import org.joda.time.DateTime;
 
 /**
- * A network event.
+ * A simple network event.<br>
+ * 
+ * Defined by a specific time, srcIp, srcPort, dstIp and dstPort.
  * 
  * @author Rwilmes
  * 
  */
 public class NetworkEvent {
 
-	protected Date time;
+	protected DateTime time;
 
 	protected int srcPort;
 	protected int dstPort;
@@ -18,7 +20,7 @@ public class NetworkEvent {
 	protected String srcIp;
 	protected String dstIp;
 
-	public NetworkEvent(Date time, String srcIp, int srcPort, String dstIp,
+	public NetworkEvent(DateTime time, String srcIp, int srcPort, String dstIp,
 			int dstPort) {
 		this.time = time;
 		this.srcIp = srcIp;
@@ -27,7 +29,7 @@ public class NetworkEvent {
 		this.dstPort = dstPort;
 	}
 
-	public Date getTime() {
+	public DateTime getTime() {
 		return time;
 	}
 

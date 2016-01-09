@@ -1,9 +1,10 @@
 package dna.graph.generators.network.tcplist;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import dna.graph.generators.network.NetworkEvent;
 
@@ -17,15 +18,15 @@ public class TCPListEntry extends NetworkEvent {
 
 	private long id;
 
-	private Date duration;
+	private DateTime duration;
 
 	private String service;
 	private double attackScore;
 	private String name;
 
-	public TCPListEntry(long id, Date time, Date duration, String service,
-			int srcPort, int dstPort, String srcIp, String dstIp,
-			double attackScore, String name) {
+	public TCPListEntry(long id, DateTime time, DateTime duration,
+			String service, int srcPort, int dstPort, String srcIp,
+			String dstIp, double attackScore, String name) {
 		super(time, srcIp, srcPort, dstIp, dstPort);
 		this.id = id;
 		this.duration = duration;
@@ -38,7 +39,7 @@ public class TCPListEntry extends NetworkEvent {
 		return id;
 	}
 
-	public Date getDuration() {
+	public DateTime getDuration() {
 		return duration;
 	}
 
@@ -65,15 +66,30 @@ public class TCPListEntry extends NetworkEvent {
 		// split
 		String[] splits = line.split(" ");
 
-		// parse timestamps
-		DateFormat timeFormat = new SimpleDateFormat("dd/MM/yyyyhh:mm:ss");
-		Date time = timeFormat.parse(splits[2] + splits[3]);
-		DateFormat durationFormat = new SimpleDateFormat("hh:mm:ss");
-		Date duration = durationFormat.parse(splits[4]);
+		// format times
+		DateTimeFormatter timeFormat = DateTimeFormat
+				.forPattern("dd/MM/yyyyHH:mm:ss");
+		DateTime time = timeFormat.parseDateTime(splits[2] + splits[3]);
+		DateTimeFormatter durationFormat = DateTimeFormat
+				.forPattern("HH:mm:ss");
+		DateTime duration = durationFormat.parseDateTime(splits[4]);
 
+		// try to parse ports
+		int srcPort = 0;
+		int dstPort = 0;
+
+		try {
+			srcPort = Integer.parseInt(splits[6]);
+		} catch (NumberFormatException e) {
+		}
+		try {
+			dstPort = Integer.parseInt(splits[7]);
+		} catch (NumberFormatException e) {
+		}
+
+		// craft and return
 		return new TCPListEntry(Integer.parseInt(splits[0]), time, duration,
-				splits[5], Integer.parseInt(splits[6]),
-				Integer.parseInt(splits[7]), splits[8], splits[9],
+				splits[5], srcPort, dstPort, splits[8], splits[9],
 				Double.parseDouble(splits[10]), splits[11]);
 	}
 
