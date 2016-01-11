@@ -36,7 +36,6 @@ public class Model1Graph extends NetworkGraph {
 			ipMap.put(ips.get(i), i + portMap.size());
 	}
 
-	@Override
 	protected void init() {
 		// add nodes
 		for (int p : ports)

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import org.joda.time.DateTime;
 
 import dna.graph.edges.DirectedEdge;
-import dna.graph.generators.network.tcplist.TCPListEntry;
+import dna.graph.generators.network.tcplist.TCPListEvent;
 import dna.io.Reader;
 import dna.test.gds.GDS;
 import dna.updates.batch.Batch;
@@ -35,7 +35,7 @@ public class Model1BatchGenerator {
 	private int batchLength;
 	private DateTime threshold;
 
-	private TCPListEntry bufferedEntry;
+	private TCPListEvent bufferedEntry;
 
 	private long timestamp;
 
@@ -66,7 +66,7 @@ public class Model1BatchGenerator {
 		// while still lines to read -> read and craft batches
 		// will abort when time is out of interval
 		while ((line = this.r.readString()) != null) {
-			TCPListEntry entry = TCPListEntry.getFromString(line);
+			TCPListEvent entry = TCPListEvent.getFromString(line);
 			DateTime time = entry.getTime();
 
 			// only do this the first time
@@ -92,7 +92,7 @@ public class Model1BatchGenerator {
 		return b;
 	}
 
-	protected void handleEntry(Batch b, TCPListEntry entry) {
+	protected void handleEntry(Batch b, TCPListEvent entry) {
 		// if port == 0, return
 		if (entry.getDstPort() == 0)
 			return;
