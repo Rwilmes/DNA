@@ -42,8 +42,8 @@ public class M1Batch extends NetworkBatch {
 		Node portNode = g.getNode(portId);
 
 		// add edges
-		Edge e1 = g.getGraphDatastructures().newEdgeInstance(srcNode, dstNode);
-		Edge e2 = g.getGraphDatastructures().newEdgeInstance(dstNode, portNode);
+		Edge e1 = g.getGraphDatastructures().newEdgeInstance(srcNode, portNode);
+		Edge e2 = g.getGraphDatastructures().newEdgeInstance(portNode, dstNode);
 
 		if (!g.containsEdge(e1))
 			b.add(new EdgeAddition(e1));
