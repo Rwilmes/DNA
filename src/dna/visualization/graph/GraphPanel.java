@@ -301,7 +301,7 @@ public class GraphPanel extends JPanel {
 		statPanel.add(statDummy);
 
 		// timestamp
-		timestampValue.setPreferredSize(new Dimension(95, 25));
+		timestampValue.setPreferredSize(new Dimension(100, 25));
 		statPanel.add(timestampLabel);
 		statPanel.add(timestampValue);
 
