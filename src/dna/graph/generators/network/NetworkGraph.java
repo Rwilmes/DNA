@@ -32,6 +32,22 @@ public class NetworkGraph extends Graph {
 		this.g = g;
 	}
 
+	public NetworkGraph(String name, long timestamp, GraphDataStructure gds,
+			int nodesInit, int edgesInit) {
+		super(name, timestamp, gds, nodesInit, edgesInit);
+
+		this.ports = new ArrayList<Integer>();
+		this.ips = new ArrayList<String>();
+	}
+
+	public void setPorts(ArrayList<Integer> ports) {
+		this.ports = ports;
+	}
+
+	public void setIps(ArrayList<String> ips) {
+		this.ips = ips;
+	}
+
 	public HashMap<Integer, Integer> getPortMap() {
 		return portMap;
 	}
@@ -40,7 +56,11 @@ public class NetworkGraph extends Graph {
 		return ipMap;
 	}
 
-	protected void map(ArrayList<Integer> ports, ArrayList<String> ips) {
+	public void map() {
+		map(ports, ips);
+	}
+
+	public void map(ArrayList<Integer> ports, ArrayList<String> ips) {
 		// map ports and ips
 		this.portMap = new HashMap<Integer, Integer>();
 		this.ipMap = new HashMap<String, Integer>();

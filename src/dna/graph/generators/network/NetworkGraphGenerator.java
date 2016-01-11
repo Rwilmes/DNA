@@ -64,8 +64,10 @@ public abstract class NetworkGraphGenerator extends GraphGenerator {
 		return !finished;
 	}
 
-	
-	public void init() {
-		
+	public NetworkGraph newGraphInstance() {
+		GraphDataStructure newGDS = gds.clone();
+		newGDS.newNetworkGraphInstance("", 1, 2, 3);
+		return newGDS.newNetworkGraphInstance(this.getName(),
+				this.timestampInit, this.nodesInit, this.edgesInit);
 	}
 }
