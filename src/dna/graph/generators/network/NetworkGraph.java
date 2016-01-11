@@ -6,12 +6,14 @@ import java.util.HashMap;
 import dna.graph.Graph;
 import dna.graph.datastructures.GraphDataStructure;
 
-public abstract class NetworkGraph extends Graph {
+public class NetworkGraph extends Graph {
 
 	protected ArrayList<Integer> ports;
 	protected HashMap<Integer, Integer> portMap;
 	protected ArrayList<String> ips;
 	protected HashMap<String, Integer> ipMap;
+
+	protected Graph g;
 
 	public NetworkGraph(String name, long timestamp, GraphDataStructure gds,
 			ArrayList<Integer> ports, ArrayList<String> ips) {
@@ -22,9 +24,12 @@ public abstract class NetworkGraph extends Graph {
 
 		// map
 		map(ports, ips);
+	}
 
-		// init
-		init();
+	public NetworkGraph(Graph g, ArrayList<Integer> ports, ArrayList<String> ips) {
+		this(g.getName(), g.getTimestamp(), g.getGraphDatastructures(), ports,
+				ips);
+		this.g = g;
 	}
 
 	public HashMap<Integer, Integer> getPortMap() {
@@ -35,8 +40,15 @@ public abstract class NetworkGraph extends Graph {
 		return ipMap;
 	}
 
-	protected abstract void map(ArrayList<Integer> ports, ArrayList<String> ips);
+	protected void map(ArrayList<Integer> ports, ArrayList<String> ips) {
+		// map ports and ips
+		this.portMap = new HashMap<Integer, Integer>();
+		this.ipMap = new HashMap<String, Integer>();
+		for (int i = 0; i < ports.size(); i++)
+			portMap.put(ports.get(i), i);
 
-	protected abstract void init();
+		for (int i = 0; i < ips.size(); i++)
+			ipMap.put(ips.get(i), i + portMap.size());
+	}
 
 }
