@@ -988,8 +988,12 @@ public class Plot {
 				values[i] = new Value(value, b.getGeneralRuntimes().get(value)
 						.getRuntime());
 			} else if (domain.equals(PlotConfig.customPlotDomainMetricRuntimes)) {
-				values[i] = new Value(value, b.getMetricRuntimes().get(value)
-						.getRuntime());
+				try {
+					values[i] = new Value(value, b.getMetricRuntimes()
+							.get(value).getRuntime());
+				} catch (NullPointerException e) {
+					values[i] = new Value(value, 0);
+				}
 			} else if (b.getMetrics().getNames().contains(domain)) {
 				MetricData m = b.getMetrics().get(domain);
 				if (m.getValues().getNames().contains(value)) {
