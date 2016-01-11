@@ -5,10 +5,19 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import dna.graph.Graph;
 import dna.graph.datastructures.GraphDataStructure;
 import dna.graph.nodes.Node;
 
+/**
+ * NetworkGraphGenerator for Model1.<br>
+ * 
+ * Nodes = Ports and Hosts<br>
+ * 
+ * onInit: scans tcp file and adds all ports and hosts as nodes to the graph.
+ * 
+ * @author Rwilmes
+ * 
+ */
 public class M1Graph extends NetworkGraphGenerator {
 
 	public M1Graph(GraphDataStructure gds, String dir, String filename)
@@ -23,7 +32,7 @@ public class M1Graph extends NetworkGraphGenerator {
 
 	@Override
 	public NetworkGraph generate() {
-		Graph g = this.newGraphInstance();
+		NetworkGraph g = this.newGraphInstance();
 
 		ArrayList<Integer> ports = new ArrayList<Integer>();
 		ArrayList<String> ips = new ArrayList<String>();
@@ -49,22 +58,24 @@ public class M1Graph extends NetworkGraphGenerator {
 		Collections.sort(ports);
 		Collections.sort(ips);
 
-		// init graph for mappings
-		NetworkGraph graph = new NetworkGraph(g, ports, ips);
+		// map ports and ips
+		g.setPorts(ports);
+		g.setIps(ips);
+		g.map();
 
 		// add nodes
 		for (int i = 0; i < ports.size(); i++) {
-			Node node = this.gds.newNodeInstance(graph.getPortMap().get(
+			Node node = this.gds.newNodeInstance(g.getPortMap().get(
 					ports.get(i)));
-			graph.addNode(node);
+			g.addNode(node);
 		}
 		for (int i = 0; i < ips.size(); i++) {
-			Node node = this.gds.newNodeInstance(graph.getIpMap().get(
-					ips.get(i)));
-			graph.addNode(node);
+			Node node = this.gds.newNodeInstance(g.getIpMap().get(ips.get(i)));
+			g.addNode(node);
 		}
 
 		// return
-		return graph;
+		return g;
 	}
+
 }

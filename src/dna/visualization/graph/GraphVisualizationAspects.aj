@@ -3,6 +3,7 @@ package dna.visualization.graph;
 import dna.graph.Graph;
 import dna.graph.datastructures.GraphDataStructure;
 import dna.graph.edges.Edge;
+import dna.graph.generators.network.NetworkGraph;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedEdge;
 import dna.graph.weights.IWeightedNode;
@@ -14,12 +15,23 @@ public aspect GraphVisualizationAspects {
 	 * GRAPH
 	 */
 
-	pointcut graphInit() :  
-		if(GraphVisualization.isEnabled()) &&
-		call(* GraphDataStructure.newGraphInstance(String, long, int, int));
+	pointcut graphInit() :
+	 if(GraphVisualization.isEnabled()) &&
+	 call(* GraphDataStructure.newGraphInstance(String, long, int, int));
 
 	Graph around() : graphInit() {
 		Graph g = proceed();
+		GraphVisualization.init(g);
+		return g;
+	}
+
+	pointcut networkGraphInit() :
+		if(GraphVisualization.isEnabled()) &&
+		call(* GraphDataStructure.newNetworkGraphInstance(String, long, int,
+				int));
+
+	NetworkGraph around() : networkGraphInit() {
+		NetworkGraph g = proceed();
 		GraphVisualization.init(g);
 		return g;
 	}
