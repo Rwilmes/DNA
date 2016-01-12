@@ -2,7 +2,6 @@ package dna.util.network;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.ParseException;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -11,7 +10,6 @@ import org.joda.time.format.DateTimeFormatter;
 import dna.io.Reader;
 import dna.util.Config;
 import dna.util.network.NetworkEvent.NetworkEventField;
-import dna.util.network.tcp.TCPEvent;
 
 /**
  * Reader that reads NetworkEvents from a list-file.
@@ -55,10 +53,10 @@ public class NetworkEventReader extends Reader {
 		try {
 			line = readString();
 			if (line != null)
-				this.bufferedEvent = TCPEvent.getFromString(line);
+				this.bufferedEvent = parseLine(line);
 			else
 				this.finished = true;
-		} catch (IOException | ParseException e1) {
+		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 

@@ -68,33 +68,33 @@ public class TCPEvent extends NetworkEvent {
 	/** Parses a String to a TCPListEntry object. **/
 	public static TCPEvent getFromString(String line) throws ParseException {
 		// split
-		String[] splits = line.split(" ");
+		String[] splits = line.split("\\t");
 
 		// format times
 		DateTimeFormatter timeFormat = DateTimeFormat
 				.forPattern("dd/MM/yyyyHH:mm:ss");
-		DateTime time = timeFormat.parseDateTime(splits[2] + splits[3]);
+		DateTime time = timeFormat.parseDateTime(splits[2]);
 		DateTimeFormatter durationFormat = DateTimeFormat
 				.forPattern("HH:mm:ss");
-		DateTime duration = durationFormat.parseDateTime(splits[4]);
+		DateTime duration = durationFormat.parseDateTime(splits[3]);
 
 		// try to parse ports
 		int srcPort = 0;
 		int dstPort = 0;
 
 		try {
-			srcPort = Integer.parseInt(splits[6]);
+			srcPort = Integer.parseInt(splits[4]);
 		} catch (NumberFormatException e) {
 		}
 		try {
-			dstPort = Integer.parseInt(splits[7]);
+			dstPort = Integer.parseInt(splits[5]);
 		} catch (NumberFormatException e) {
 		}
 
 		// craft and return
 		return new TCPEvent(Integer.parseInt(splits[0]), time, duration,
-				splits[5], srcPort, dstPort, splits[8], splits[9],
-				Double.parseDouble(splits[10]), splits[11]);
+				splits[6], srcPort, dstPort, splits[7], splits[8],
+				Double.parseDouble(splits[9]), splits[10]);
 	}
 
 }

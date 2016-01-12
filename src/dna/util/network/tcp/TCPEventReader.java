@@ -2,7 +2,6 @@ package dna.util.network.tcp;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.ParseException;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -25,8 +24,8 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected DateTimeFormatter durationFormat;
 
-	public TCPEventReader(String dir, String filename,
-			TCPEventField... fields) throws FileNotFoundException {
+	public TCPEventReader(String dir, String filename, TCPEventField... fields)
+			throws FileNotFoundException {
 		this(dir, filename, Config.get("TCP_LIST_DEFAULT_DELIMITER"), Config
 				.get("TCP_LIST_DEFAULT_TIME_FORMAT"), Config
 				.get("TCP_LIST_DEFAULT_DURATION_FORMAT"), fields);
@@ -38,6 +37,12 @@ public class TCPEventReader extends NetworkEventReader {
 		super(dir, filename, delimiter, timeFormat);
 		this.durationFormat = DateTimeFormat.forPattern(durationFormat);
 		this.fields = fields;
+		try {
+			this.bufferedEvent = parseLine(readString());
+		} catch (IOException e) {
+			this.finished = true;
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -49,11 +54,13 @@ public class TCPEventReader extends NetworkEventReader {
 		String line;
 		try {
 			line = readString();
+			System.out.println("XXXX:   " + line);
 			if (line != null)
-				this.bufferedEvent = TCPEvent.getFromString(line);
+				// return parseLine(line);
+				this.bufferedEvent = parseLine(line);
 			else
 				this.finished = true;
-		} catch (IOException | ParseException e1) {
+		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 
@@ -99,7 +106,10 @@ public class TCPEventReader extends NetworkEventReader {
 				} catch (NumberFormatException e) {
 				}
 			case ATTACK_SCORE:
-				attackScore = Double.parseDouble(x);
+				try {
+					attackScore = Double.parseDouble(x);
+				} catch (NumberFormatException e) {
+				}
 				break;
 			case DURATION:
 				duration = durationFormat.parseDateTime(x);
@@ -117,6 +127,9 @@ public class TCPEventReader extends NetworkEventReader {
 				break;
 			}
 		}
+
+		System.out.println("RETURNING TCP EVENT: " + id + "\t" + srcIp + "\t"
+				+ dstIp + "\t" + dstPort);
 
 		return new TCPEvent(id, time, duration, service, srcPort, dstPort,
 				srcIp, dstIp, attackScore, name);

@@ -40,9 +40,9 @@ public class M1Graph extends NetworkGraphGenerator {
 		ArrayList<Integer> ports = new ArrayList<Integer>();
 		ArrayList<String> ips = new ArrayList<String>();
 
-		while (isNextEventPossible()) {
+		while (this.reader.isNextEventPossible()) {
 			// read next event
-			NetworkEvent e = getNextEvent();
+			NetworkEvent e = this.reader.getNextEvent();
 
 			// add ports and ips to list
 			int port = e.getDstPort();

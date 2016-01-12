@@ -1,19 +1,19 @@
 package dna.graph.generators.network;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.HashMap;
 
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
 import dna.graph.nodes.Node;
-import dna.io.Reader;
 import dna.updates.batch.Batch;
 import dna.updates.generators.BatchGenerator;
 import dna.util.Log;
 import dna.util.network.NetworkEvent;
+import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEvent;
+import dna.util.network.tcp.TCPEventReader;
 
 /**
  * A batch-generator which creates batches based on a tcp-list file.
@@ -33,7 +33,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 	protected boolean init;
 	protected boolean finished;
 
-	protected Reader r;
+	protected TCPEventReader reader;
 
 	protected TCPEvent bufferedEntry;
 
@@ -48,7 +48,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 		this.finished = false;
 
 		// init reader
-		this.r = Reader.getReader(dir, filename);
+		this.reader = new DefaultTCPEventReader(dir, filename);
 	}
 
 	public abstract void onEvent(NetworkGraph g, Batch b, NetworkEvent e,
@@ -67,47 +67,31 @@ public abstract class NetworkBatch extends BatchGenerator {
 			return b;
 		}
 
-		// HashMap<Integer, Integer> portMap = graph.getPortMap();
-		// HashMap<String, Integer> ipMap = graph.getIpMap();
-
 		HashMap<Integer, Node> portMap = new HashMap<Integer, Node>();
 		HashMap<String, Node> ipMap = new HashMap<String, Node>();
-
-		String line;
 
 		if (this.bufferedEntry != null)
 			onEvent(graph, b, this.bufferedEntry, portMap, ipMap);
 
-		// while still lines to read -> read and craft batches
-		// will abort when time is out of interval
-		try {
-			while ((line = this.r.readString()) != null) {
-				TCPEvent event;
+		while (this.reader.isNextEventPossible()) {
+			TCPEvent e = this.reader.getNextEvent();
+			System.out.println("'''''   " + e);
+			DateTime time = e.getTime();
 
-				event = TCPEvent.getFromString(line);
-
-				DateTime time = event.getTime();
-
-				// only do this the first time
-				if (!this.init) {
-					this.threshold = time.plusSeconds(this.batchLength);
-					this.init = true;
-				}
-
-				// check if out of interval
-				if (time.isAfter(this.threshold)) {
-					// System.out.println("AFTER!");
-					this.threshold = this.threshold
-							.plusSeconds(this.batchLength);
-					this.bufferedEntry = event;
-					return b;
-				} else {
-					// handle changes
-					this.onEvent(graph, b, event, portMap, ipMap);
-				}
+			if (!this.init) {
+				this.threshold = time.plusSeconds(this.batchLength);
+				this.init = true;
 			}
-		} catch (IOException | ParseException e) {
-			e.printStackTrace();
+
+			// check if out of interval
+			if (time.isAfter(this.threshold)) {
+				this.threshold = this.threshold.plusSeconds(this.batchLength);
+				this.bufferedEntry = e;
+				return b;
+			} else {
+				// handle changes
+				this.onEvent(graph, b, e, portMap, ipMap);
+			}
 		}
 
 		this.finished = true;
@@ -117,8 +101,8 @@ public abstract class NetworkBatch extends BatchGenerator {
 	@Override
 	public void reset() {
 		try {
-			this.r.close();
-			this.r = Reader.getReader(dir, filename);
+			this.reader.close();
+			this.reader = new DefaultTCPEventReader(dir, filename);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
