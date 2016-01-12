@@ -10,13 +10,13 @@ import org.graphstream.ui.spriteManager.SpriteManager;
 
 import dna.graph.weights.Weight;
 import dna.visualization.graph.GraphPanel;
+import dna.visualization.graph.ToolTip.ToolTip;
+import dna.visualization.graph.ToolTip.ToolTip.ToolTipType;
+import dna.visualization.graph.ToolTip.button.FreezeButton;
+import dna.visualization.graph.ToolTip.button.HighlightButton;
+import dna.visualization.graph.ToolTip.infoLabel.NodeDegreeLabel;
+import dna.visualization.graph.ToolTip.infoLabel.NodeIdLabel;
 import dna.visualization.graph.rules.GraphStyleRule;
-import dna.visualization.graph.toolTip.ToolTip;
-import dna.visualization.graph.toolTip.ToolTip.ToolTipType;
-import dna.visualization.graph.toolTip.button.FreezeButton;
-import dna.visualization.graph.toolTip.button.HighlightButton;
-import dna.visualization.graph.toolTip.infoLabel.NodeDegreeLabel;
-import dna.visualization.graph.toolTip.infoLabel.NodeIdLabel;
 
 /**
  * The ToolTipManager handles the ToolTips used in the GraphVisualization.

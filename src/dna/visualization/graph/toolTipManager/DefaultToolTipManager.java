@@ -1,11 +1,7 @@
 package dna.visualization.graph.toolTipManager;
 
 import dna.visualization.graph.GraphPanel;
-import dna.visualization.graph.toolTip.ToolTip.ToolTipType;
-import dna.visualization.graph.toolTip.button.FreezeButton;
-import dna.visualization.graph.toolTip.button.HighlightButton;
-import dna.visualization.graph.toolTip.infoLabel.NodeDegreeLabel;
-import dna.visualization.graph.toolTip.infoLabel.NodeIdLabel;
+import dna.visualization.graph.ToolTip.ToolTip.ToolTipType;
 
 /**
  * The default ToolTipManager used in the GraphVisualization.
