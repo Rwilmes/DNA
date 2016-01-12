@@ -5,12 +5,13 @@ import java.util.HashMap;
 
 import dna.graph.edges.Edge;
 import dna.graph.generators.network.NetworkBatch;
-import dna.graph.generators.network.NetworkEvent;
 import dna.graph.generators.network.NetworkGraph;
 import dna.graph.nodes.Node;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
 import dna.updates.update.NodeAddition;
+import dna.util.network.NetworkEvent;
+import dna.visualization.graph.GraphVisualization;
 
 /**
  * NetworkBatch-Generator for Model1.<br>
