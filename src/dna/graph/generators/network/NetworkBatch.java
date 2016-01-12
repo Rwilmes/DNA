@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
+import dna.graph.generators.network.tcplist.TCPListEvent;
 import dna.graph.nodes.Node;
 import dna.io.Reader;
 import dna.updates.batch.Batch;

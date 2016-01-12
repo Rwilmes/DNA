@@ -1,10 +1,12 @@
-package dna.graph.generators.network;
+package dna.graph.generators.network.tcplist;
 
 import java.text.ParseException;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+
+import dna.graph.generators.network.NetworkEvent;
 
 /**
  * Represents one line in a TCPDump-List.
