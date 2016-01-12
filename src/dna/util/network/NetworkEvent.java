@@ -1,4 +1,4 @@
-package dna.graph.generators.network;
+package dna.util.network;
 
 import org.joda.time.DateTime;
 
