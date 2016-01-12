@@ -7,7 +7,7 @@ import java.util.HashMap;
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
-import dna.graph.generators.network.tcplist.TCPListEvent;
+import dna.graph.generators.network.tcplist.TCPEvent;
 import dna.graph.nodes.Node;
 import dna.io.Reader;
 import dna.updates.batch.Batch;
@@ -34,7 +34,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 	protected Reader r;
 
-	protected TCPListEvent bufferedEntry;
+	protected TCPEvent bufferedEntry;
 
 	public NetworkBatch(String name, String dir, String filename,
 			int batchIntervalInSeconds) throws IOException {
@@ -84,9 +84,9 @@ public abstract class NetworkBatch extends BatchGenerator {
 		// will abort when time is out of interval
 		try {
 			while ((line = this.r.readString()) != null) {
-				TCPListEvent event;
+				TCPEvent event;
 
-				event = TCPListEvent.getFromString(line);
+				event = TCPEvent.getFromString(line);
 
 				DateTime time = event.getTime();
 

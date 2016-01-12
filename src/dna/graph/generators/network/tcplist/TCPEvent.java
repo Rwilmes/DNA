@@ -14,7 +14,7 @@ import dna.graph.generators.network.NetworkEvent;
  * @author Rwilmes
  * 
  */
-public class TCPListEvent extends NetworkEvent {
+public class TCPEvent extends NetworkEvent {
 
 	public enum TCPEventField {
 		ID, TIME, DURATION, SRC_IP, SRC_PORT, DST_IP, DST_PORT, SERVICE, NAME, ATTACK_SCORE, NONE
@@ -28,7 +28,7 @@ public class TCPListEvent extends NetworkEvent {
 	private double attackScore;
 	private String name;
 
-	public TCPListEvent(long id, DateTime time, DateTime duration,
+	public TCPEvent(long id, DateTime time, DateTime duration,
 			String service, int srcPort, int dstPort, String srcIp,
 			String dstIp, double attackScore, String name) {
 		super(time, srcIp, srcPort, dstIp, dstPort);
@@ -66,7 +66,7 @@ public class TCPListEvent extends NetworkEvent {
 	}
 
 	/** Parses a String to a TCPListEntry object. **/
-	public static TCPListEvent getFromString(String line) throws ParseException {
+	public static TCPEvent getFromString(String line) throws ParseException {
 		// split
 		String[] splits = line.split(" ");
 
@@ -92,7 +92,7 @@ public class TCPListEvent extends NetworkEvent {
 		}
 
 		// craft and return
-		return new TCPListEvent(Integer.parseInt(splits[0]), time, duration,
+		return new TCPEvent(Integer.parseInt(splits[0]), time, duration,
 				splits[5], srcPort, dstPort, splits[8], splits[9],
 				Double.parseDouble(splits[10]), splits[11]);
 	}
