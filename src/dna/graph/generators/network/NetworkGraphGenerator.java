@@ -7,7 +7,8 @@ import dna.graph.datastructures.GraphDataStructure;
 import dna.graph.generators.GraphGenerator;
 import dna.io.Reader;
 import dna.util.network.NetworkEvent;
-import dna.util.network.tcp.TCPEvent;
+import dna.util.network.NetworkEventReader;
+import dna.util.network.tcp.DefaultTCPEventReader;
 
 /**
  * Abstract class for a graph generator that generates a graph based on a TCP
@@ -23,6 +24,8 @@ public abstract class NetworkGraphGenerator extends GraphGenerator {
 
 	protected NetworkEvent bufferedEvent;
 
+	protected NetworkEventReader reader;
+
 	public NetworkGraphGenerator(String name, GraphDataStructure gds,
 			long timestampInit, String dir, String filename)
 			throws IOException, ParseException {
@@ -37,40 +40,16 @@ public abstract class NetworkGraphGenerator extends GraphGenerator {
 		// read and buffer first event
 		this.finished = false;
 		this.r = Reader.getReader(dir, filename);
-
-		String line = r.readString();
-		if (line == null) {
+		this.reader = new DefaultTCPEventReader(dir, filename);
+		if (!this.reader.isNextEventPossible()) {
 			this.finished = true;
-			r.close();
+			this.reader.close();
 		} else
-			this.bufferedEvent = TCPEvent.getFromString(line);
+			this.bufferedEvent = this.reader.getNextEvent();
 	}
 
 	@Override
 	public abstract NetworkGraph generate();
-
-	public NetworkEvent getNextEvent() {
-		if (finished)
-			return null;
-
-		NetworkEvent e = this.bufferedEvent;
-		String line;
-		try {
-			line = r.readString();
-			if (line != null)
-				this.bufferedEvent = TCPEvent.getFromString(line);
-			else
-				this.finished = true;
-		} catch (IOException | ParseException e1) {
-			e1.printStackTrace();
-		}
-
-		return e;
-	}
-
-	public boolean isNextEventPossible() {
-		return !finished;
-	}
 
 	public NetworkGraph newGraphInstance() {
 		GraphDataStructure newGDS = gds.clone();
