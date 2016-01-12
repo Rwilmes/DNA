@@ -5,7 +5,7 @@ import java.text.ParseException;
 
 import dna.graph.datastructures.GraphDataStructure;
 import dna.graph.generators.GraphGenerator;
-import dna.graph.generators.network.tcplist.TCPListEvent;
+import dna.graph.generators.network.tcplist.TCPEvent;
 import dna.io.Reader;
 
 /**
@@ -42,7 +42,7 @@ public abstract class NetworkGraphGenerator extends GraphGenerator {
 			this.finished = true;
 			r.close();
 		} else
-			this.bufferedEvent = TCPListEvent.getFromString(line);
+			this.bufferedEvent = TCPEvent.getFromString(line);
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public abstract class NetworkGraphGenerator extends GraphGenerator {
 		try {
 			line = r.readString();
 			if (line != null)
-				this.bufferedEvent = TCPListEvent.getFromString(line);
+				this.bufferedEvent = TCPEvent.getFromString(line);
 			else
 				this.finished = true;
 		} catch (IOException | ParseException e1) {

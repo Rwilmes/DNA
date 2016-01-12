@@ -9,7 +9,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import dna.graph.generators.network.NetworkEvent.NetworkEventField;
-import dna.graph.generators.network.tcplist.TCPListEvent;
+import dna.graph.generators.network.tcplist.TCPEvent;
 import dna.io.Reader;
 import dna.util.Config;
 
@@ -55,7 +55,7 @@ public class NetworkEventReader extends Reader {
 		try {
 			line = readString();
 			if (line != null)
-				this.bufferedEvent = TCPListEvent.getFromString(line);
+				this.bufferedEvent = TCPEvent.getFromString(line);
 			else
 				this.finished = true;
 		} catch (IOException | ParseException e1) {

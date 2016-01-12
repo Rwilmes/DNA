@@ -9,7 +9,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import dna.graph.generators.network.NetworkEventReader;
-import dna.graph.generators.network.tcplist.TCPListEvent.TCPEventField;
+import dna.graph.generators.network.tcplist.TCPEvent.TCPEventField;
 import dna.util.Config;
 
 /**
@@ -18,21 +18,21 @@ import dna.util.Config;
  * @author Rwilmes
  * 
  */
-public class TCPListEventReader extends NetworkEventReader {
+public class TCPEventReader extends NetworkEventReader {
 
-	protected TCPListEvent bufferedEvent;
+	protected TCPEvent bufferedEvent;
 	protected TCPEventField[] fields;
 
 	protected DateTimeFormatter durationFormat;
 
-	public TCPListEventReader(String dir, String filename,
+	public TCPEventReader(String dir, String filename,
 			TCPEventField... fields) throws FileNotFoundException {
 		this(dir, filename, Config.get("TCP_LIST_DEFAULT_DELIMITER"), Config
 				.get("TCP_LIST_DEFAULT_TIME_FORMAT"), Config
 				.get("TCP_LIST_DEFAULT_DURATION_FORMAT"), fields);
 	}
 
-	public TCPListEventReader(String dir, String filename, String delimiter,
+	public TCPEventReader(String dir, String filename, String delimiter,
 			String timeFormat, String durationFormat, TCPEventField... fields)
 			throws FileNotFoundException {
 		super(dir, filename, delimiter, timeFormat);
@@ -41,16 +41,16 @@ public class TCPListEventReader extends NetworkEventReader {
 	}
 
 	@Override
-	public TCPListEvent getNextEvent() {
+	public TCPEvent getNextEvent() {
 		if (finished)
 			return null;
 
-		TCPListEvent e = this.bufferedEvent;
+		TCPEvent e = this.bufferedEvent;
 		String line;
 		try {
 			line = readString();
 			if (line != null)
-				this.bufferedEvent = TCPListEvent.getFromString(line);
+				this.bufferedEvent = TCPEvent.getFromString(line);
 			else
 				this.finished = true;
 		} catch (IOException | ParseException e1) {
@@ -61,7 +61,7 @@ public class TCPListEventReader extends NetworkEventReader {
 	}
 
 	@Override
-	protected TCPListEvent parseLine(String line) {
+	protected TCPEvent parseLine(String line) {
 		String[] splits = line.split(this.delimiter);
 
 		long id = -1;
@@ -118,7 +118,7 @@ public class TCPListEventReader extends NetworkEventReader {
 			}
 		}
 
-		return new TCPListEvent(id, time, duration, service, srcPort, dstPort,
+		return new TCPEvent(id, time, duration, service, srcPort, dstPort,
 				srcIp, dstIp, attackScore, name);
 	}
 }
