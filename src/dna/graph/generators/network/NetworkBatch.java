@@ -8,7 +8,6 @@ import java.util.HashMap;
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
-import dna.graph.generators.network.tcplist.TCPListEvent;
 import dna.io.Reader;
 import dna.updates.batch.Batch;
 import dna.updates.generators.BatchGenerator;

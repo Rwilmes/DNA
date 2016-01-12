@@ -1,4 +1,4 @@
-package dna.graph.generators.network;
+package dna.graph.generators.network.m1;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import dna.graph.datastructures.GraphDataStructure;
+import dna.graph.generators.network.NetworkEvent;
+import dna.graph.generators.network.NetworkGraph;
+import dna.graph.generators.network.NetworkGraphGenerator;
 import dna.graph.nodes.Node;
 
 /**

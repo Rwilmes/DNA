@@ -1,10 +1,12 @@
-package dna.graph.generators.network;
+package dna.graph.generators.network.m1;
 
 import java.io.IOException;
 import java.util.HashMap;
 
 import dna.graph.Graph;
 import dna.graph.edges.Edge;
+import dna.graph.generators.network.NetworkBatch;
+import dna.graph.generators.network.NetworkEvent;
 import dna.graph.nodes.Node;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
