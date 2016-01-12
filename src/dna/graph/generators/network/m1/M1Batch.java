@@ -3,13 +3,14 @@ package dna.graph.generators.network.m1;
 import java.io.IOException;
 import java.util.HashMap;
 
-import dna.graph.Graph;
 import dna.graph.edges.Edge;
 import dna.graph.generators.network.NetworkBatch;
 import dna.graph.generators.network.NetworkEvent;
+import dna.graph.generators.network.NetworkGraph;
 import dna.graph.nodes.Node;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
+import dna.updates.update.NodeAddition;
 
 /**
  * NetworkBatch-Generator for Model1.<br>
@@ -27,8 +28,8 @@ public class M1Batch extends NetworkBatch {
 	}
 
 	@Override
-	public void onEvent(Graph g, Batch b, NetworkEvent entry,
-			HashMap<Integer, Integer> portMap, HashMap<String, Integer> ipMap) {
+	public void onEvent(NetworkGraph g, Batch b, NetworkEvent entry,
+			HashMap<Integer, Node> portMap, HashMap<String, Node> ipMap) {
 		// if port == 0, return
 		if (entry.getDstPort() == 0)
 			return;
@@ -41,15 +42,45 @@ public class M1Batch extends NetworkBatch {
 		String dstIp = entry.getDstIp();
 		int dstPort = entry.getDstPort();
 
-		// get mapping
-		int srcId = ipMap.get(srcIp);
-		int dstId = ipMap.get(dstIp);
-		int portId = portMap.get(dstPort);
+		Node srcNode;
+		Node dstNode;
+		Node portNode;
 
-		// get nodes
-		Node srcNode = g.getNode(srcId);
-		Node dstNode = g.getNode(dstId);
-		Node portNode = g.getNode(portId);
+		// if port node not present yet, add it and buffer in port
+		if (g.hasPort(dstPort)) {
+			portNode = g.getNode(g.getPortMapping(dstPort));
+			if (portNode == null)
+				portNode = portMap.get(dstPort);
+		} else {
+			portNode = g.getGraphDatastructures().newNodeInstance(
+					g.addPort(dstPort));
+			b.add(new NodeAddition(portNode));
+			portMap.put(dstPort, portNode);
+		}
+
+		// if ip node not present yet, add it and buffer in ipMap
+		if (g.hasIp(srcIp)) {
+			srcNode = g.getNode(g.getIpMapping(srcIp));
+			if (srcNode == null)
+				srcNode = ipMap.get(srcIp);
+		} else {
+			srcNode = g.getGraphDatastructures()
+					.newNodeInstance(g.addIp(srcIp));
+			b.add(new NodeAddition(srcNode));
+			ipMap.put(srcIp, srcNode);
+		}
+
+		// if ip node not present yet, add it and buffer in ipMap
+		if (g.hasIp(dstIp)) {
+			dstNode = g.getNode(g.getIpMapping(dstIp));
+			if (dstNode == null)
+				dstNode = ipMap.get(dstIp);
+		} else {
+			dstNode = g.getGraphDatastructures()
+					.newNodeInstance(g.addIp(dstIp));
+			b.add(new NodeAddition(dstNode));
+			ipMap.put(dstIp, dstNode);
+		}
 
 		// add edges
 		Edge e1 = g.getGraphDatastructures().newEdgeInstance(srcNode, portNode);
@@ -60,5 +91,4 @@ public class M1Batch extends NetworkBatch {
 		if (!g.containsEdge(e2))
 			b.add(new EdgeAddition(e2));
 	}
-
 }

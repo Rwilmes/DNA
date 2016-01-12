@@ -26,6 +26,13 @@ public abstract class NetworkGraphGenerator extends GraphGenerator {
 			throws IOException, ParseException {
 		super(name, null, gds, timestampInit, 0, 0);
 
+		// if no dir or filename, do nothing
+		if (dir == null || filename == null) {
+			this.finished = true;
+			return;
+		}
+
+		// read and buffer first event
 		this.finished = false;
 		this.r = Reader.getReader(dir, filename);
 
