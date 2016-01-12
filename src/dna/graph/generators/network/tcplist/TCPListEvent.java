@@ -16,6 +16,10 @@ import dna.graph.generators.network.NetworkEvent;
  */
 public class TCPListEvent extends NetworkEvent {
 
+	public enum TCPEventField {
+		ID, TIME, DURATION, SRC_IP, SRC_PORT, DST_IP, DST_PORT, SERVICE, NAME, ATTACK_SCORE, NONE
+	};
+
 	private long id;
 
 	private DateTime duration;
