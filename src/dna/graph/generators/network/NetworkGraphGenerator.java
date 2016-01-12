@@ -5,6 +5,7 @@ import java.text.ParseException;
 
 import dna.graph.datastructures.GraphDataStructure;
 import dna.graph.generators.GraphGenerator;
+import dna.graph.generators.network.tcplist.TCPListEvent;
 import dna.io.Reader;
 
 /**
