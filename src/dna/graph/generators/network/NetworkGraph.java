@@ -15,6 +15,8 @@ public class NetworkGraph extends Graph {
 
 	protected Graph g;
 
+	protected static final int ipOffset = 100000;
+
 	public NetworkGraph(String name, long timestamp, GraphDataStructure gds,
 			ArrayList<Integer> ports, ArrayList<String> ips) {
 		super(name, timestamp, gds);
@@ -65,10 +67,10 @@ public class NetworkGraph extends Graph {
 		this.portMap = new HashMap<Integer, Integer>();
 		this.ipMap = new HashMap<String, Integer>();
 		for (int i = 0; i < ports.size(); i++)
-			portMap.put(ports.get(i), i);
+			portMap.put(ports.get(i), ports.get(i));
 
 		for (int i = 0; i < ips.size(); i++)
-			ipMap.put(ips.get(i), i + portMap.size());
+			ipMap.put(ips.get(i), i + NetworkGraph.ipOffset);
 	}
 
 }
