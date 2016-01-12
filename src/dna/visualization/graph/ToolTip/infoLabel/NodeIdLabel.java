@@ -1,4 +1,4 @@
-package dna.visualization.graph.toolTip.infoLabel;
+package dna.visualization.graph.ToolTip.infoLabel;
 
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
