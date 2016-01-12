@@ -31,6 +31,11 @@ public class M1Batch extends NetworkBatch {
 	@Override
 	public void onEvent(NetworkGraph g, Batch b, NetworkEvent entry,
 			HashMap<Integer, Node> portMap, HashMap<String, Node> ipMap) {
+		if (GraphVisualization.isEnabled()) {
+			GraphVisualization.getGraphPanel(g).setText(
+					"Network Time: " + entry.getTimeReadable());
+		}
+
 		// if port == 0, return
 		if (entry.getDstPort() == 0)
 			return;
