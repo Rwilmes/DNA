@@ -61,4 +61,18 @@ public class NetworkEvent {
 		return "Network-Event: " + srcIp + ":" + srcPort + " to " + dstIp + ":"
 				+ dstPort + " at " + time.toString();
 	}
+
+	public String getTimeReadable() {
+		if (time == null)
+			return "??:??:??";
+
+		String hours = "" + time.getHourOfDay();
+		hours = (hours.length() == 1) ? "0" + hours : hours;
+		String mins = "" + time.getMinuteOfHour();
+		mins = (mins.length() == 1) ? "0" + mins : mins;
+		String secs = "" + time.getSecondOfMinute();
+		secs = (secs.length() == 1) ? "0" + secs : secs;
+
+		return hours + ":" + mins + ":" + secs;
+	}
 }
