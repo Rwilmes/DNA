@@ -58,8 +58,51 @@ public class NetworkGraph extends Graph {
 		return ipMap;
 	}
 
+	public int getPortMapping(int port) {
+		return portMap.get(port);
+	}
+
+	public int getIpMapping(String ip) {
+		return ipMap.get(ip);
+	}
+
+	public ArrayList<Integer> getPorts() {
+		return ports;
+	}
+
+	public ArrayList<String> getIps() {
+		return ips;
+	}
+
 	public void map() {
 		map(ports, ips);
+	}
+
+	public boolean hasPort(int port) {
+		return this.ports.contains(port);
+	}
+
+	public boolean hasIp(String ip) {
+		return this.ips.contains(ip);
+	}
+
+	public int addPort(int port) {
+		if (!this.ports.contains(port)) {
+			this.ports.add(port);
+			this.portMap.put(port, port);
+		}
+		return port;
+	}
+
+	public int addIp(String ip) {
+		if (!this.ips.contains(ip)) {
+			int amount = this.ips.size();
+			int mapping = amount + ipOffset;
+			this.ips.add(ip);
+			this.ipMap.put(ip, mapping);
+			return mapping;
+		}
+		return this.ipMap.get(ip);
 	}
 
 	public void map(ArrayList<Integer> ports, ArrayList<String> ips) {

@@ -1,18 +1,17 @@
 package dna.graph.generators.network;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.HashMap;
 
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
+import dna.graph.nodes.Node;
 import dna.io.Reader;
 import dna.updates.batch.Batch;
 import dna.updates.generators.BatchGenerator;
 import dna.util.Log;
-import dna.util.parameters.Parameter;
 
 /**
  * A batch-generator which creates batches based on a tcp-list file.
@@ -36,8 +35,8 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 	protected TCPListEvent bufferedEntry;
 
-	public NetworkBatch(String name, String dir,
-			String filename, int batchIntervalInSeconds) throws IOException {
+	public NetworkBatch(String name, String dir, String filename,
+			int batchIntervalInSeconds) throws IOException {
 		super(name, null);
 		this.dir = dir;
 		this.filename = filename;
@@ -50,8 +49,8 @@ public abstract class NetworkBatch extends BatchGenerator {
 		this.r = Reader.getReader(dir, filename);
 	}
 
-	public abstract void onEvent(Graph g, Batch b, NetworkEvent e,
-			HashMap<Integer, Integer> portMap, HashMap<String, Integer> ipMap);
+	public abstract void onEvent(NetworkGraph g, Batch b, NetworkEvent e,
+			HashMap<Integer, Node> portMap, HashMap<String, Node> ipMap);
 
 	@Override
 	public Batch generate(Graph g) {
@@ -66,13 +65,19 @@ public abstract class NetworkBatch extends BatchGenerator {
 			return b;
 		}
 
-		HashMap<Integer, Integer> portMap = graph.getPortMap();
-		HashMap<String, Integer> ipMap = graph.getIpMap();
+//		HashMap<Integer, Integer> portMap = graph.getPortMap();
+//		HashMap<String, Integer> ipMap = graph.getIpMap();
 
+		
+		HashMap<Integer, Node> portMap = new HashMap<Integer, Node>();
+		HashMap<String, Node> ipMap = new HashMap<String, Node>();
+		
 		String line;
 
+		
+		
 		if (this.bufferedEntry != null)
-			onEvent(g, b, this.bufferedEntry, portMap, ipMap);
+			onEvent(graph, b, this.bufferedEntry, portMap, ipMap);
 
 		// while still lines to read -> read and craft batches
 		// will abort when time is out of interval
@@ -99,7 +104,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 					return b;
 				} else {
 					// handle changes
-					this.onEvent(g, b, event, portMap, ipMap);
+					this.onEvent(graph, b, event, portMap, ipMap);
 				}
 			}
 		} catch (IOException | ParseException e) {
