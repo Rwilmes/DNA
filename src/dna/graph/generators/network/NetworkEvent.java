@@ -12,6 +12,10 @@ import org.joda.time.DateTime;
  */
 public class NetworkEvent {
 
+	public enum NetworkEventField {
+		TIME, SRC_IP, SRC_PORT, DST_IP, DST_PORT, NONE
+	};
+
 	protected DateTime time;
 
 	protected int srcPort;
