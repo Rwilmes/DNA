@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import dna.graph.datastructures.GraphDataStructure;
-import dna.graph.generators.network.NetworkEvent;
 import dna.graph.generators.network.NetworkGraph;
 import dna.graph.generators.network.NetworkGraphGenerator;
 import dna.graph.nodes.Node;
+import dna.util.network.NetworkEvent;
 
 /**
  * NetworkGraphGenerator for Model1.<br>

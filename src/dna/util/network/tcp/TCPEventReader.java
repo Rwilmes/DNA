@@ -1,4 +1,4 @@
-package dna.graph.generators.network.tcplist;
+package dna.util.network.tcp;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,9 +8,9 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import dna.graph.generators.network.NetworkEventReader;
-import dna.graph.generators.network.tcplist.TCPEvent.TCPEventField;
 import dna.util.Config;
+import dna.util.network.NetworkEventReader;
+import dna.util.network.tcp.TCPEvent.TCPEventField;
 
 /**
  * Reader that reads TCPEvents from a TCP-List-File.

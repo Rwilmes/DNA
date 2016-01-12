@@ -7,12 +7,13 @@ import java.util.HashMap;
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
-import dna.graph.generators.network.tcplist.TCPEvent;
 import dna.graph.nodes.Node;
 import dna.io.Reader;
 import dna.updates.batch.Batch;
 import dna.updates.generators.BatchGenerator;
 import dna.util.Log;
+import dna.util.network.NetworkEvent;
+import dna.util.network.tcp.TCPEvent;
 
 /**
  * A batch-generator which creates batches based on a tcp-list file.
@@ -66,17 +67,14 @@ public abstract class NetworkBatch extends BatchGenerator {
 			return b;
 		}
 
-//		HashMap<Integer, Integer> portMap = graph.getPortMap();
-//		HashMap<String, Integer> ipMap = graph.getIpMap();
+		// HashMap<Integer, Integer> portMap = graph.getPortMap();
+		// HashMap<String, Integer> ipMap = graph.getIpMap();
 
-		
 		HashMap<Integer, Node> portMap = new HashMap<Integer, Node>();
 		HashMap<String, Node> ipMap = new HashMap<String, Node>();
-		
+
 		String line;
 
-		
-		
 		if (this.bufferedEntry != null)
 			onEvent(graph, b, this.bufferedEntry, portMap, ipMap);
 

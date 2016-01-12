@@ -5,8 +5,9 @@ import java.text.ParseException;
 
 import dna.graph.datastructures.GraphDataStructure;
 import dna.graph.generators.GraphGenerator;
-import dna.graph.generators.network.tcplist.TCPEvent;
 import dna.io.Reader;
+import dna.util.network.NetworkEvent;
+import dna.util.network.tcp.TCPEvent;
 
 /**
  * Abstract class for a graph generator that generates a graph based on a TCP
