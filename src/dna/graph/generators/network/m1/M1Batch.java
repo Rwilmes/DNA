@@ -11,6 +11,14 @@ import dna.graph.nodes.Node;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
 
+/**
+ * NetworkBatch-Generator for Model1.<br>
+ * 
+ * onEvent: addEdge(srcIp, dstPort), addEde(dstPort, dstIp)
+ * 
+ * @author Rwilmes
+ * 
+ */
 public class M1Batch extends NetworkBatch {
 
 	public M1Batch(String dir, String filename, int batchIntervalInSeconds)
