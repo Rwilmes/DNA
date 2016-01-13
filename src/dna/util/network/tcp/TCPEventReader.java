@@ -75,11 +75,11 @@ public class TCPEventReader extends NetworkEventReader {
 		DateTime time = null;
 		DateTime duration = null;
 		String service = null;
-		int srcPort = -1;
-		int dstPort = -1;
+		int srcPort = 0;
+		int dstPort = 0;
 		String srcIp = null;
 		String dstIp = null;
-		double attackScore = -1;
+		double attackScore = 0;
 		String name = null;
 
 		for (int i = 0; (i < this.fields.length && i < splits.length); i++) {
