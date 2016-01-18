@@ -1,5 +1,6 @@
 package dna.graph.generators.network;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -9,7 +10,6 @@ import dna.graph.Graph;
 import dna.graph.nodes.Node;
 import dna.updates.batch.Batch;
 import dna.updates.generators.BatchGenerator;
-import dna.util.Log;
 import dna.util.network.NetworkEvent;
 import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEvent;
@@ -23,9 +23,6 @@ import dna.util.network.tcp.TCPEventReader;
  */
 public abstract class NetworkBatch extends BatchGenerator {
 
-	protected String dir;
-	protected String filename;
-
 	protected int batchLength;
 
 	protected DateTime threshold;
@@ -37,35 +34,30 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 	protected TCPEvent bufferedEntry;
 
-	public NetworkBatch(String name, String dir, String filename,
-			int batchIntervalInSeconds) throws IOException {
+	public NetworkBatch(String name, TCPEventReader reader,
+			int batchIntervalInSeconds) throws FileNotFoundException {
 		super(name, null);
-		this.dir = dir;
-		this.filename = filename;
+		this.reader = reader;
 		this.batchLength = batchIntervalInSeconds;
 
 		this.init = false;
 		this.finished = false;
-
-		// init reader
-		this.reader = new DefaultTCPEventReader(dir, filename);
 	}
 
-	public abstract void onEvent(NetworkGraph g, Batch b, NetworkEvent e,
+	public NetworkBatch(String name, String dir, String filename,
+			int batchIntervalInSeconds) throws IOException {
+		this(name, new DefaultTCPEventReader(dir, filename),
+				batchIntervalInSeconds);
+	}
+
+	public abstract void onEvent(Graph g, Batch b, NetworkEvent e,
 			HashMap<Integer, Node> portMap, HashMap<String, Node> ipMap);
 
 	@Override
-	public Batch generate(Graph g) {
-		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
-				g.getTimestamp() + 1, 0, 0, 0, 0, 0, 0);
-
-		NetworkGraph graph;
-		if (g instanceof NetworkGraph) {
-			graph = (NetworkGraph) g;
-		} else {
-			Log.warn("cannot generate NetworkBatch for non-NetworkGraph!");
-			return b;
-		}
+	public Batch generate(Graph graph) {
+		Batch b = new Batch(graph.getGraphDatastructures(),
+				graph.getTimestamp(), graph.getTimestamp() + 1, 0, 0, 0, 0, 0,
+				0);
 
 		HashMap<Integer, Node> portMap = new HashMap<Integer, Node>();
 		HashMap<String, Node> ipMap = new HashMap<String, Node>();
@@ -75,7 +67,6 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 		while (this.reader.isNextEventPossible()) {
 			TCPEvent e = this.reader.getNextEvent();
-			System.out.println("'''''   " + e);
 			DateTime time = e.getTime();
 
 			if (!this.init) {
@@ -101,8 +92,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 	@Override
 	public void reset() {
 		try {
-			this.reader.close();
-			this.reader = new DefaultTCPEventReader(dir, filename);
+			this.reader = this.reader.copy();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

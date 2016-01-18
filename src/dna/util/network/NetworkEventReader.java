@@ -19,27 +19,34 @@ import dna.util.network.NetworkEvent.NetworkEventField;
  */
 public class NetworkEventReader extends Reader {
 
-	protected String delimiter;
+	protected String separator;
 	protected NetworkEventField[] fields;
 
 	protected boolean finished;
 
 	protected NetworkEvent bufferedEvent;
 
+	protected String timeFormatPattern;
 	protected DateTimeFormatter timeFormat;
+
+	protected String dir;
+	protected String filename;
 
 	public NetworkEventReader(String dir, String filename,
 			NetworkEventField... fields) throws FileNotFoundException {
-		this(dir, filename, Config.get("TCP_LIST_DEFAULT_DELIMITER"), Config
+		this(dir, filename, Config.get("TCP_LIST_DEFAULT_SEPARATOR"), Config
 				.get("TCP_LIST_DEFAULT_TIME_FORMAT"), fields);
 	}
 
-	public NetworkEventReader(String dir, String filename, String delimiter,
+	public NetworkEventReader(String dir, String filename, String separator,
 			String timeFormat, NetworkEventField... fields)
 			throws FileNotFoundException {
 		super(dir, filename);
-		this.delimiter = delimiter;
+		this.dir = dir;
+		this.filename = filename;
+		this.separator = separator;
 		this.fields = fields;
+		this.timeFormatPattern = timeFormat;
 		this.timeFormat = DateTimeFormat.forPattern(timeFormat);
 		this.finished = false;
 	}
@@ -68,7 +75,7 @@ public class NetworkEventReader extends Reader {
 	}
 
 	protected NetworkEvent parseLine(String line) {
-		String[] splits = line.split(this.delimiter);
+		String[] splits = line.split(this.separator);
 
 		DateTime time = null;
 		int srcPort = -1;
@@ -106,5 +113,13 @@ public class NetworkEventReader extends Reader {
 		}
 
 		return new NetworkEvent(time, srcIp, srcPort, dstIp, dstPort);
+	}
+
+	public String getDir() {
+		return dir;
+	}
+
+	public String getFilename() {
+		return filename;
 	}
 }
