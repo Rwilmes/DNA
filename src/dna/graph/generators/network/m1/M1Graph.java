@@ -2,14 +2,13 @@ package dna.graph.generators.network.m1;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collections;
 
+import dna.graph.Graph;
 import dna.graph.datastructures.GraphDataStructure;
-import dna.graph.generators.network.NetworkGraph;
 import dna.graph.generators.network.NetworkGraphGenerator;
 import dna.graph.nodes.Node;
 import dna.util.network.NetworkEvent;
+import dna.util.network.tcp.TCPEventReader;
 
 /**
  * NetworkGraphGenerator for Model1.<br>
@@ -23,58 +22,53 @@ import dna.util.network.NetworkEvent;
  */
 public class M1Graph extends NetworkGraphGenerator {
 
-	public M1Graph(GraphDataStructure gds, String dir, String filename)
+	public M1Graph(GraphDataStructure gds, TCPEventReader reader)
 			throws IOException, ParseException {
-		this("M1Graph-Generator", gds, 0, dir, filename);
+		super("M1-GraphGenerator", gds, 0, reader);
 	}
 
-	public M1Graph(String name, GraphDataStructure gds, long timestampInit,
-			String dir, String filename) throws IOException, ParseException {
-		super(name, gds, timestampInit, dir, filename);
+	public M1Graph(GraphDataStructure gds, long timestampInit,
+			TCPEventReader reader) throws IOException, ParseException {
+		super("M1-GraphGenerator", gds, timestampInit, reader);
 	}
 
 	@Override
-	public NetworkGraph generate() {
-		NetworkGraph g = this.newGraphInstance();
+	public Graph generate() {
+		Graph g = this.newGraphInstance();
 
-		ArrayList<Integer> ports = new ArrayList<Integer>();
-		ArrayList<String> ips = new ArrayList<String>();
-
-		while (this.reader.isNextEventPossible()) {
+		while (reader.isNextEventPossible()) {
 			// read next event
-			NetworkEvent e = this.reader.getNextEvent();
+			NetworkEvent e = reader.getNextEvent();
 
 			// add ports and ips to list
 			int port = e.getDstPort();
 			String srcIp = e.getSrcIp();
 			String dstIp = e.getDstIp();
 
-			if (!ports.contains(port))
-				ports.add(port);
-			if (!ips.contains(srcIp))
-				ips.add(srcIp);
-			if (!ips.contains(dstIp))
-				ips.add(dstIp);
-		}
+			if (!reader.containsPort(port)) {
+				reader.addPort(port);
 
-		// sort lists
-		Collections.sort(ports);
-		Collections.sort(ips);
+				// add node
+				Node node = this.gds.newNodeInstance(reader
+						.getPortMapping(port));
+				g.addNode(node);
+			}
+			if (!reader.containsIp(srcIp)) {
+				reader.addIp(srcIp);
 
-		// map ports and ips
-		g.setPorts(ports);
-		g.setIps(ips);
-		g.map();
+				// add node
+				Node node = this.gds
+						.newNodeInstance(reader.getIpMapping(srcIp));
+				g.addNode(node);
+			}
+			if (!reader.containsIp(dstIp)) {
+				reader.addIp(dstIp);
 
-		// add nodes
-		for (int i = 0; i < ports.size(); i++) {
-			Node node = this.gds.newNodeInstance(g.getPortMap().get(
-					ports.get(i)));
-			g.addNode(node);
-		}
-		for (int i = 0; i < ips.size(); i++) {
-			Node node = this.gds.newNodeInstance(g.getIpMap().get(ips.get(i)));
-			g.addNode(node);
+				// add node
+				Node node = this.gds
+						.newNodeInstance(reader.getIpMapping(dstIp));
+				g.addNode(node);
+			}
 		}
 
 		// return
