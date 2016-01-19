@@ -18,7 +18,6 @@ import dna.graph.edges.DummyUndirectedEdge;
 import dna.graph.edges.Edge;
 import dna.graph.edges.IEdgeDummy;
 import dna.graph.edges.UndirectedEdge;
-import dna.graph.generators.network.NetworkGraph;
 import dna.graph.nodes.DirectedNode;
 import dna.graph.nodes.Node;
 import dna.graph.nodes.UndirectedNode;
@@ -320,28 +319,6 @@ public class GraphDataStructure implements Cloneable {
 		setCurrent(this);
 
 		return new Graph(name, timestamp, this, nodes, edges);
-	}
-
-	public NetworkGraph newNetworkGraphInstance(String name, long timestamp,
-			int nodes, int edges) {
-		this.canGDSCreateProperLists();
-		this.defaultListSizes.put(ListType.GlobalNodeList, nodes);
-		this.defaultListSizes.put(ListType.GlobalEdgeList, edges);
-
-		if (nodes > 0) {
-			int estimatedMeanSize = (int) ((edges / nodes) * 1.1d);
-			if (estimatedMeanSize < 1) {
-				estimatedMeanSize = 1;
-			}
-			this.defaultListSizes
-					.put(ListType.LocalEdgeList, estimatedMeanSize);
-			this.defaultListSizes
-					.put(ListType.LocalNodeList, estimatedMeanSize);
-		}
-
-		setCurrent(this);
-
-		return new NetworkGraph(name, timestamp, this, nodes, edges);
 	}
 
 	private int getStartingSize(ListType lt) {
