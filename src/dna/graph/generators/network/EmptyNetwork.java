@@ -12,7 +12,7 @@ import dna.graph.datastructures.GraphDataStructure;
  * @author Rwilmes
  * 
  */
-public class EmptyNetwork extends NetworkGraphGenerator {
+public class EmptyNetwork extends NetworkGraph {
 
 	public EmptyNetwork(String name, GraphDataStructure gds, long timestampInit)
 			throws IOException, ParseException {

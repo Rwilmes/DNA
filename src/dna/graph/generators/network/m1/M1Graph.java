@@ -5,7 +5,7 @@ import java.text.ParseException;
 
 import dna.graph.Graph;
 import dna.graph.datastructures.GraphDataStructure;
-import dna.graph.generators.network.NetworkGraphGenerator;
+import dna.graph.generators.network.NetworkGraph;
 import dna.graph.nodes.Node;
 import dna.util.network.NetworkEvent;
 import dna.util.network.tcp.TCPEventReader;
@@ -20,7 +20,7 @@ import dna.util.network.tcp.TCPEventReader;
  * @author Rwilmes
  * 
  */
-public class M1Graph extends NetworkGraphGenerator {
+public class M1Graph extends NetworkGraph {
 
 	public M1Graph(GraphDataStructure gds, TCPEventReader reader)
 			throws IOException, ParseException {

@@ -17,7 +17,7 @@ import dna.util.network.tcp.TCPEventReader;
  * @author Rwilmes
  * 
  */
-public abstract class NetworkGraphGenerator extends GraphGenerator {
+public abstract class NetworkGraph extends GraphGenerator {
 
 	protected boolean finished;
 
@@ -25,13 +25,13 @@ public abstract class NetworkGraphGenerator extends GraphGenerator {
 
 	protected TCPEventReader reader;
 
-	public NetworkGraphGenerator(String name, GraphDataStructure gds,
+	public NetworkGraph(String name, GraphDataStructure gds,
 			long timestampInit, String dir, String filename)
 			throws IOException, ParseException {
 		this(name, gds, timestampInit, new DefaultTCPEventReader(dir, filename));
 	}
 
-	public NetworkGraphGenerator(String name, GraphDataStructure gds,
+	public NetworkGraph(String name, GraphDataStructure gds,
 			long timestampInit, TCPEventReader reader) throws IOException,
 			ParseException {
 		super(name, null, gds, timestampInit, 0, 0);
