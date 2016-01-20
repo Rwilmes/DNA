@@ -122,4 +122,12 @@ public class NetworkEventReader extends Reader {
 	public String getFilename() {
 		return filename;
 	}
+
+	public String getTimeFormatPattern() {
+		return timeFormatPattern;
+	}
+
+	public DateTimeFormatter getTimeFormat() {
+		return timeFormat;
+	}
 }

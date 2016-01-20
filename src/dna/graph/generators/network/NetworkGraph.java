@@ -54,7 +54,7 @@ public abstract class NetworkGraph extends GraphGenerator {
 
 	@Override
 	public abstract Graph generate();
-	
+
 	public TCPEventReader getReader() {
 		return reader;
 	}

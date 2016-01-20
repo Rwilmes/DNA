@@ -1,6 +1,7 @@
 package dna.graph.generators.network.m1;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import dna.graph.Graph;
@@ -38,7 +39,8 @@ public class M1Batch extends NetworkBatch {
 
 	@Override
 	public void onEvent(Graph g, Batch b, NetworkEvent entry,
-			HashMap<Integer, Node> portMap, HashMap<String, Node> ipMap) {
+			HashMap<Integer, Node> portMap, HashMap<String, Node> ipMap,
+			HashMap<Integer, Integer> nodeDegreeChangeMap, ArrayList<Edge> addedEdges, ArrayList<Edge> removedEdges) {
 		if (GraphVisualization.isEnabled()) {
 			GraphVisualization.getGraphPanel(g).setText(
 					"Network Time: " + entry.getTimeReadable());

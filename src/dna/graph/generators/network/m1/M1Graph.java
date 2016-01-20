@@ -46,27 +46,21 @@ public class M1Graph extends NetworkGraph {
 			String dstIp = e.getDstIp();
 
 			if (!reader.containsPort(port)) {
-				reader.addPort(port);
-
 				// add node
-				Node node = this.gds.newNodeInstance(reader
-						.getPortMapping(port));
+				Node node = this.gds.newNodeInstance(reader.mapPort(port));
+				reader.addPortNode(port, node);
 				g.addNode(node);
 			}
 			if (!reader.containsIp(srcIp)) {
-				reader.addIp(srcIp);
-
 				// add node
-				Node node = this.gds
-						.newNodeInstance(reader.getIpMapping(srcIp));
+				Node node = this.gds.newNodeInstance(reader.mapIp(srcIp));
+				reader.addIpNode(srcIp, node);
 				g.addNode(node);
 			}
 			if (!reader.containsIp(dstIp)) {
-				reader.addIp(dstIp);
-
 				// add node
-				Node node = this.gds
-						.newNodeInstance(reader.getIpMapping(dstIp));
+				Node node = this.gds.newNodeInstance(reader.mapIp(dstIp));
+				reader.addIpNode(dstIp, node);
 				g.addNode(node);
 			}
 		}

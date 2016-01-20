@@ -9,7 +9,9 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import dna.graph.nodes.Node;
 import dna.util.Config;
+import dna.util.Log;
 import dna.util.network.NetworkEventReader;
 import dna.util.network.tcp.TCPEvent.TCPEventField;
 
@@ -34,9 +36,15 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected ArrayList<Integer> ports;
 	protected HashMap<Integer, Integer> portMap;
+	protected HashMap<Integer, Node> portNodeMap;
+	protected ArrayList<Node> portNodes;
 
 	protected ArrayList<String> ips;
 	protected HashMap<String, Integer> ipMap;
+	protected HashMap<String, Node> ipNodeMap;
+	protected ArrayList<Node> ipNodes;
+
+	protected boolean removeZeroDegreeNodes = true;
 
 	public TCPEventReader(String dir, String filename, TCPEventField... fields)
 			throws FileNotFoundException {
@@ -50,22 +58,31 @@ public class TCPEventReader extends NetworkEventReader {
 			throws FileNotFoundException {
 		this(dir, filename, separator, timeFormat, durationFormat,
 				new ArrayList<Integer>(), new HashMap<Integer, Integer>(),
-				new ArrayList<String>(), new HashMap<String, Integer>(), fields);
+				new HashMap<Integer, Node>(), new ArrayList<Node>(),
+				new ArrayList<String>(), new HashMap<String, Integer>(),
+				new HashMap<String, Node>(), new ArrayList<Node>(), fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
 			String timeFormat, String durationFormat, ArrayList<Integer> ports,
-			HashMap<Integer, Integer> portMap, ArrayList<String> ips,
-			HashMap<String, Integer> ipMap, TCPEventField... fields)
-			throws FileNotFoundException {
+			HashMap<Integer, Integer> portMap,
+			HashMap<Integer, Node> portNodeMap, ArrayList<Node> portNodes,
+			ArrayList<String> ips, HashMap<String, Integer> ipMap,
+			HashMap<String, Node> ipNodeMap, ArrayList<Node> ipNodes,
+			TCPEventField... fields) throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 		this.durationFormatPattern = durationFormat;
 		this.durationFormat = DateTimeFormat.forPattern(durationFormat);
 		this.fields = fields;
 		this.ports = ports;
 		this.portMap = portMap;
+		this.portNodeMap = portNodeMap;
+		this.portNodes = portNodes;
+
 		this.ips = ips;
 		this.ipMap = ipMap;
+		this.ipNodeMap = ipNodeMap;
+		this.ipNodes = ipNodes;
 
 		try {
 			this.bufferedEvent = parseLine(readString());
@@ -177,6 +194,10 @@ public class TCPEventReader extends NetworkEventReader {
 		return this.portMap;
 	}
 
+	public HashMap<Integer, Node> getPortNodeMap() {
+		return portNodeMap;
+	}
+
 	public ArrayList<String> getIps() {
 		return this.ips;
 	}
@@ -185,36 +206,124 @@ public class TCPEventReader extends NetworkEventReader {
 		return this.ipMap;
 	}
 
+	public HashMap<String, Node> getIpNodeMap() {
+		return ipNodeMap;
+	}
+
+	public void addPortNode(int port, Node node) {
+		if (!ports.contains(port))
+			ports.add(port);
+		if (!portNodes.contains(node))
+			portNodes.add(node);
+		if (!portNodeMap.containsKey(port))
+			portNodeMap.put(port, node);
+	}
+
+	public void addIpNode(String ip, Node node) {
+		if (!ips.contains(ip))
+			ips.add(ip);
+		if (!ipNodes.contains(node))
+			ipNodes.add(node);
+		if (!ipNodeMap.containsKey(ip))
+			ipNodeMap.put(ip, node);
+	}
+
+	public void removeNode(Node node) {
+		if (portNodeMap.containsValue(node)) {
+			int index = portNodes.indexOf(node);
+			portNodeMap.remove(ports.get(index));
+			portNodes.remove(index);
+			ports.remove(index);
+		}
+		if (ipNodeMap.containsValue(node)) {
+			int index = ipNodes.indexOf(node);
+			ipNodeMap.remove(ips.get(index));
+			ipNodes.remove(index);
+			ips.remove(index);
+		}
+	}
+
+	public void removeIpNode(String ip) {
+		ips.remove(ips.indexOf(ip));
+		ipNodeMap.remove(ip);
+	}
+
+	public void removePortNode(int port) {
+		ports.remove(ports.indexOf(port));
+		portNodeMap.remove(port);
+	}
+
 	public int addPort(int port) {
-		this.ports.add(port);
+		if (!ports.contains(port))
+			this.ports.add(port);
 		int mapping = mapPort(port);
-		this.portMap.put(port, mapping);
+
+		if (!portMap.containsKey(mapping))
+			this.portMap.put(port, mapping);
+
 		return mapping;
 	}
 
 	public int addIp(String ip) {
-		this.ips.add(ip);
+		if (!ips.contains(ip))
+			this.ips.add(ip);
 		int mapping = mapIp(ip);
-		this.ipMap.put(ip, mapping);
+
+		if (!ipMap.containsKey(ip))
+			this.ipMap.put(ip, mapping);
+
 		return mapping;
 	}
 
 	/** Maps a port to its id. **/
-	protected int mapPort(int port) {
+	public int mapPort(int port) {
 		return port;
 	}
 
 	/** Maps an ip to its id. **/
-	protected int mapIp(String ip) {
+	public int mapIp(String ip) {
 		return (this.getIps().size() - 1) + ipOffset;
+	}
+
+	public boolean containsPortNode(int port) {
+		return this.ports.contains(port) && this.portNodeMap.containsKey(port);
 	}
 
 	public boolean containsPort(int port) {
 		return this.ports.contains(port);
 	}
 
+	public int mapp(String ip) {
+		if (this.ips.contains(ip)) {
+			return ipMap.get(ip);
+		} else {
+			int mapping = mapIp(ip);
+			this.ips.add(ip);
+			this.ipMap.put(ip, mapping);
+			return mapping;
+		}
+	}
+
+	public int mapp(int port) {
+		if (this.ports.contains(port)) {
+			return portMap.get(port);
+		} else {
+			int mapping = mapPort(port);
+			this.ports.add(port);
+			this.portMap.put(port, mapping);
+			return mapping;
+		}
+	}
+
 	public boolean containsIp(String ip) {
 		return this.ips.contains(ip);
+	}
+
+	public boolean containsIpNode(String ip) {
+		// System.out.println("containsIpNode?? \t" + ip + "\t" +
+		// ips.contains(ip) + "\t" + ip+ "\t" +
+		// this.ipNodeMap.containsKey(mapp(ip)));
+		return this.ips.contains(ip) && this.ipNodeMap.containsKey(ip);
 	}
 
 	public int getPortMapping(int port) {
@@ -227,6 +336,24 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public TCPEventReader copy() throws FileNotFoundException {
 		return new TCPEventReader(dir, filename, separator, timeFormatPattern,
-				durationFormatPattern, ports, portMap, ips, ipMap, fields);
+				durationFormatPattern, ports, portMap, portNodeMap, portNodes,
+				ips, ipMap, ipNodeMap, ipNodes, fields);
+	}
+
+	public boolean isRemoveZeroDegreeNodes() {
+		return removeZeroDegreeNodes;
+	}
+
+	public void printMappings() {
+		Log.infoSep();
+		Log.info("PORTS:");
+		for (int i = 0; i < ports.size(); i++) {
+			Log.info("\t" + ports.get(i) + "\t=>\t" + portMap.get(ports.get(i)));
+		}
+		Log.info("IPS:");
+		for (int i = 0; i < ips.size(); i++) {
+			Log.info("\t" + ips.get(i) + "\t=>\t" + ipMap.get(ips.get(i)));
+		}
+		Log.infoSep();
 	}
 }
