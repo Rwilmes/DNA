@@ -221,7 +221,7 @@ public class M1BatchTimed extends M1Batch {
 		// init batch
 		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
 				lastTime, 0, 0, 0, 0, 0, 0);
-		
+
 		// gather changes inside events
 		for (int i = 0; i < events.size(); i++) {
 			TCPEvent e = events.get(i);
