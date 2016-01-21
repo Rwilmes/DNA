@@ -60,7 +60,8 @@ public class TCPEventReader extends NetworkEventReader {
 				new ArrayList<Integer>(), new HashMap<Integer, Integer>(),
 				new HashMap<Integer, Node>(), new ArrayList<Node>(),
 				new ArrayList<String>(), new HashMap<String, Integer>(),
-				new HashMap<String, Node>(), new ArrayList<Node>(), fields);
+				new HashMap<String, Node>(), new ArrayList<Node>(),
+				new ArrayList<String>(), fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
@@ -69,7 +70,8 @@ public class TCPEventReader extends NetworkEventReader {
 			HashMap<Integer, Node> portNodeMap, ArrayList<Node> portNodes,
 			ArrayList<String> ips, HashMap<String, Integer> ipMap,
 			HashMap<String, Node> ipNodeMap, ArrayList<Node> ipNodes,
-			TCPEventField... fields) throws FileNotFoundException {
+			ArrayList<String> activeNodes, TCPEventField... fields)
+			throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 		this.durationFormatPattern = durationFormat;
 		this.durationFormat = DateTimeFormat.forPattern(durationFormat);
@@ -83,6 +85,8 @@ public class TCPEventReader extends NetworkEventReader {
 		this.ipMap = ipMap;
 		this.ipNodeMap = ipNodeMap;
 		this.ipNodes = ipNodes;
+
+		this.activeNodes = activeNodes;
 
 		try {
 			this.bufferedEvent = parseLine(readString());
@@ -228,18 +232,47 @@ public class TCPEventReader extends NetworkEventReader {
 			ipNodeMap.put(ip, node);
 	}
 
+	protected ArrayList<String> activeNodes;
+
+	public void addNode(String id) {
+		if (!activeNodes.contains(id))
+			activeNodes.add(id);
+	}
+
+	public void removeNode(String id) {
+		if (activeNodes.contains(id))
+			activeNodes.remove(activeNodes.indexOf(id));
+	}
+
+	public boolean isNodeActive(String id) {
+		return activeNodes.contains(id);
+	}
+
 	public void removeNode(Node node) {
+		System.out.println("REMOVE NODE: " + node);
 		if (portNodeMap.containsValue(node)) {
+			System.out.println("1");
 			int index = portNodes.indexOf(node);
+			System.out.println(index);
+			System.out.println(ports.get(index));
 			portNodeMap.remove(ports.get(index));
+			System.out.println(portNodes.get(index));
 			portNodes.remove(index);
-			ports.remove(index);
+			System.out.println(ports.get(index));
+			// ports.remove(index);
+			System.out.println("2");
 		}
 		if (ipNodeMap.containsValue(node)) {
+			System.out.println("3");
 			int index = ipNodes.indexOf(node);
+			System.out.println(index);
+			System.out.println(ips.get(index));
 			ipNodeMap.remove(ips.get(index));
+			System.out.println(ipNodes.get(index));
 			ipNodes.remove(index);
-			ips.remove(index);
+			System.out.println(ips.get(index));
+			// ips.remove(index);
+			System.out.println("4");
 		}
 	}
 
@@ -304,6 +337,15 @@ public class TCPEventReader extends NetworkEventReader {
 		}
 	}
 
+	public int mappp(String id) {
+		try {
+			int p = Integer.parseInt(id);
+			return mapp(p);
+		} catch (NumberFormatException e) {
+			return mapp(id);
+		}
+	}
+
 	public int mapp(int port) {
 		if (this.ports.contains(port)) {
 			return portMap.get(port);
@@ -320,9 +362,8 @@ public class TCPEventReader extends NetworkEventReader {
 	}
 
 	public boolean containsIpNode(String ip) {
-		// System.out.println("containsIpNode?? \t" + ip + "\t" +
-		// ips.contains(ip) + "\t" + ip+ "\t" +
-		// this.ipNodeMap.containsKey(mapp(ip)));
+		System.out.println("containsIpNode?? \t" + ip + "\t" + ips.contains(ip)
+				+ "\t" + ip + "\t" + this.ipNodeMap.containsKey(ip));
 		return this.ips.contains(ip) && this.ipNodeMap.containsKey(ip);
 	}
 
@@ -337,7 +378,7 @@ public class TCPEventReader extends NetworkEventReader {
 	public TCPEventReader copy() throws FileNotFoundException {
 		return new TCPEventReader(dir, filename, separator, timeFormatPattern,
 				durationFormatPattern, ports, portMap, portNodeMap, portNodes,
-				ips, ipMap, ipNodeMap, ipNodes, fields);
+				ips, ipMap, ipNodeMap, ipNodes, activeNodes, fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
