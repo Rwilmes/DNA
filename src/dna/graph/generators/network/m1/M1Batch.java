@@ -12,6 +12,7 @@ import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
 import dna.updates.update.NodeAddition;
 import dna.util.network.NetworkEvent;
+import dna.util.network.tcp.TCPEvent;
 import dna.util.network.tcp.TCPEventReader;
 import dna.visualization.graph.GraphVisualization;
 
@@ -111,6 +112,13 @@ public class M1Batch extends NetworkBatch {
 
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+
+	@Override
+	public Batch craftBatch(Graph g,
+			ArrayList<TCPEvent> events) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

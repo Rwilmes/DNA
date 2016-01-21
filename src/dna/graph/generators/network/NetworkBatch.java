@@ -57,23 +57,21 @@ public abstract class NetworkBatch extends BatchGenerator {
 			HashMap<Integer, Integer> nodeDegreeChangeMap,
 			ArrayList<Edge> addedEdges, ArrayList<Edge> removedEdges);
 
+	public abstract Batch craftBatch(Graph g, ArrayList<TCPEvent> events);
+
 	@Override
 	public Batch generate(Graph graph) {
 		Batch b = new Batch(graph.getGraphDatastructures(),
 				graph.getTimestamp(), graph.getTimestamp() + 1, 0, 0, 0, 0, 0,
 				0);
+		boolean outOfBounds = false;
+		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
 
-		HashMap<Integer, Node> portMap = new HashMap<Integer, Node>();
-		HashMap<String, Node> ipMap = new HashMap<String, Node>();
-		HashMap<Integer, Integer> nodeDegreeChangeMap = new HashMap<Integer, Integer>();
-		ArrayList<Edge> addedEdges = new ArrayList<Edge>();
-		ArrayList<Edge> removedEdges = new ArrayList<Edge>();
+		if (this.bufferedEntry != null) {
+			events.add(this.bufferedEntry);
+		}
 
-		if (this.bufferedEntry != null)
-			onEvent(graph, b, this.bufferedEntry, portMap, ipMap,
-					nodeDegreeChangeMap, addedEdges, removedEdges);
-
-		while (this.reader.isNextEventPossible()) {
+		while (this.reader.isNextEventPossible() && !outOfBounds) {
 			TCPEvent e = this.reader.getNextEvent();
 			DateTime time = e.getTime();
 
@@ -86,36 +84,52 @@ public abstract class NetworkBatch extends BatchGenerator {
 			if (time.isAfter(this.threshold)) {
 				this.threshold = this.threshold.plusSeconds(this.batchLength);
 				this.bufferedEntry = e;
-
-				// print mappings (FOR DEBUG)
-				// reader.printMappings();
-
-				// if (reader.isRemoveZeroDegreeNodes()) {
-				// for (IElement n_ : graph.getNodes()) {
-				// Node n = (Node) n_;
-				//
-				// int change = 0;
-				// if (nodeDegreeChangeMap.containsKey(n.getIndex()))
-				// change = nodeDegreeChangeMap.get(n.getIndex());
-				// System.out.println("blablain node " + n
-				// + "  ?? \tdegree: " + n.getDegree()
-				// + "\tchange: " + change +"\tremove: " + ((n.getDegree() +
-				// change) <= 0));
-				// if ((n.getDegree() + change) <= 0)
-				// b.add(new NodeRemoval(n));
-				// }
-				// }
-
-				return b;
+				outOfBounds = true;
 			} else {
-				// handle changes
-				this.onEvent(graph, b, e, portMap, ipMap, nodeDegreeChangeMap,
-						addedEdges, removedEdges);
+				events.add(e);
 			}
 		}
 
-		this.finished = true;
-		return b;
+		ArrayList<Integer> ports = new ArrayList<Integer>();
+		ArrayList<Long> portTimes = new ArrayList<Long>();
+		ArrayList<String> ips = new ArrayList<String>();
+		ArrayList<Long> ipTimes = new ArrayList<Long>();
+
+		// gather ips and ports
+		for (int i = 0; i < events.size(); i++) {
+			TCPEvent e = events.get(i);
+			String srcIp = e.getSrcIp();
+			String dstIp = e.getDstIp();
+			int dstPort = e.getDstPort();
+			long t = e.getTime().getMillis();
+
+			if (!ips.contains(srcIp)) {
+				ips.add(srcIp);
+				ipTimes.add(t);
+			} else {
+				ipTimes.set(ips.indexOf(srcIp), t);
+			}
+			if (!ips.contains(dstIp)) {
+				ips.add(dstIp);
+				ipTimes.add(t);
+			} else {
+				ipTimes.set(ips.indexOf(dstIp), t);
+			}
+			if (!ports.contains(dstPort)) {
+				ports.add(dstPort);
+				portTimes.add(t);
+			} else {
+				portTimes.set(ports.indexOf(dstPort), t);
+			}
+		}
+
+		// end-condition
+		if (!this.reader.isNextEventPossible() && !outOfBounds) {
+			this.bufferedEntry = null;
+			this.finished = true;
+		}
+
+		return craftBatch(graph, events);
 	}
 
 	@Override
@@ -134,5 +148,4 @@ public abstract class NetworkBatch extends BatchGenerator {
 		else
 			return true;
 	}
-
 }
