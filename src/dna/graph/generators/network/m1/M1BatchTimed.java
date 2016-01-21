@@ -211,8 +211,6 @@ public class M1BatchTimed extends M1Batch {
 
 	@Override
 	public Batch craftBatch(Graph g, ArrayList<TCPEvent> events) {
-		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
-				g.getTimestamp() + 1, 0, 0, 0, 0, 0, 0);
 		ArrayList<String> addedNodes = new ArrayList<String>();
 		ArrayList<Node> addedNodesNodes = new ArrayList<Node>();
 		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();
@@ -220,6 +218,10 @@ public class M1BatchTimed extends M1Batch {
 		// time of last event
 		long lastTime = events.get(events.size() - 1).getTime().getMillis();
 
+		// init batch
+		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
+				lastTime, 0, 0, 0, 0, 0, 0);
+		
 		// gather changes inside events
 		for (int i = 0; i < events.size(); i++) {
 			TCPEvent e = events.get(i);
