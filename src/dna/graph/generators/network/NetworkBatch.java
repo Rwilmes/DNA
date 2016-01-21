@@ -34,7 +34,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 	protected TCPEventReader reader;
 
-	protected TCPEvent bufferedEntry;
+	protected TCPEvent bufferedEvent;
 
 	public NetworkBatch(String name, TCPEventReader reader,
 			int batchIntervalInSeconds) throws FileNotFoundException {
@@ -59,15 +59,74 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 	public abstract Batch craftBatch(Graph g, ArrayList<TCPEvent> events);
 
-	@Override
+	/** Increments the threshold by the given batchLength. **/
+	private void incrementThreshold() {
+		threshold = threshold.plusSeconds(batchLength);
+	}
+
 	public Batch generate(Graph graph) {
+		// list of events
+		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
+
+		if (!init) {
+			this.threshold = new DateTime(graph.getTimestamp())
+					.plusSeconds(batchLength);
+			init = true;
+		}
+
+		// handle buffered event
+		if (bufferedEvent != null) {
+			// if after threshold -> increment threshold and recurse
+			if (bufferedEvent.getTime().isAfter(threshold)) {
+				incrementThreshold();
+				return generate(graph);
+			}
+
+			// add event
+			events.add(bufferedEvent);
+
+			// if reader has no next event -> this was the last -> return batch
+			if (!reader.isNextEventPossible()) {
+				bufferedEvent = null;
+				finished = true;
+				return craftBatch(graph, events);
+			}
+		}
+
+		// read events until threshold reached
+		while (reader.isNextEventPossible()) {
+			TCPEvent e = reader.getNextEvent();
+			DateTime t = e.getTime();
+
+			// if t is after threshold -> return
+			if (t.isAfter(threshold)) {
+				// buffer event
+				this.bufferedEvent = e;
+				break;
+			} else {
+				// add event to list
+				events.add(e);
+			}
+		}
+
+		// if no events -> all after threshold -> recurse
+		if (events.size() == 0) {
+			incrementThreshold();
+			return generate(graph);
+		}
+
+		// craft batch from event
+		return craftBatch(graph, events);
+	}
+
+	public Batch generate2(Graph graph) {
 		// list of events
 		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
 
 		// always buffer 1 event (when out of bounds keep it and go on with
 		// reading next turn.
-		if (this.bufferedEntry != null) {
-			events.add(this.bufferedEntry);
+		if (this.bufferedEvent != null) {
+			events.add(this.bufferedEvent);
 		}
 
 		// read events
@@ -81,10 +140,18 @@ public abstract class NetworkBatch extends BatchGenerator {
 				this.init = true;
 			}
 
+			System.out.println(graph.getTimestamp() + "\tthreshold: "
+					+ this.threshold.getMillis() + "\ttime: "
+					+ time.getMillis() + "\tafter:"
+					+ time.isAfter(this.threshold));
+			System.out.println("\tthreshold: "
+					+ this.threshold.toString(reader.getTimeFormat())
+					+ "\t\ttime: " + time.toString(reader.getTimeFormat()));
+
 			// check if out of interval
 			if (time.isAfter(this.threshold)) {
 				this.threshold = this.threshold.plusSeconds(this.batchLength);
-				this.bufferedEntry = e;
+				this.bufferedEvent = e;
 				outOfBounds = true;
 			} else {
 				events.add(e);
@@ -93,7 +160,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 		// end-condition
 		if (!this.reader.isNextEventPossible() && !outOfBounds) {
-			this.bufferedEntry = null;
+			this.bufferedEvent = null;
 			this.finished = true;
 		}
 
