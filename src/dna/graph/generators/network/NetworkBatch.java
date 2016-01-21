@@ -61,16 +61,17 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 	@Override
 	public Batch generate(Graph graph) {
-		Batch b = new Batch(graph.getGraphDatastructures(),
-				graph.getTimestamp(), graph.getTimestamp() + 1, 0, 0, 0, 0, 0,
-				0);
-		boolean outOfBounds = false;
+		// list of events
 		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
 
+		// always buffer 1 event (when out of bounds keep it and go on with
+		// reading next turn.
 		if (this.bufferedEntry != null) {
 			events.add(this.bufferedEntry);
 		}
 
+		// read events
+		boolean outOfBounds = false;
 		while (this.reader.isNextEventPossible() && !outOfBounds) {
 			TCPEvent e = this.reader.getNextEvent();
 			DateTime time = e.getTime();
@@ -87,39 +88,6 @@ public abstract class NetworkBatch extends BatchGenerator {
 				outOfBounds = true;
 			} else {
 				events.add(e);
-			}
-		}
-
-		ArrayList<Integer> ports = new ArrayList<Integer>();
-		ArrayList<Long> portTimes = new ArrayList<Long>();
-		ArrayList<String> ips = new ArrayList<String>();
-		ArrayList<Long> ipTimes = new ArrayList<Long>();
-
-		// gather ips and ports
-		for (int i = 0; i < events.size(); i++) {
-			TCPEvent e = events.get(i);
-			String srcIp = e.getSrcIp();
-			String dstIp = e.getDstIp();
-			int dstPort = e.getDstPort();
-			long t = e.getTime().getMillis();
-
-			if (!ips.contains(srcIp)) {
-				ips.add(srcIp);
-				ipTimes.add(t);
-			} else {
-				ipTimes.set(ips.indexOf(srcIp), t);
-			}
-			if (!ips.contains(dstIp)) {
-				ips.add(dstIp);
-				ipTimes.add(t);
-			} else {
-				ipTimes.set(ips.indexOf(dstIp), t);
-			}
-			if (!ports.contains(dstPort)) {
-				ports.add(dstPort);
-				portTimes.add(t);
-			} else {
-				portTimes.set(ports.indexOf(dstPort), t);
 			}
 		}
 

@@ -46,6 +46,8 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected boolean removeZeroDegreeNodes = true;
 
+	protected DateTime initTimestamp;
+
 	public TCPEventReader(String dir, String filename, TCPEventField... fields)
 			throws FileNotFoundException {
 		this(dir, filename, Config.get("TCP_LIST_DEFAULT_SEPARATOR"), Config
@@ -90,10 +92,15 @@ public class TCPEventReader extends NetworkEventReader {
 
 		try {
 			this.bufferedEvent = parseLine(readString());
+			this.initTimestamp = this.bufferedEvent.getTime();
 		} catch (IOException e) {
 			this.finished = true;
 			e.printStackTrace();
 		}
+	}
+
+	public DateTime getInitTimestamp() {
+		return this.initTimestamp;
 	}
 
 	public void setAll(ArrayList<Integer> ports,

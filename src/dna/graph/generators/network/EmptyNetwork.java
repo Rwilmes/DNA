@@ -19,6 +19,11 @@ public class EmptyNetwork extends NetworkGraph {
 		super(name, gds, timestampInit, null);
 	}
 
+	public EmptyNetwork(GraphDataStructure gds, long timestampInit)
+			throws IOException, ParseException {
+		this("EmptyNetwork", gds, timestampInit);
+	}
+
 	public EmptyNetwork(GraphDataStructure gds) throws IOException,
 			ParseException {
 		this("EmptyNetwork", gds, 0);
