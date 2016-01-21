@@ -129,9 +129,9 @@ public class Dir {
 		} else {
 			String[] names = (new File(dir)).list(new PrefixFilenameFilter(
 					Config.get("PREFIX_BATCHDATA_DIR")));
-			int[] timestamps = new int[names.length];
+			long[] timestamps = new long[names.length];
 			for (int i = 0; i < names.length; i++) {
-				timestamps[i] = Integer.parseInt((names[i].replace(
+				timestamps[i] = Long.parseLong((names[i].replace(
 						Config.get("PREFIX_BATCHDATA_DIR"), "")).replace(
 						Config.get("SUFFIX_ZIP_FILE"), ""));
 			}
