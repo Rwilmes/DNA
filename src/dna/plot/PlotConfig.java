@@ -120,6 +120,9 @@ public class PlotConfig {
 	public static String gnuplotDefaultKeyXRange = "GNUPLOT_XRANGE";
 	public static String gnuplotDefaultKeyYRange = "GNUPLOT_YRANGE";
 
+	public static String gnuplotDefaultKeyXTics = "GNUPLOT_XTICS";
+	public static String gnuplotDefaultKeyYTics = "GNUPLOT_YTICS";
+
 	public static String gnuplotDefaultXScaling = "GNUPLOT_XSCALING";
 	public static String gnuplotDefaultYScaling = "GNUPLOT_YSCALING";
 
@@ -506,8 +509,8 @@ public class PlotConfig {
 					.getDouble(PlotConfig.gnuplotDefaultKeyYOffset);
 			String xRange = Config.get(PlotConfig.gnuplotDefaultKeyXRange);
 			String yRange = Config.get(PlotConfig.gnuplotDefaultKeyYRange);
-			String xTics = null;
-			String yTics = null;
+			String xTics = Config.get(PlotConfig.gnuplotDefaultKeyXTics);
+			String yTics = Config.get(PlotConfig.gnuplotDefaultKeyYTics);
 			String xScaling = Config.get(PlotConfig.gnuplotDefaultXScaling);
 			String yScaling = Config.get(PlotConfig.gnuplotDefaultYScaling);
 			PlotStyle style = null;

@@ -1233,6 +1233,12 @@ public class Plot {
 			if (!Config.get("GNUPLOT_YRANGE").equals("null")) {
 				script.add("set yrange " + Config.get("GNUPLOT_YRANGE"));
 			}
+			if (!Config.get("GNUPLOT_XTICS").equals("null")) {
+				script.add("set xtics " + Config.get("GNUPLOT_XTICS"));
+			}
+			if (!Config.get("GNUPLOT_YTICS").equals("null")) {
+				script.add("set ytics " + Config.get("GNUPLOT_YTICS"));
+			}
 			for (int i = 0; i < this.data.length; i++) {
 				String line = "";
 
@@ -1292,9 +1298,9 @@ public class Plot {
 				script.add("set xrange " + this.config.getxRange());
 			if (!this.config.getyRange().equals("null"))
 				script.add("set yrange " + this.config.getyRange());
-			if (this.config.getxTics() != null)
+			if (!this.config.getxTics().equals("null"))
 				script.add("set xtics " + this.config.getxTics());
-			if (this.config.getyTics() != null)
+			if (!this.config.getyTics().equals("null"))
 				script.add("set ytics " + this.config.getyTics());
 			if (this.config.getLogscale() != null)
 				script.add("set logscale " + this.config.getLogscale());
