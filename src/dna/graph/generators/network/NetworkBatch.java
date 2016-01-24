@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
 
@@ -69,8 +70,8 @@ public abstract class NetworkBatch extends BatchGenerator {
 		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
 
 		if (!init) {
-			this.threshold = new DateTime(graph.getTimestamp())
-					.plusSeconds(batchLength);
+			this.threshold = new DateTime(TimeUnit.SECONDS.toMillis(graph
+					.getTimestamp())).plusSeconds(batchLength);
 			init = true;
 		}
 
@@ -116,54 +117,6 @@ public abstract class NetworkBatch extends BatchGenerator {
 		}
 
 		// craft batch from event
-		return craftBatch(graph, events);
-	}
-
-	public Batch generate2(Graph graph) {
-		// list of events
-		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
-
-		// always buffer 1 event (when out of bounds keep it and go on with
-		// reading next turn.
-		if (this.bufferedEvent != null) {
-			events.add(this.bufferedEvent);
-		}
-
-		// read events
-		boolean outOfBounds = false;
-		while (this.reader.isNextEventPossible() && !outOfBounds) {
-			TCPEvent e = this.reader.getNextEvent();
-			DateTime time = e.getTime();
-
-			if (!this.init) {
-				this.threshold = time.plusSeconds(this.batchLength);
-				this.init = true;
-			}
-
-			System.out.println(graph.getTimestamp() + "\tthreshold: "
-					+ this.threshold.getMillis() + "\ttime: "
-					+ time.getMillis() + "\tafter:"
-					+ time.isAfter(this.threshold));
-			System.out.println("\tthreshold: "
-					+ this.threshold.toString(reader.getTimeFormat())
-					+ "\t\ttime: " + time.toString(reader.getTimeFormat()));
-
-			// check if out of interval
-			if (time.isAfter(this.threshold)) {
-				this.threshold = this.threshold.plusSeconds(this.batchLength);
-				this.bufferedEvent = e;
-				outOfBounds = true;
-			} else {
-				events.add(e);
-			}
-		}
-
-		// end-condition
-		if (!this.reader.isNextEventPossible() && !outOfBounds) {
-			this.bufferedEvent = null;
-			this.finished = true;
-		}
-
 		return craftBatch(graph, events);
 	}
 
