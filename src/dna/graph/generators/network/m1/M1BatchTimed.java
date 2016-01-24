@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 import dna.graph.Graph;
 import dna.graph.IElement;
@@ -220,7 +221,7 @@ public class M1BatchTimed extends M1Batch {
 
 		// init batch
 		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
-				lastTime, 0, 0, 0, 0, 0, 0);
+				TimeUnit.MILLISECONDS.toSeconds(lastTime), 0, 0, 0, 0, 0, 0);
 
 		// gather changes inside events
 		for (int i = 0; i < events.size(); i++) {
