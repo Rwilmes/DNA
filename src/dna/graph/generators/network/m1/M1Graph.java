@@ -48,19 +48,19 @@ public class M1Graph extends NetworkGraph {
 			if (!reader.containsPort(port)) {
 				// add node
 				Node node = this.gds.newNodeInstance(reader.mapPort(port));
-				reader.addPortNode(port, node);
+				reader.addPort(port);
 				g.addNode(node);
 			}
 			if (!reader.containsIp(srcIp)) {
 				// add node
 				Node node = this.gds.newNodeInstance(reader.mapIp(srcIp));
-				reader.addIpNode(srcIp, node);
+				reader.addIp(srcIp);
 				g.addNode(node);
 			}
 			if (!reader.containsIp(dstIp)) {
 				// add node
 				Node node = this.gds.newNodeInstance(reader.mapIp(dstIp));
-				reader.addIpNode(dstIp, node);
+				reader.addIp(dstIp);
 				g.addNode(node);
 			}
 		}
