@@ -45,6 +45,11 @@ public class TEST {
 		Config.zipRuns();
 		GraphVisualization.enable();
 
+		boolean normalTest = false;
+		boolean timedTest = false;
+
+		boolean nodeTypeTest = true;
+
 		int secondsPerBatch = 1;
 		int maxBatches = 1000;
 		long lifeTimePerEdge = 60000;
@@ -60,11 +65,56 @@ public class TEST {
 		Log.info("maxBatches:\t" + maxBatches);
 		Log.infoSep();
 
-		TCPTEST1("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
-				maxBatches, true, true);
+		if (normalTest)
+			TCPTEST1("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
+					maxBatches, true, true);
 
-		TCPTEST1TIMED("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
-				lifeTimePerEdge, maxBatches, true, false);
+		if (timedTest)
+			TCPTEST1TIMED("data/tcp_test/10/", "out_10_3.list",
+					secondsPerBatch, lifeTimePerEdge, maxBatches, true, false);
+
+		if (nodeTypeTest)
+			NodeTypeTest("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
+					lifeTimePerEdge, maxBatches, true, true);
+
+	}
+
+	public static void NodeTypeTest(String dir, String filename, int seconds,
+			long millis, int maxBatches, boolean plot, boolean debug)
+			throws IOException, ParseException, AggregationException,
+			MetricNotApplicableException, InterruptedException {
+		Log.info("M1-Batch test with node-types as weights!");
+		Log.info("Lifetime:\t" + millis + "ms");
+		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
+
+		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
+		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
+
+		long timestampMillis = reader.getInitTimestamp().getMillis();
+		long timestampSeconds = TimeUnit.MILLISECONDS
+				.toSeconds(timestampMillis);
+		gg = new EmptyNetwork(GDS.directedE(LongWeight.class,
+				WeightSelection.Zero), timestampSeconds);
+		BatchGenerator bg = new M1BatchTimed(reader, seconds, millis);
+		((M1BatchTimed) bg).setDebug(debug);
+
+		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
+				new DirectedMotifsU() };
+
+		Series s = new Series(gg, bg, metrics,
+				dir + seconds + "_timed/series/", "s1");
+
+		System.out.println("millis: " + timestampMillis + "\tseconds: "
+				+ timestampSeconds);
+
+		SeriesData sd = s.generate(1, maxBatches, false);
+
+		if (plot) {
+			plot(sd, dir + seconds + "_timed/plots/", true, true);
+		}
+
+		GraphVisualization.setText("Finished");
+		Log.infoSep();
 	}
 
 	public static void TCPTEST1(String dir, String filename, int seconds,
@@ -77,19 +127,13 @@ public class TEST {
 		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
 		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
 
-		// gg = new RandomGraph(GDS.directed(), 0, 0);
-
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
 		gg = new EmptyNetwork(GDS.directed(), timestampSeconds);
 
-		// gg = new RandomGraph(GDS.directed(), 0, 0);
-
 		BatchGenerator bg = new M1Batch(reader, seconds);
 		((M1Batch) bg).setDebug(debug);
-		// gg = new RandomGraph(GDS.directed(), 10, 0);
-		// bg = new RandomBatch(0,0,1,0);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
@@ -132,11 +176,7 @@ public class TEST {
 		Series s = new Series(gg, bg, metrics,
 				dir + seconds + "_timed/series/", "s1");
 
-		System.out.println("millis: " + timestampMillis + "\tseconds: "
-				+ timestampSeconds);
-
 		SeriesData sd = s.generate(1, maxBatches, false);
-		// s.generate(0, 40, 5000);
 
 		if (plot) {
 			plot(sd, dir + seconds + "_timed/plots/", true, true);
