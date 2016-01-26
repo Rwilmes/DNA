@@ -25,6 +25,7 @@ import dna.graph.weights.longW.Long3dWeight;
 import dna.util.Config;
 import dna.util.Log;
 import dna.visualization.graph.GraphPanel.PositionMode;
+import dna.visualization.graph.rules.NetworkNodeShape;
 import dna.visualization.graph.rules.NodeColorByDegree;
 import dna.visualization.graph.rules.NodeSizeBy3dCoordinates;
 import dna.visualization.graph.rules.NodeSizeByDegree;
@@ -42,6 +43,7 @@ public class GraphVisualization {
 	public static final String antialiasKey = "ui.antialias";
 	public static final String colorKey = "dna.color";
 	public static final String sizeKey = "dna.size";
+	public static final String shapeKey = "dna.shape";
 	public static final String styleKey = "ui.style";
 	public static final String updateKey = "dna.update";
 	public static final String zKey = "dna.z";
@@ -119,6 +121,8 @@ public class GraphVisualization {
 		if (Config.getBoolean("GRAPH_VIS_COLOR_NODES_BY_DEGREE"))
 			panel.addGraphStyleRule(new NodeColorByDegree(
 					"NODE_COLOR_BY_DEGREE"));
+		if (Config.getBoolean("GRAPH_VIS_NETWORK_NODE_SHAPE"))
+			panel.addGraphStyleRule(new NetworkNodeShape("NETWORK_NODE_SHAPE"));
 		if (Config.getBoolean("GRAPH_VIS_TOOLTIPS_ENABLED"))
 			panel.addToolTipManager(new DefaultToolTipManager(panel));
 		// panel.addGraphStyleRule(new
