@@ -10,6 +10,7 @@ import dna.graph.generators.network.EmptyNetwork;
 import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1BatchTimed;
 import dna.graph.generators.network.m1.M1Graph;
+import dna.graph.generators.network.weights.NetworkNodeWeight;
 import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.metrics.Metric;
@@ -41,14 +42,18 @@ public class TEST {
 
 		Config.overwrite("GNUPLOT_PATH",
 				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
+		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
+		Config.overwrite("GRAPH_VIS_NODE_DEFAULT_SIZE", "14");
 
 		Config.zipRuns();
 		GraphVisualization.enable();
 
-		boolean normalTest = false;
-		boolean timedTest = false;
+		boolean plot = false;
+		boolean debug = true;
 
-		boolean nodeTypeTest = true;
+		boolean normalTest = false;
+		boolean timedTest = true;
+		boolean nodeTypeTest = false;
 
 		int secondsPerBatch = 1;
 		int maxBatches = 1000;
@@ -67,15 +72,15 @@ public class TEST {
 
 		if (normalTest)
 			TCPTEST1("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
-					maxBatches, true, true);
+					maxBatches, plot, debug);
 
 		if (timedTest)
 			TCPTEST1TIMED("data/tcp_test/10/", "out_10_3.list",
-					secondsPerBatch, lifeTimePerEdge, maxBatches, true, false);
+					secondsPerBatch, lifeTimePerEdge, maxBatches, plot, debug);
 
 		if (nodeTypeTest)
 			NodeTypeTest("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
-					lifeTimePerEdge, maxBatches, true, true);
+					lifeTimePerEdge, maxBatches, plot, debug);
 
 	}
 
@@ -93,24 +98,24 @@ public class TEST {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		gg = new EmptyNetwork(GDS.directedE(LongWeight.class,
-				WeightSelection.Zero), timestampSeconds);
+
+		gg = new EmptyNetwork(GDS.directedVE(NetworkNodeWeight.class,
+				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
+				timestampSeconds);
+
 		BatchGenerator bg = new M1BatchTimed(reader, seconds, millis);
 		((M1BatchTimed) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
 
-		Series s = new Series(gg, bg, metrics,
-				dir + seconds + "_timed/series/", "s1");
-
-		System.out.println("millis: " + timestampMillis + "\tseconds: "
-				+ timestampSeconds);
+		Series s = new Series(gg, bg, metrics, dir + seconds + "_ntt/series/",
+				"s1");
 
 		SeriesData sd = s.generate(1, maxBatches, false);
 
 		if (plot) {
-			plot(sd, dir + seconds + "_timed/plots/", true, true);
+			plot(sd, dir + seconds + "_ntt/plots/", true, true);
 		}
 
 		GraphVisualization.setText("Finished");
@@ -130,7 +135,8 @@ public class TEST {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		gg = new EmptyNetwork(GDS.directed(), timestampSeconds);
+		gg = new EmptyNetwork(GDS.directedV(NetworkNodeWeight.class,
+				WeightSelection.None), timestampSeconds);
 
 		BatchGenerator bg = new M1Batch(reader, seconds);
 		((M1Batch) bg).setDebug(debug);
@@ -165,8 +171,9 @@ public class TEST {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		gg = new EmptyNetwork(GDS.directedE(LongWeight.class,
-				WeightSelection.Zero), timestampSeconds);
+		gg = new EmptyNetwork(GDS.directedVE(NetworkNodeWeight.class,
+				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
+				timestampSeconds);
 		BatchGenerator bg = new M1BatchTimed(reader, seconds, millis);
 		((M1BatchTimed) bg).setDebug(debug);
 
