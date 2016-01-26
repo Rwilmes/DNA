@@ -247,7 +247,8 @@ public class GraphVisualization {
 
 	/** Sets the description text for the CURRENT GRAPH. **/
 	public static void setText(String text) {
-		currentGraphPanel.setText(text);
+		if (isEnabled() && currentGraphPanel != null)
+			currentGraphPanel.setText(text);
 	}
 
 	/** Returns the layouter belonging to graph g. **/
