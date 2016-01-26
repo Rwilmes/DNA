@@ -9,14 +9,18 @@ import dna.graph.Graph;
 import dna.graph.IElement;
 import dna.graph.edges.Edge;
 import dna.graph.generators.network.NetworkEdge;
+import dna.graph.generators.network.weights.NetworkNodeWeight;
+import dna.graph.generators.network.weights.NetworkNodeWeight.NodeType;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedEdge;
+import dna.graph.weights.IWeightedNode;
 import dna.graph.weights.LongWeight;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
 import dna.updates.update.EdgeRemoval;
 import dna.updates.update.EdgeWeight;
 import dna.updates.update.NodeAddition;
+import dna.updates.update.NodeWeight;
 import dna.util.Log;
 import dna.util.network.tcp.TCPEvent;
 import dna.util.network.tcp.TCPEventReader;
@@ -89,6 +93,12 @@ public class M1BatchTimed extends M1Batch {
 					reader.addNode(srcIp);
 					addedNodes.add(srcIp);
 					addedNodesNodes.add(srcNode);
+
+					// check if nodeweights
+					if (g.getGraphDatastructures().getNodeWeightType()
+							.equals(NetworkNodeWeight.class))
+						b.add(new NodeWeight((IWeightedNode) srcNode,
+								new NetworkNodeWeight(NodeType.HOST)));
 				} else {
 					srcNode = addedNodesNodes.get(addedNodes.indexOf(srcIp));
 				}
@@ -103,6 +113,12 @@ public class M1BatchTimed extends M1Batch {
 					reader.addNode(dstIp);
 					addedNodes.add(dstIp);
 					addedNodesNodes.add(dstNode);
+
+					// check if nodeweights
+					if (g.getGraphDatastructures().getNodeWeightType()
+							.equals(NetworkNodeWeight.class))
+						b.add(new NodeWeight((IWeightedNode) dstNode,
+								new NetworkNodeWeight(NodeType.HOST)));
 				} else {
 					dstNode = addedNodesNodes.get(addedNodes.indexOf(dstIp));
 				}
@@ -117,6 +133,12 @@ public class M1BatchTimed extends M1Batch {
 					reader.addNode("" + port);
 					addedNodes.add("" + port);
 					addedNodesNodes.add(portNode);
+
+					// check if nodeweights
+					if (g.getGraphDatastructures().getNodeWeightType()
+							.equals(NetworkNodeWeight.class))
+						b.add(new NodeWeight((IWeightedNode) portNode,
+								new NetworkNodeWeight(NodeType.PORT)));
 				} else {
 					portNode = addedNodesNodes.get(addedNodes
 							.indexOf("" + port));
