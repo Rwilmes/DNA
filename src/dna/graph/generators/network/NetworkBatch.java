@@ -3,17 +3,13 @@ package dna.graph.generators.network;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
-import dna.graph.edges.Edge;
-import dna.graph.nodes.Node;
 import dna.updates.batch.Batch;
 import dna.updates.generators.BatchGenerator;
-import dna.util.network.NetworkEvent;
 import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEvent;
 import dna.util.network.tcp.TCPEventReader;
@@ -52,11 +48,6 @@ public abstract class NetworkBatch extends BatchGenerator {
 		this(name, new DefaultTCPEventReader(dir, filename),
 				batchIntervalInSeconds);
 	}
-
-	public abstract void onEvent(Graph g, Batch b, NetworkEvent e,
-			HashMap<Integer, Node> portMap, HashMap<String, Node> ipMap,
-			HashMap<Integer, Integer> nodeDegreeChangeMap,
-			ArrayList<Edge> addedEdges, ArrayList<Edge> removedEdges);
 
 	public abstract Batch craftBatch(Graph g, ArrayList<TCPEvent> events);
 
