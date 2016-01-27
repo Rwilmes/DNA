@@ -10,7 +10,7 @@ import dna.graph.generators.network.EmptyNetwork;
 import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1BatchTimed;
 import dna.graph.generators.network.m1.M1Graph;
-import dna.graph.generators.network.weights.NetworkNodeWeight;
+import dna.graph.generators.network.weights.NetworkWeight;
 import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.metrics.Metric;
@@ -81,7 +81,6 @@ public class TEST {
 		if (nodeTypeTest)
 			NodeTypeTest("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
 					lifeTimePerEdge, maxBatches, plot, debug);
-
 	}
 
 	public static void NodeTypeTest(String dir, String filename, int seconds,
@@ -99,7 +98,7 @@ public class TEST {
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
 
-		gg = new EmptyNetwork(GDS.directedVE(NetworkNodeWeight.class,
+		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
@@ -135,7 +134,7 @@ public class TEST {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		gg = new EmptyNetwork(GDS.directedV(NetworkNodeWeight.class,
+		gg = new EmptyNetwork(GDS.directedV(NetworkWeight.class,
 				WeightSelection.None), timestampSeconds);
 
 		BatchGenerator bg = new M1Batch(reader, seconds);
@@ -171,7 +170,7 @@ public class TEST {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		gg = new EmptyNetwork(GDS.directedVE(NetworkNodeWeight.class,
+		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 		BatchGenerator bg = new M1BatchTimed(reader, seconds, millis);

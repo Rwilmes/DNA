@@ -10,8 +10,8 @@ import dna.graph.IElement;
 import dna.graph.edges.Edge;
 import dna.graph.generators.network.NetworkBatch;
 import dna.graph.generators.network.NetworkEdge;
-import dna.graph.generators.network.weights.NetworkNodeWeight;
-import dna.graph.generators.network.weights.NetworkNodeWeight.NodeType;
+import dna.graph.generators.network.weights.NetworkWeight;
+import dna.graph.generators.network.weights.NetworkWeight.ElementType;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedNode;
 import dna.updates.batch.Batch;
@@ -96,9 +96,9 @@ public class M1Batch extends NetworkBatch {
 
 					// check if nodeweights
 					if (g.getGraphDatastructures().getNodeWeightType()
-							.equals(NetworkNodeWeight.class))
+							.equals(NetworkWeight.class))
 						b.add(new NodeWeight((IWeightedNode) srcNode,
-								new NetworkNodeWeight(NodeType.HOST)));
+								new NetworkWeight(ElementType.HOST)));
 				} else {
 					srcNode = addedNodesNodes.get(addedNodes.indexOf(srcIp));
 				}
@@ -116,9 +116,9 @@ public class M1Batch extends NetworkBatch {
 
 					// check if nodeweights
 					if (g.getGraphDatastructures().getNodeWeightType()
-							.equals(NetworkNodeWeight.class))
+							.equals(NetworkWeight.class))
 						b.add(new NodeWeight((IWeightedNode) dstNode,
-								new NetworkNodeWeight(NodeType.HOST)));
+								new NetworkWeight(ElementType.HOST)));
 				} else {
 					dstNode = addedNodesNodes.get(addedNodes.indexOf(dstIp));
 				}
@@ -136,9 +136,9 @@ public class M1Batch extends NetworkBatch {
 
 					// check if nodeweights
 					if (g.getGraphDatastructures().getNodeWeightType()
-							.equals(NetworkNodeWeight.class))
+							.equals(NetworkWeight.class))
 						b.add(new NodeWeight((IWeightedNode) portNode,
-								new NetworkNodeWeight(NodeType.PORT)));
+								new NetworkWeight(ElementType.PORT)));
 				} else {
 					portNode = addedNodesNodes.get(addedNodes
 							.indexOf("" + port));
