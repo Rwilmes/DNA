@@ -45,18 +45,20 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_NODE_DEFAULT_SIZE", "14");
 
-		Config.zipRuns();
-		GraphVisualization.enable();
+		Config.zipBatches();
+		// GraphVisualization.enable();
 
 		boolean plot = false;
 		boolean debug = true;
 
 		boolean normalTest = false;
-		boolean timedTest = true;
+		boolean timedTest = false;
 		boolean nodeTypeTest = false;
+		boolean w2tuesdayGen = false;
+		boolean w2tuesdayPlot = true;
 
 		int secondsPerBatch = 1;
-		int maxBatches = 1000;
+		int maxBatches = 56000;
 		long lifeTimePerEdge = 60000;
 
 		String dir = "data/tcp_test/10/";
@@ -81,6 +83,35 @@ public class TEST {
 		if (nodeTypeTest)
 			NodeTypeTest("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
 					lifeTimePerEdge, maxBatches, plot, debug);
+
+		if (w2tuesdayGen)
+			TCPTEST1TIMED("data/tcp_test/w2tuesday/", "w2tuesday.list",
+					secondsPerBatch, lifeTimePerEdge, maxBatches, false, debug);
+
+		if (w2tuesdayPlot) {
+			Log.info("reading w2 tuesday data");
+			SeriesData sd = SeriesData.read(
+					"data/tcp_test/w2tuesday/1_timed/series/", "w2-tuesday",
+					false, false);
+			Log.info("plotting w2 tuesday data");
+			plotW2(sd, "data/tcp_test/w2tuesday/1_timed/series/plots/");
+		}
+	}
+
+	public static void plotW2(SeriesData sd, String dir) throws IOException,
+			InterruptedException {
+		String defXTics = Config.get(gnuplot_xtics);
+		String defDateTime = Config.get(gnuplot_datetime);
+		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
+		Config.overwrite(gnuplot_xtics, "7200");
+		Config.overwrite(gnuplot_datetime, "%H:%M");
+		Config.overwrite(gnuplot_plotdatetime, "true");
+		GraphVisualization.setText("Generating single scalar plots");
+		Plotting.plot(sd, dir, new PlottingConfig(
+				PlotFlag.plotSingleScalarValues));
+		Config.overwrite(gnuplot_xtics, defXTics);
+		Config.overwrite(gnuplot_datetime, defDateTime);
+		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
 	}
 
 	public static void NodeTypeTest(String dir, String filename, int seconds,
@@ -185,7 +216,7 @@ public class TEST {
 		SeriesData sd = s.generate(1, maxBatches, false);
 
 		if (plot) {
-			plot(sd, dir + seconds + "_timed/plots/", true, true);
+			plot(sd, dir + seconds + "_timed/plots/", true, false);
 		}
 
 		GraphVisualization.setText("Finished");
