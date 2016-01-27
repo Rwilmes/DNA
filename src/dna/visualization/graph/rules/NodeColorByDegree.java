@@ -63,11 +63,11 @@ public class NodeColorByDegree extends GraphStyleRule {
 
 	/** Calculates a new color based on the amplification parameter. **/
 	protected Color adaptColor(Color c, double amplification) {
-		int red = (int) Math.floor(c.getRed() + this.amplification);
+		int red = (int) Math.floor(c.getRed() + amplification);
 		red = red < 0 ? 0 : red;
 		red = red > 255 ? 255 : red;
 
-		int green = (int) Math.floor(c.getGreen() - this.amplification);
+		int green = (int) Math.floor(c.getGreen() - amplification);
 		green = green < 0 ? 0 : green;
 		green = green > 255 ? 255 : green;
 
