@@ -3,7 +3,7 @@ package dna.visualization.graph.rules;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 
-import dna.graph.generators.network.weights.NetworkNodeWeight;
+import dna.graph.generators.network.weights.NetworkWeight;
 import dna.graph.weights.Weight;
 import dna.visualization.graph.GraphVisualization;
 import dna.visualization.graph.rules.GraphStyleUtils.ElementShape;
@@ -37,8 +37,8 @@ public class NetworkNodeShape extends GraphStyleRule {
 	@Override
 	public void onNodeAddition(Node n) {
 		Weight w = n.getAttribute(GraphVisualization.weightKey);
-		if (w instanceof NetworkNodeWeight) {
-			switch (((NetworkNodeWeight) w).getWeight()) {
+		if (w instanceof NetworkWeight) {
+			switch (((NetworkWeight) w).getWeight()) {
 			case HOST:
 				GraphStyleUtils.setShape(n, hostShape);
 				break;
@@ -53,8 +53,8 @@ public class NetworkNodeShape extends GraphStyleRule {
 
 	@Override
 	public void onNodeWeightChange(Node n, Weight wNew, Weight wOld) {
-		if (wNew instanceof NetworkNodeWeight) {
-			switch (((NetworkNodeWeight) wNew).getWeight()) {
+		if (wNew instanceof NetworkWeight) {
+			switch (((NetworkWeight) wNew).getWeight()) {
 			case HOST:
 				GraphStyleUtils.setShape(n, hostShape);
 				break;
