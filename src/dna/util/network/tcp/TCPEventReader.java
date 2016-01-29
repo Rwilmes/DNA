@@ -4,11 +4,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import dna.graph.generators.network.NetworkEdge;
+import dna.graph.weights.LongWeight;
 import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.NetworkEventReader;
@@ -41,6 +44,8 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected ArrayList<String> activeNodes;
 
+	protected HashMap<NetworkEdge, LongWeight> edgeWeightMap;
+
 	protected boolean removeZeroDegreeNodes = true;
 
 	protected DateTime initTimestamp;
@@ -58,13 +63,15 @@ public class TCPEventReader extends NetworkEventReader {
 		this(dir, filename, separator, timeFormat, durationFormat,
 				new ArrayList<Integer>(), new HashMap<Integer, Integer>(),
 				new ArrayList<String>(), new HashMap<String, Integer>(),
-				new ArrayList<String>(), fields);
+				new ArrayList<String>(),
+				new HashMap<NetworkEdge, LongWeight>(), fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
 			String timeFormat, String durationFormat, ArrayList<Integer> ports,
 			HashMap<Integer, Integer> portMap, ArrayList<String> ips,
 			HashMap<String, Integer> ipMap, ArrayList<String> activeNodes,
+			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
 			TCPEventField... fields) throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 		this.durationFormatPattern = durationFormat;
@@ -77,6 +84,10 @@ public class TCPEventReader extends NetworkEventReader {
 		this.ipMap = ipMap;
 
 		this.activeNodes = activeNodes;
+
+		this.edgeWeightMap = edgeWeightMap;
+
+		this.eq = new LinkedList<NetworkEdge>();
 
 		try {
 			this.bufferedEvent = parseLine(readString());
@@ -102,22 +113,44 @@ public class TCPEventReader extends NetworkEventReader {
 
 	@Override
 	public TCPEvent getNextEvent() {
-		if (finished)
-			return null;
-
 		TCPEvent e = this.bufferedEvent;
+
 		String line;
 		try {
 			line = readString();
 			if (line != null)
 				this.bufferedEvent = parseLine(line);
-			else
+			else {
+				this.bufferedEvent = null;
 				this.finished = true;
+			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 
 		return e;
+	}
+
+	/** Reads and returns all events until the threshold is reached. **/
+	public ArrayList<TCPEvent> getEventsUntil(DateTime threshold) {
+		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
+
+		// if next event above threshold -> return empty list
+		if (bufferedEvent != null)
+			if (bufferedEvent.getTime().isAfter(threshold))
+				return events;
+
+		// read events and add them to list
+		while (isNextEventPossible()) {
+			// if next-event after threshold, return
+			if (bufferedEvent.getTime().isAfter(threshold))
+				return events;
+
+			events.add(getNextEvent());
+		}
+
+		// return
+		return events;
 	}
 
 	@Override
@@ -247,7 +280,7 @@ public class TCPEventReader extends NetworkEventReader {
 	public TCPEventReader copy() throws FileNotFoundException {
 		return new TCPEventReader(dir, filename, separator, timeFormatPattern,
 				durationFormatPattern, ports, portMap, ips, ipMap, activeNodes,
-				fields);
+				edgeWeightMap, fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
@@ -265,5 +298,121 @@ public class TCPEventReader extends NetworkEventReader {
 			Log.info("\t" + ips.get(i) + "\t=>\t" + ipMap.get(ips.get(i)));
 		}
 		Log.infoSep();
+	}
+
+	public LongWeight getEdgeWeight(NetworkEdge e) {
+		if (this.edgeWeightMap.containsKey(e))
+			return this.edgeWeightMap.get(e);
+		else
+			return null;
+	}
+
+	public boolean isEdgeWeightZero(NetworkEdge e) {
+		if (this.edgeWeightMap.containsKey(e))
+			return (this.edgeWeightMap.get(e).getWeight() == 0);
+		else
+			return true;
+	}
+
+	public void setEdgeWeight(NetworkEdge e, long w) {
+		this.edgeWeightMap.put(e, new LongWeight(w));
+	}
+
+	public void incrementEdgeWeight(NetworkEdge e) {
+		System.out.println("INCREMENTING EDGEWEIGHT : " + e.toString());
+		// get weight
+		long w = 0;
+		if (this.edgeWeightMap.containsKey(e)) {
+			w = this.edgeWeightMap.get(e).getWeight();
+		}
+
+		// put weight
+		this.edgeWeightMap.put(e, new LongWeight(w + 1));
+	}
+
+	public void decrementEdgeWeight(NetworkEdge e) {
+		// get weight
+		long w = this.edgeWeightMap.get(e).getWeight();
+
+		// put weight
+		this.edgeWeightMap.put(e, new LongWeight(w - 1));
+	}
+
+	public HashMap<NetworkEdge, LongWeight> getEdgeWeightMap() {
+		return this.edgeWeightMap;
+	}
+
+	LinkedList<NetworkEdge> eq = new LinkedList<NetworkEdge>();
+
+	public void addEdgeToQueue(NetworkEdge e) {
+		eq.add(e);
+	}
+
+	public NetworkEdge getFirstEdgeFromQueue() {
+		return eq.getFirst();
+	}
+
+	public NetworkEdge popFirstEdgeFromQueue() {
+		return eq.removeFirst();
+	}
+
+	public boolean isEventQueueEmpty() {
+		return eq.isEmpty();
+	}
+
+	/** Returns all decrement events until the threshold. **/
+	public ArrayList<NetworkEdge> getDecrementEdges(long threshold) {
+		ArrayList<NetworkEdge> list = new ArrayList<NetworkEdge>();
+
+		boolean finished = false;
+		while (!finished && !eq.isEmpty()) {
+			NetworkEdge e = getFirstEdgeFromQueue();
+			long t = e.getTime();
+
+			if (t <= threshold)
+				list.add(popFirstEdgeFromQueue());
+			else
+				finished = true;
+		}
+
+		return list;
+	}
+
+	/** Returns a map with the sum of all weight decrementals per edge. **/
+	public HashMap<String, Long> getWeightDecrementals(
+			ArrayList<NetworkEdge> allEdges) {
+		HashMap<String, Long> wcMap = new HashMap<String, Long>();
+		for (int i = 0; i < allEdges.size(); i++) {
+			NetworkEdge e = allEdges.get(i);
+			decrementWeightChanges(e.getSrc(), e.getDst(), wcMap);
+		}
+
+		return wcMap;
+	}
+
+	protected String getIdentifier(int src, int dst) {
+		return src + "->" + dst;
+	}
+
+	protected void incrementWeightChanges(int src, int dst,
+			HashMap<String, Long> map) {
+		// add incrementals to map
+		String identifier = getIdentifier(src, dst);
+		if (map.containsKey(identifier)) {
+			map.put(identifier, map.get(identifier) + 1);
+		} else {
+			map.put(identifier, 1L);
+		}
+	}
+
+	protected void decrementWeightChanges(int src, int dst,
+			HashMap<String, Long> map) {
+		// add incrementals to map
+		String identifier = getIdentifier(src, dst);
+		if (map.containsKey(identifier)) {
+			map.put(identifier, map.get(identifier) - 1);
+		} else {
+			map.put(identifier, -1L);
+		}
 	}
 }

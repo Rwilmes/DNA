@@ -3,6 +3,7 @@ package dna.graph.generators.network;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
@@ -49,7 +50,8 @@ public abstract class NetworkBatch extends BatchGenerator {
 				batchIntervalInSeconds);
 	}
 
-	public abstract Batch craftBatch(Graph g, ArrayList<TCPEvent> events);
+	public abstract Batch craftBatch(Graph g, DateTime timestamp,
+			ArrayList<TCPEvent> events, HashMap<String, Long> edgeWeighChanges);
 
 	/** Increments the threshold by the given batchLength. **/
 	private void incrementThreshold() {
@@ -57,6 +59,35 @@ public abstract class NetworkBatch extends BatchGenerator {
 	}
 
 	public Batch generate(Graph graph) {
+		//
+		if (!init) {
+			this.threshold = new DateTime(TimeUnit.SECONDS.toMillis(graph
+					.getTimestamp())).plusSeconds(batchLength);
+			init = true;
+		}
+
+		// get events
+		ArrayList<TCPEvent> events = reader.getEventsUntil(threshold);
+		ArrayList<NetworkEdge> decrementEdges = reader
+				.getDecrementEdges(threshold.getMillis());
+
+		// if both empty -> increase threshold and call generate again
+		if (events.isEmpty() && decrementEdges.isEmpty()) {
+			incrementThreshold();
+			return generate(graph);
+		}
+
+		// get weight changes from events in queue
+		HashMap<String, Long> map = reader
+				.getWeightDecrementals(decrementEdges);
+
+		// return crafted batch
+		if (!reader.isNextEventPossible() && reader.isEventQueueEmpty())
+			finished = true;
+		return craftBatch(graph, threshold, events, map);
+	}
+
+	public Batch generate3(Graph graph) {
 		// list of events
 		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
 
@@ -71,7 +102,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 			// if after threshold -> increment threshold and recurse
 			if (bufferedEvent.getTime().isAfter(threshold)) {
 				incrementThreshold();
-				return generate(graph);
+				return generate3(graph);
 			}
 
 			// add event
@@ -81,7 +112,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 			if (!reader.isNextEventPossible()) {
 				bufferedEvent = null;
 				finished = true;
-				return craftBatch(graph, events);
+				return craftBatch(graph, null, events, null);
 			}
 		}
 
@@ -104,11 +135,11 @@ public abstract class NetworkBatch extends BatchGenerator {
 		// if no events -> all after threshold -> recurse
 		if (events.size() == 0) {
 			incrementThreshold();
-			return generate(graph);
+			return generate3(graph);
 		}
 
 		// craft batch from event
-		return craftBatch(graph, events);
+		return craftBatch(graph, null, events, null);
 	}
 
 	@Override

@@ -61,8 +61,10 @@ public class NetworkEventReader extends Reader {
 			line = readString();
 			if (line != null)
 				this.bufferedEvent = parseLine(line);
-			else
+			else {
 				this.finished = true;
+				this.bufferedEvent = null;
+			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -71,7 +73,7 @@ public class NetworkEventReader extends Reader {
 	}
 
 	public boolean isNextEventPossible() {
-		return !finished;
+		return !finished || bufferedEvent != null;
 	}
 
 	protected NetworkEvent parseLine(String line) {
