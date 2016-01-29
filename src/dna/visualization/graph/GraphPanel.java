@@ -784,8 +784,6 @@ public class GraphPanel extends JPanel {
 
 	/** Adds node n to the graph. **/
 	public void addNode(dna.graph.nodes.Node n) {
-		System.out.println("GVIS DEBUG: ADD NODE: " + n.getIndex());
-
 		// add node to graph
 		Node node = this.graph.addNode("" + n.getIndex());
 		node.addAttribute(GraphVisualization.sizeKey,
@@ -865,6 +863,10 @@ public class GraphPanel extends JPanel {
 		// get node
 		Node node = this.graph.getNode("" + n.getIndex());
 
+		// if node not in graph, dont do anything
+		if (node == null)
+			return;
+
 		// get old weight
 		Weight wOld = node.getAttribute(GraphVisualization.weightKey);
 
@@ -928,9 +930,6 @@ public class GraphPanel extends JPanel {
 		int n1 = e.getN1Index();
 		int n2 = e.getN2Index();
 
-		System.out.println("GVIS DEBUG: " + n1 + " => " + n2);
-		System.out.println("GVIS DEBUG: " + this.graph.getNode("" + n1) + "\t"
-				+ this.graph.getNode("" + n2));
 		// if edge not there, add it
 		if (this.graph.getNode("" + n1).getEdgeBetween("" + n2) == null) {
 			Edge edge = this.graph.addEdge(n1 + "-" + n2, "" + n1, "" + n2,
@@ -1000,6 +999,11 @@ public class GraphPanel extends JPanel {
 		// get indizes
 		int n1 = e.getN1().getIndex();
 		int n2 = e.getN2().getIndex();
+
+		// if one of the nodes is null -> return
+		if (this.graph.getNode("" + n1) == null
+				|| this.graph.getNode("" + n2) == null)
+			return;
 
 		// get edge
 		Edge edge = this.graph.getNode("" + n1).getEdgeBetween("" + n2);
