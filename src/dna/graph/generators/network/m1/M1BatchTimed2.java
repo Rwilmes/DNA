@@ -34,7 +34,7 @@ import dna.util.network.tcp.TCPEventReader;
  * @author Rwilmes
  * 
  */
-public class M1BatchTimed extends M1Batch {
+public class M1BatchTimed2 extends M1Batch {
 
 	protected long interval;
 
@@ -42,7 +42,7 @@ public class M1BatchTimed extends M1Batch {
 		NOTHING, REMOVE_ON_ZERO_DEGREE
 	};
 
-	public M1BatchTimed(TCPEventReader reader, int batchIntervalInSeconds,
+	public M1BatchTimed2(TCPEventReader reader, int batchIntervalInSeconds,
 			long edgeLifetimeInMillis) throws IOException {
 		super(reader, batchIntervalInSeconds);
 		this.interval = edgeLifetimeInMillis;
@@ -50,9 +50,225 @@ public class M1BatchTimed extends M1Batch {
 			Log.warn("interval < batch-interval!");
 	}
 
+	/** Returns a map with the sum of all weight decrementals per edge. **/
+	protected HashMap<String, Long> getWeightDecrementals(
+			ArrayList<NetworkEdge> allEdges) {
+		HashMap<String, Long> wcMap = new HashMap<String, Long>();
+		for (int i = 0; i < allEdges.size(); i++) {
+			NetworkEdge e = allEdges.get(i);
+			decrementWeightChanges(e.getSrc(), e.getDst(), wcMap);
+		}
+
+		return wcMap;
+	}
+
+	protected String getIdentifier(int src, int dst) {
+		return src + "->" + dst;
+	}
+
+	protected void incrementWeightChanges(int src, int dst,
+			HashMap<String, Long> map) {
+		// add incrementals to map
+		String identifier = getIdentifier(src, dst);
+		if (map.containsKey(identifier)) {
+			map.put(identifier, map.get(identifier) + 1);
+		} else {
+			map.put(identifier, 1L);
+		}
+	}
+
+	protected void decrementWeightChanges(int src, int dst,
+			HashMap<String, Long> map) {
+		// add incrementals to map
+		String identifier = getIdentifier(src, dst);
+		if (map.containsKey(identifier)) {
+			map.put(identifier, map.get(identifier) - 1);
+		} else {
+			map.put(identifier, -1L);
+		}
+	}
+
 	@Override
 	public Batch craftBatch(Graph g, DateTime timestamp,
-			ArrayList<TCPEvent> events, HashMap<String, Long> weightChangesMap) {
+			ArrayList<TCPEvent> events, HashMap<String, Long> map) {
+		// init batch
+		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
+				TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()), 0, 0,
+				0, 0, 0, 0);
+
+		ArrayList<Node> addedNodes = new ArrayList<Node>();
+		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();
+
+		// iterate over events
+		for (int i = 0; i < events.size(); i++) {
+			TCPEvent e = events.get(i);
+			String srcIp = e.getSrcIp();
+			String dstIp = e.getDstIp();
+			int port = e.getDstPort();
+			long t = e.getTime().getMillis();
+
+			// get mappings
+			int srcIpMapping = reader.mapp(srcIp);
+			int dstIpMapping = reader.mapp(dstIp);
+			int portMapping = reader.mapp(port);
+
+			// add events to queue when to decrement edges
+			reader.addEdgeToQueue(new NetworkEdge(srcIpMapping, portMapping,
+					(t + this.interval)));
+			reader.addEdgeToQueue(new NetworkEdge(portMapping, dstIpMapping,
+					(t + this.interval)));
+
+			// account weight changes
+			incrementWeightChanges(srcIpMapping, portMapping, map);
+			incrementWeightChanges(portMapping, dstIpMapping, map);
+
+			/*
+			 * NODES
+			 */
+
+			Node srcNode;
+			Node dstNode;
+			Node portNode;
+
+			if (!reader.isNodeActive(srcIp)) {
+				srcNode = addHostNode(g, srcIpMapping);
+				reader.addNode(srcIp);
+				addedNodes.add(srcNode);
+				b.add(new NodeAddition(srcNode));
+			}
+			if (!reader.isNodeActive(dstIp)) {
+				dstNode = addHostNode(g, dstIpMapping);
+				reader.addNode(dstIp);
+				addedNodes.add(dstNode);
+				b.add(new NodeAddition(dstNode));
+			}
+			if (!reader.isNodeActive("" + port)) {
+				portNode = addPortNode(g, portMapping);
+				reader.addNode("" + port);
+				addedNodes.add(portNode);
+				b.add(new NodeAddition(portNode));
+			}
+
+			/*
+			 * EDGES
+			 */
+
+			// check if edges already exist in graph
+			boolean edge1Exists = false;
+			boolean edge2Exists = false;
+
+			Iterator<IElement> iterator = g.getEdges().iterator();
+			while (iterator.hasNext() && !(edge1Exists && edge2Exists)) {
+				Edge edge = (Edge) iterator.next();
+				int n1 = edge.getN1Index();
+				int n2 = edge.getN2Index();
+
+				if (n1 == srcIpMapping && n2 == portMapping)
+					edge1Exists = true;
+
+				if (n1 == portMapping && n2 == dstIpMapping)
+					edge2Exists = true;
+			}
+
+			if (!edge1Exists) {
+				NetworkEdge ne = new NetworkEdge(srcIpMapping, portMapping, t);
+				if (!ne.containedIn(addedEdges))
+					addedEdges.add(ne);
+			}
+			if (!edge2Exists) {
+				NetworkEdge ne = new NetworkEdge(portMapping, dstIpMapping, t);
+				if (!ne.containedIn(addedEdges))
+					addedEdges.add(ne);
+			}
+		}
+
+		// add edges
+		for (int j = 0; j < addedEdges.size(); j++) {
+			addEdgeToBatch(b, g, addedNodes, addedEdges.get(j));
+		}
+
+		// change edge weights, possibly delete nodes
+		for (String s : map.keySet()) {
+			String[] splits = s.split("->");
+			changeEdgeWeights(b, g, Integer.parseInt(splits[0]),
+					Integer.parseInt(splits[1]), map.get(s));
+		}
+
+		Log.infoSep();
+		Log.info("RETURNING BATCH: " + b.getTo());
+		b.print();
+		Log.infoSep();
+
+		return b;
+	}
+
+	protected void addEdgeToBatch(Batch b, Graph g, ArrayList<Node> addedNodes,
+			NetworkEdge ne) {
+
+		int src = ne.getSrc();
+		int dst = ne.getDst();
+
+		Node sNode = getNode(g, addedNodes, src);
+		Node dNode = getNode(g, addedNodes, dst);
+
+		IWeightedEdge e = (IWeightedEdge) g.getGraphDatastructures()
+				.newEdgeInstance(sNode, dNode);
+		e.setWeight(new LongWeight(1L));
+
+		b.add(new EdgeAddition(e));
+		// b.add(new EdgeWeight(e, new LongWeight(ne.getTime())));
+	}
+
+	protected void changeEdgeWeights(Batch b, Graph g, int src, int dst,
+			long weight) {
+		Iterator<IElement> ite = g.getEdges().iterator();
+
+		boolean fin = false;
+		while (ite.hasNext() && !fin) {
+			IWeightedEdge edge = (IWeightedEdge) ite.next();
+			if (edge.getN1().getIndex() == src
+					&& edge.getN2().getIndex() == dst) {
+				LongWeight w = (LongWeight) edge.getWeight();
+				weight += w.getWeight();
+
+				// change weight or remove
+				if (weight > 0)
+					b.add(new EdgeWeight(edge, new LongWeight(weight)));
+				else
+					b.add(new EdgeRemoval(edge));
+
+				fin = true;
+			}
+		}
+	}
+
+	public Node addNode(Graph g, int mapping, ElementType type) {
+		Node n = g.getNode(mapping);
+		if (n != null)
+			return n;
+
+		// init node
+		n = g.getGraphDatastructures().newNodeInstance(mapping);
+
+		// set networkweight
+		if (g.getGraphDatastructures().getNodeWeightType()
+				.equals(NetworkWeight.class))
+			((IWeightedNode) n).setWeight(new NetworkWeight(type));
+
+		return n;
+	}
+
+	public Node addHostNode(Graph g, int mapping) {
+		return addNode(g, mapping, ElementType.HOST);
+	}
+
+	public Node addPortNode(Graph g, int mapping) {
+		return addNode(g, mapping, ElementType.PORT);
+	}
+
+	// @Override
+	public Batch craftBatch2(Graph g, ArrayList<TCPEvent> events,
+			HashMap<String, Long> weightChangesMap2) {
 		ArrayList<String> addedNodes = new ArrayList<String>();
 		ArrayList<Node> addedNodesNodes = new ArrayList<Node>();
 		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();
@@ -64,6 +280,13 @@ public class M1BatchTimed extends M1Batch {
 		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
 				TimeUnit.MILLISECONDS.toSeconds(lastTime), 0, 0, 0, 0, 0, 0);
 
+		// get all edges to decrement
+		ArrayList<NetworkEdge> decrementEdges = reader
+				.getDecrementEdges(lastTime);
+
+		// get the amount of weight-decrements per edge
+		HashMap<String, Long> weightChangesMap = getWeightDecrementals(decrementEdges);
+
 		// gather changes inside events
 		for (int i = 0; i < events.size(); i++) {
 			TCPEvent e = events.get(i);
@@ -72,15 +295,24 @@ public class M1BatchTimed extends M1Batch {
 			int port = e.getDstPort();
 			long t = e.getTime().getMillis();
 
-			/*
-			 * NODES
-			 */
-
-			e.print();
-
+			// get mappings
 			int srcIpMapping = reader.mapp(srcIp);
 			int dstIpMapping = reader.mapp(dstIp);
 			int portMapping = reader.mapp(port);
+
+			// add events to queue when to decrement edges
+			reader.addEdgeToQueue(new NetworkEdge(srcIpMapping, portMapping,
+					(t + this.interval)));
+			reader.addEdgeToQueue(new NetworkEdge(portMapping, dstIpMapping,
+					(t + this.interval)));
+
+			// account weight changes
+			incrementWeightChanges(srcIpMapping, portMapping, weightChangesMap);
+			incrementWeightChanges(portMapping, dstIpMapping, weightChangesMap);
+
+			/*
+			 * NODES
+			 */
 
 			boolean srcNodeExists = reader.isNodeActive(srcIp);
 			boolean dstNodeExists = reader.isNodeActive(dstIp);
@@ -198,10 +430,13 @@ public class M1BatchTimed extends M1Batch {
 				if (edge1added) {
 					// update ne timestamp
 					ne.setTime(t);
+					reader.incrementEdgeWeight(ne);
 				} else {
 					// add edge
-					addedEdges
-							.add(new NetworkEdge(srcIpMapping, portMapping, t));
+					NetworkEdge netEdge = new NetworkEdge(srcIpMapping,
+							portMapping, t);
+					addedEdges.add(netEdge);
+					reader.incrementEdgeWeight(netEdge);
 				}
 			}
 
@@ -223,10 +458,13 @@ public class M1BatchTimed extends M1Batch {
 				if (edge2added) {
 					// update ne timestamp
 					ne.setTime(t);
+					reader.incrementEdgeWeight(ne);
 				} else {
 					// add edge
-					addedEdges
-							.add(new NetworkEdge(portMapping, dstIpMapping, t));
+					NetworkEdge netEdge = new NetworkEdge(portMapping,
+							dstIpMapping, t);
+					addedEdges.add(netEdge);
+					reader.incrementEdgeWeight(netEdge);
 				}
 			}
 		}

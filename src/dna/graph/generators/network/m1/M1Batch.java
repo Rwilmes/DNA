@@ -2,8 +2,11 @@ package dna.graph.generators.network.m1;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
+
+import org.joda.time.DateTime;
 
 import dna.graph.Graph;
 import dna.graph.IElement;
@@ -48,7 +51,8 @@ public class M1Batch extends NetworkBatch {
 	}
 
 	@Override
-	public Batch craftBatch(Graph g, ArrayList<TCPEvent> events) {
+	public Batch craftBatch(Graph g, DateTime timestamp, ArrayList<TCPEvent> events,
+			HashMap<String, Long> weightChangesMap) {
 		ArrayList<String> addedNodes = new ArrayList<String>();
 		ArrayList<Node> addedNodesNodes = new ArrayList<Node>();
 		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();
