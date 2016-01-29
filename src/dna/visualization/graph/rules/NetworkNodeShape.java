@@ -1,15 +1,18 @@
 package dna.visualization.graph.rules;
 
+import java.awt.Color;
+
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 
 import dna.graph.generators.network.weights.NetworkWeight;
 import dna.graph.weights.Weight;
+import dna.util.Config;
 import dna.visualization.graph.GraphVisualization;
 import dna.visualization.graph.rules.GraphStyleUtils.ElementShape;
 
 /**
- * This rule shape nodes according to their NetworkNodeWeight.
+ * This rule shape and colors nodes according to their NetworkNodeWeight.
  * 
  * @author Rwilmes
  * 
@@ -22,16 +25,20 @@ public class NetworkNodeShape extends GraphStyleRule {
 	protected ElementShape hostShape;
 	protected ElementShape portShape;
 
+	protected int portBlue;
+
 	public NetworkNodeShape(String name) {
-		this(name, ElementShape.circle, ElementShape.circle, ElementShape.box);
+		this(name, ElementShape.circle, ElementShape.circle, ElementShape.box,
+				Config.getInt("GRAPH_VIS_NETWORK_PORT_NODE_BLUE"));
 	}
 
 	public NetworkNodeShape(String name, ElementShape defaultShape,
-			ElementShape hostShape, ElementShape portShape) {
+			ElementShape hostShape, ElementShape portShape, int portBlue) {
 		this.name = name;
 		this.defaultShape = defaultShape;
 		this.hostShape = hostShape;
 		this.portShape = portShape;
+		this.portBlue = portBlue;
 	}
 
 	@Override
@@ -44,6 +51,7 @@ public class NetworkNodeShape extends GraphStyleRule {
 				break;
 			case PORT:
 				GraphStyleUtils.setShape(n, portShape);
+				colorPortNode(n);
 				break;
 			default:
 				GraphStyleUtils.setShape(n, defaultShape);
@@ -60,11 +68,20 @@ public class NetworkNodeShape extends GraphStyleRule {
 				break;
 			case PORT:
 				GraphStyleUtils.setShape(n, portShape);
+				colorPortNode(n);
 				break;
 			default:
 				GraphStyleUtils.setShape(n, defaultShape);
 			}
 		}
+	}
+
+	/** Sets the blue-part of the node color. **/
+	protected void colorPortNode(Node n) {
+		Color c = GraphStyleUtils.getColor(n);
+		if (c != null)
+			GraphStyleUtils.setColor(n, new Color(c.getRed(), c.getGreen(),
+					portBlue));
 	}
 
 	@Override
