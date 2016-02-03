@@ -51,7 +51,8 @@ public abstract class NetworkBatch extends BatchGenerator {
 	}
 
 	public abstract Batch craftBatch(Graph g, DateTime timestamp,
-			ArrayList<TCPEvent> events, HashMap<String, Long> edgeWeighChanges);
+			ArrayList<TCPEvent> events,
+			HashMap<String, Integer> edgeWeighChanges);
 
 	/** Increments the threshold by the given batchLength. **/
 	private void incrementThreshold() {
@@ -78,7 +79,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 		}
 
 		// get weight changes from events in queue
-		HashMap<String, Long> map = reader
+		HashMap<String, Integer> map = reader
 				.getWeightDecrementals(decrementEdges);
 
 		// return crafted batch
