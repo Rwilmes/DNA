@@ -936,9 +936,14 @@ public class GraphPanel extends JPanel {
 		int n1 = e.getN1Index();
 		int n2 = e.getN2Index();
 
+		// get nodes and edges
+		Node node1 = this.graph.getNode("" + n1);
+		Node node2 = this.graph.getNode("" + n2);
+		Edge edge = node1.getEdgeBetween(node2);
+
 		// if edge not there, add it
-		if (this.graph.getNode("" + n1).getEdgeBetween("" + n2) == null) {
-			Edge edge = this.graph.addEdge(n1 + "-" + n2, "" + n1, "" + n2,
+		if ((edge == null) || (directedEdges && node2.equals(edge.getNode0()))) {
+			edge = this.graph.addEdge(n1 + "-" + n2, "" + n1, "" + n2,
 					directedEdges);
 
 			// init weight
@@ -961,8 +966,6 @@ public class GraphPanel extends JPanel {
 							+ "px;");
 
 			// apply style rules
-			Node node1 = this.graph.getNode("" + n1);
-			Node node2 = this.graph.getNode("" + n2);
 			for (GraphStyleRule r : rules)
 				r.onEdgeAddition(edge, node1, node2);
 
