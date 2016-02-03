@@ -91,7 +91,7 @@ public class M1BatchTimed2 extends M1Batch {
 
 	@Override
 	public Batch craftBatch(Graph g, DateTime timestamp,
-			ArrayList<TCPEvent> events, HashMap<String, Integer> map) {
+			ArrayList<TCPEvent> events, HashMap<String, Integer> edgeWeightMap) {
 		// init batch
 		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
 				TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()), 0, 0,
@@ -120,8 +120,8 @@ public class M1BatchTimed2 extends M1Batch {
 					(t + this.interval)));
 
 			// account weight changes
-			incrementWeightChanges(srcIpMapping, portMapping, map);
-			incrementWeightChanges(portMapping, dstIpMapping, map);
+			incrementWeightChanges(srcIpMapping, portMapping, edgeWeightMap);
+			incrementWeightChanges(portMapping, dstIpMapping, edgeWeightMap);
 
 			/*
 			 * NODES
@@ -189,10 +189,10 @@ public class M1BatchTimed2 extends M1Batch {
 		}
 
 		// change edge weights, possibly delete nodes
-		for (String s : map.keySet()) {
+		for (String s : edgeWeightMap.keySet()) {
 			String[] splits = s.split("->");
 			changeEdgeWeights(b, g, Integer.parseInt(splits[0]),
-					Integer.parseInt(splits[1]), map.get(s));
+					Integer.parseInt(splits[1]), edgeWeightMap.get(s));
 		}
 
 		Log.infoSep();
