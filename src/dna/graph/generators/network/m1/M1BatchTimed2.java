@@ -11,6 +11,7 @@ import org.joda.time.DateTime;
 import dna.graph.Graph;
 import dna.graph.IElement;
 import dna.graph.edges.Edge;
+import dna.graph.generators.network.NetworkBatch;
 import dna.graph.generators.network.NetworkEdge;
 import dna.graph.generators.network.weights.NetworkWeight;
 import dna.graph.generators.network.weights.NetworkWeight.ElementType;
@@ -36,9 +37,11 @@ import dna.util.network.tcp.TCPEventReader;
  * @author Rwilmes
  * 
  */
-public class M1BatchTimed2 extends M1Batch {
+public class M1BatchTimed2 extends NetworkBatch {
 
 	protected long interval;
+
+	protected boolean debug;
 
 	public enum TCPNodeType {
 		NOTHING, REMOVE_ON_ZERO_DEGREE
@@ -46,10 +49,14 @@ public class M1BatchTimed2 extends M1Batch {
 
 	public M1BatchTimed2(TCPEventReader reader, int batchIntervalInSeconds,
 			long edgeLifetimeInMillis) throws IOException {
-		super(reader, batchIntervalInSeconds);
+		super("M1-BatchGenerator", reader, batchIntervalInSeconds);
 		this.interval = edgeLifetimeInMillis;
 		if (edgeLifetimeInMillis * 1000 <= batchIntervalInSeconds)
 			Log.warn("interval < batch-interval!");
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
 	}
 
 	/** Returns a map with the sum of all weight decrementals per edge. **/
@@ -570,6 +577,18 @@ public class M1BatchTimed2 extends M1Batch {
 		}
 
 		return b;
+	}
+
+	protected Node getNode(Graph g, ArrayList<Node> addedNodesNodes, int index) {
+		Node n = g.getNode(index);
+		if (n != null)
+			return n;
+
+		for (Node node : addedNodesNodes) {
+			if (node.getIndex() == index)
+				return node;
+		}
+		return null;
 	}
 
 }
