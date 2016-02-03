@@ -11,7 +11,6 @@ import dna.graph.generators.GraphGenerator;
 import dna.graph.generators.network.EmptyNetwork;
 import dna.graph.generators.network.NetworkEdge;
 import dna.graph.generators.network.m1.M1Batch;
-import dna.graph.generators.network.m1.M1BatchTimed;
 import dna.graph.generators.network.m1.M1BatchTimed2;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
@@ -177,8 +176,8 @@ public class TEST {
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		BatchGenerator bg = new M1BatchTimed(reader, seconds, millis);
-		((M1BatchTimed) bg).setDebug(debug);
+		BatchGenerator bg = new M1BatchTimed2(reader, seconds, millis);
+		((M1BatchTimed2) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
@@ -248,8 +247,8 @@ public class TEST {
 		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
-		BatchGenerator bg = new M1BatchTimed(reader, seconds, millis);
-		((M1BatchTimed) bg).setDebug(debug);
+		BatchGenerator bg = new M1BatchTimed2(reader, seconds, millis);
+		((M1BatchTimed2) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
