@@ -276,8 +276,15 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
 		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
+		reader.setRemoveZeroDegreeNodes(true);
+		reader.setEdgeLifeTime();
+		
+		
+		
 		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
 
+		
+		
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
