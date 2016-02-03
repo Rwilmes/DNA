@@ -91,25 +91,17 @@ public class M1BatchTimed2 extends M1Batch {
 	}
 
 	protected void incrementDegreeChanges(int key, HashMap<Integer, Integer> map) {
-		if (map.containsKey(key)) {
-
-			System.out.println("incr: " + key + "\t" + map.get(key));
+		if (map.containsKey(key))
 			map.put(key, map.get(key) + 1);
-		}else {
-
-			System.out.println("incr: " + key + "\t0");
+		else
 			map.put(key, 1);
-	}}
+	}
 
 	protected void decrementDegreeChanges(int key, HashMap<Integer, Integer> map) {
-		if (map.containsKey(key)) {
-			System.out.println("decr: " + key + "\t" + map.get(key));
+		if (map.containsKey(key))
 			map.put(key, map.get(key) - 1);
-		}		else {
+		else
 			map.put(key, -1);
-			System.out.println("decr: " + key + "\t0");
-		
-		}
 	}
 
 	@Override
@@ -218,67 +210,67 @@ public class M1BatchTimed2 extends M1Batch {
 		}
 
 		// change edge weights, possibly delete nodes
-		for (String s : edgeWeightMap.keySet()) {
-			String[] splits = s.split("->");
-			changeEdgeWeights(b, g, Integer.parseInt(splits[0]),
-					Integer.parseInt(splits[1]), edgeWeightMap.get(s),
-					nodeDegreeMap);
+		if (reader.isRemoveInactiveEdges())
+			handleEdgeWeights(b, g, edgeWeightMap, nodeDegreeMap);
+
+		// remove nodes with degree == 0
+		if (reader.isRemoveZeroDegreeNodes())
+			removeEmptyNodes(b, g, nodeDegreeMap);
+
+		// debug
+		if (this.debug) {
+			Log.infoSep();
+			Log.info("RETURNING BATCH: " + b.getTo());
+			b.print();
+
+			Log.info("");
+			Log.info("degree-map:");
+			for (Integer i : nodeDegreeMap.keySet()) {
+				Log.info(":  " + i + "\t->\t" + nodeDegreeMap.get(i));
+			}
+			Log.infoSep();
 		}
-
-		removeEmptyNodes(b, g, nodeDegreeMap);
-
-		Log.infoSep();
-		Log.info("RETURNING BATCH: " + b.getTo());
-		b.print();
-
-		Log.info("");
-		Log.info("degree-map:");
-		for (Integer i : nodeDegreeMap.keySet()) {
-			Log.info(":  " + i + "\t->\t" + nodeDegreeMap.get(i));
-		}
-
-		Log.infoSep();
 
 		return b;
 	}
 
-	protected void removeEmptyNodes(Batch b, Graph g, 
+	protected void removeEmptyNodes(Batch b, Graph g,
 			HashMap<Integer, Integer> nodeDegreeMap) {
 		Iterator<IElement> iterator = g.getNodes().iterator();
 		while (iterator.hasNext()) {
 			Node n = (Node) iterator.next();
 			int index = n.getIndex();
 			int degree = n.getDegree();
-			System.out.println("1. node: " + index + "\t\tdeg: " + degree
-					+ "\tremove: " + (degree <= 0));
 
 			if (nodeDegreeMap.containsKey(index))
 				degree += nodeDegreeMap.get(index);
 
-			System.out.println("2. node: " + index + "\t\tdeg: " + degree
-					+ "\tremove: " + (degree <= 0));
-			
-			if(degree <= 0) {
-				if(!reader.isNodeActive("" + index))
-					System.out.println("NOT ACTIVE BUT REMOVE CALL :  !!!!!!!!!!!!!!!!!              '" + index + "'");
+			if (degree <= 0) {
 				reader.removeNode("" + index);
 				b.add(new NodeRemoval(n));
 			}
 		}
 	}
 
+	protected void handleEdgeWeights(Batch b, Graph g,
+			HashMap<String, Integer> edgeWeightMap,
+			HashMap<Integer, Integer> nodeDegreeMap) {
+		for (String s : edgeWeightMap.keySet()) {
+			String[] splits = s.split("->");
+			changeEdgeWeights(b, g, Integer.parseInt(splits[0]),
+					Integer.parseInt(splits[1]), edgeWeightMap.get(s),
+					nodeDegreeMap);
+		}
+	}
+
 	protected void addEdgeToBatch(Batch b, Graph g, ArrayList<Node> addedNodes,
 			NetworkEdge ne, HashMap<Integer, Integer> nodeDegreeMap) {
-
 		int src = ne.getSrc();
 		int dst = ne.getDst();
 
 		Node sNode = getNode(g, addedNodes, src);
 		Node dNode = getNode(g, addedNodes, dst);
 
-		System.out.println("DEBUG: ADD EDGE TO BATCH: \t" + src + " -> " + dst);
-		System.out.println("\tsrcNode == null: " + (sNode == null) + "\tdstNode == null: " + (dNode == null));
-		
 		IWeightedEdge e = (IWeightedEdge) g.getGraphDatastructures()
 				.newEdgeInstance(sNode, dNode);
 		e.setWeight(new IntWeight(1));
@@ -286,7 +278,6 @@ public class M1BatchTimed2 extends M1Batch {
 		b.add(new EdgeAddition(e));
 		incrementDegreeChanges(src, nodeDegreeMap);
 		incrementDegreeChanges(dst, nodeDegreeMap);
-		// b.add(new EdgeWeight(e, new LongWeight(ne.getTime())));
 	}
 
 	protected void changeEdgeWeights(Batch b, Graph g, int src, int dst,

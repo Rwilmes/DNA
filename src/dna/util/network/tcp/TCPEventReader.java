@@ -46,9 +46,12 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected HashMap<NetworkEdge, LongWeight> edgeWeightMap;
 
-	protected boolean removeZeroDegreeNodes = false;
-	protected boolean removeInactiveEdges = false;
-	protected long edgeLifetimeMillis = 60000;
+	protected boolean removeZeroDegreeNodes;
+	protected boolean removeInactiveEdges;
+	protected long edgeLifetimeMillis;
+
+	protected int edgeWeightsIncrSteps;
+	protected int edgeWeightsDecrSteps;
 
 	protected DateTime initTimestamp;
 
@@ -66,7 +69,8 @@ public class TCPEventReader extends NetworkEventReader {
 				new ArrayList<Integer>(), new HashMap<Integer, Integer>(),
 				new ArrayList<String>(), new HashMap<String, Integer>(),
 				new ArrayList<String>(),
-				new HashMap<NetworkEdge, LongWeight>(), fields);
+				new HashMap<NetworkEdge, LongWeight>(), false, false, 60000, 1,
+				1, fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
@@ -74,7 +78,10 @@ public class TCPEventReader extends NetworkEventReader {
 			HashMap<Integer, Integer> portMap, ArrayList<String> ips,
 			HashMap<String, Integer> ipMap, ArrayList<String> activeNodes,
 			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
-			TCPEventField... fields) throws FileNotFoundException {
+			boolean removeZeroDegreeNodes, boolean removeInactiveEdges,
+			long edgeLifetimeMillis, int edgeWeightIncrSteps,
+			int edgeWeightDecrSteps, TCPEventField... fields)
+			throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 		this.durationFormatPattern = durationFormat;
 		this.durationFormat = DateTimeFormat.forPattern(durationFormat);
@@ -86,10 +93,15 @@ public class TCPEventReader extends NetworkEventReader {
 		this.ipMap = ipMap;
 
 		this.activeNodes = activeNodes;
-
 		this.edgeWeightMap = edgeWeightMap;
-
 		this.eq = new LinkedList<NetworkEdge>();
+
+		this.removeZeroDegreeNodes = removeZeroDegreeNodes;
+
+		this.removeInactiveEdges = removeInactiveEdges;
+		this.edgeLifetimeMillis = edgeLifetimeMillis;
+		this.edgeWeightsIncrSteps = edgeWeightIncrSteps;
+		this.edgeWeightsDecrSteps = edgeWeightDecrSteps;
 
 		try {
 			this.bufferedEvent = parseLine(readString());
@@ -287,7 +299,9 @@ public class TCPEventReader extends NetworkEventReader {
 	public TCPEventReader copy() throws FileNotFoundException {
 		return new TCPEventReader(dir, filename, separator, timeFormatPattern,
 				durationFormatPattern, ports, portMap, ips, ipMap, activeNodes,
-				edgeWeightMap, fields);
+				edgeWeightMap, removeZeroDegreeNodes, removeInactiveEdges,
+				edgeLifetimeMillis, edgeWeightsIncrSteps, edgeWeightsDecrSteps,
+				fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
