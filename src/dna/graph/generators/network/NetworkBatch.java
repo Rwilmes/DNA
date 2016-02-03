@@ -79,13 +79,13 @@ public abstract class NetworkBatch extends BatchGenerator {
 		}
 
 		// get weight changes from events in queue
-		HashMap<String, Integer> map = reader
+		HashMap<String, Integer> edgeWeightMap = reader
 				.getWeightDecrementals(decrementEdges);
 
 		// return crafted batch
 		if (!reader.isNextEventPossible() && reader.isEventQueueEmpty())
 			finished = true;
-		return craftBatch(graph, threshold, events, map);
+		return craftBatch(graph, threshold, events, edgeWeightMap);
 	}
 
 	public Batch generate3(Graph graph) {
