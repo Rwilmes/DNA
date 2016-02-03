@@ -24,6 +24,7 @@ import dna.updates.update.EdgeAddition;
 import dna.updates.update.EdgeRemoval;
 import dna.updates.update.EdgeWeight;
 import dna.updates.update.NodeAddition;
+import dna.updates.update.NodeRemoval;
 import dna.updates.update.NodeWeight;
 import dna.util.Log;
 import dna.util.network.tcp.TCPEvent;
@@ -89,6 +90,28 @@ public class M1BatchTimed2 extends M1Batch {
 		}
 	}
 
+	protected void incrementDegreeChanges(int key, HashMap<Integer, Integer> map) {
+		if (map.containsKey(key)) {
+
+			System.out.println("incr: " + key + "\t" + map.get(key));
+			map.put(key, map.get(key) + 1);
+		}else {
+
+			System.out.println("incr: " + key + "\t0");
+			map.put(key, 1);
+	}}
+
+	protected void decrementDegreeChanges(int key, HashMap<Integer, Integer> map) {
+		if (map.containsKey(key)) {
+			System.out.println("decr: " + key + "\t" + map.get(key));
+			map.put(key, map.get(key) - 1);
+		}		else {
+			map.put(key, -1);
+			System.out.println("decr: " + key + "\t0");
+		
+		}
+	}
+
 	@Override
 	public Batch craftBatch(Graph g, DateTime timestamp,
 			ArrayList<TCPEvent> events, HashMap<String, Integer> edgeWeightMap) {
@@ -99,6 +122,9 @@ public class M1BatchTimed2 extends M1Batch {
 
 		ArrayList<Node> addedNodes = new ArrayList<Node>();
 		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();
+
+		// map: node-mapping -> node-degree
+		HashMap<Integer, Integer> nodeDegreeMap = new HashMap<Integer, Integer>();
 
 		// iterate over events
 		for (int i = 0; i < events.size(); i++) {
@@ -131,23 +157,26 @@ public class M1BatchTimed2 extends M1Batch {
 			Node dstNode;
 			Node portNode;
 
-			if (!reader.isNodeActive(srcIp)) {
+			if (!reader.isNodeActive("" + srcIpMapping)) {
 				srcNode = addHostNode(g, srcIpMapping);
-				reader.addNode(srcIp);
+				reader.addNode("" + srcIpMapping);
 				addedNodes.add(srcNode);
 				b.add(new NodeAddition(srcNode));
+				nodeDegreeMap.put(srcIpMapping, 0);
 			}
-			if (!reader.isNodeActive(dstIp)) {
+			if (!reader.isNodeActive("" + dstIpMapping)) {
 				dstNode = addHostNode(g, dstIpMapping);
-				reader.addNode(dstIp);
+				reader.addNode("" + dstIpMapping);
 				addedNodes.add(dstNode);
 				b.add(new NodeAddition(dstNode));
+				nodeDegreeMap.put(dstIpMapping, 0);
 			}
-			if (!reader.isNodeActive("" + port)) {
+			if (!reader.isNodeActive("" + portMapping)) {
 				portNode = addPortNode(g, portMapping);
-				reader.addNode("" + port);
+				reader.addNode("" + portMapping);
 				addedNodes.add(portNode);
 				b.add(new NodeAddition(portNode));
+				nodeDegreeMap.put(portMapping, 0);
 			}
 
 			/*
@@ -185,26 +214,61 @@ public class M1BatchTimed2 extends M1Batch {
 
 		// add edges
 		for (int j = 0; j < addedEdges.size(); j++) {
-			addEdgeToBatch(b, g, addedNodes, addedEdges.get(j));
+			addEdgeToBatch(b, g, addedNodes, addedEdges.get(j), nodeDegreeMap);
 		}
 
 		// change edge weights, possibly delete nodes
 		for (String s : edgeWeightMap.keySet()) {
 			String[] splits = s.split("->");
 			changeEdgeWeights(b, g, Integer.parseInt(splits[0]),
-					Integer.parseInt(splits[1]), edgeWeightMap.get(s));
+					Integer.parseInt(splits[1]), edgeWeightMap.get(s),
+					nodeDegreeMap);
 		}
+
+		removeEmptyNodes(b, g, nodeDegreeMap);
 
 		Log.infoSep();
 		Log.info("RETURNING BATCH: " + b.getTo());
 		b.print();
+
+		Log.info("");
+		Log.info("degree-map:");
+		for (Integer i : nodeDegreeMap.keySet()) {
+			Log.info(":  " + i + "\t->\t" + nodeDegreeMap.get(i));
+		}
+
 		Log.infoSep();
 
 		return b;
 	}
 
+	protected void removeEmptyNodes(Batch b, Graph g, 
+			HashMap<Integer, Integer> nodeDegreeMap) {
+		Iterator<IElement> iterator = g.getNodes().iterator();
+		while (iterator.hasNext()) {
+			Node n = (Node) iterator.next();
+			int index = n.getIndex();
+			int degree = n.getDegree();
+			System.out.println("1. node: " + index + "\t\tdeg: " + degree
+					+ "\tremove: " + (degree <= 0));
+
+			if (nodeDegreeMap.containsKey(index))
+				degree += nodeDegreeMap.get(index);
+
+			System.out.println("2. node: " + index + "\t\tdeg: " + degree
+					+ "\tremove: " + (degree <= 0));
+			
+			if(degree <= 0) {
+				if(!reader.isNodeActive("" + index))
+					System.out.println("NOT ACTIVE BUT REMOVE CALL :  !!!!!!!!!!!!!!!!!              '" + index + "'");
+				reader.removeNode("" + index);
+				b.add(new NodeRemoval(n));
+			}
+		}
+	}
+
 	protected void addEdgeToBatch(Batch b, Graph g, ArrayList<Node> addedNodes,
-			NetworkEdge ne) {
+			NetworkEdge ne, HashMap<Integer, Integer> nodeDegreeMap) {
 
 		int src = ne.getSrc();
 		int dst = ne.getDst();
@@ -212,16 +276,21 @@ public class M1BatchTimed2 extends M1Batch {
 		Node sNode = getNode(g, addedNodes, src);
 		Node dNode = getNode(g, addedNodes, dst);
 
+		System.out.println("DEBUG: ADD EDGE TO BATCH: \t" + src + " -> " + dst);
+		System.out.println("\tsrcNode == null: " + (sNode == null) + "\tdstNode == null: " + (dNode == null));
+		
 		IWeightedEdge e = (IWeightedEdge) g.getGraphDatastructures()
 				.newEdgeInstance(sNode, dNode);
 		e.setWeight(new IntWeight(1));
 
 		b.add(new EdgeAddition(e));
+		incrementDegreeChanges(src, nodeDegreeMap);
+		incrementDegreeChanges(dst, nodeDegreeMap);
 		// b.add(new EdgeWeight(e, new LongWeight(ne.getTime())));
 	}
 
 	protected void changeEdgeWeights(Batch b, Graph g, int src, int dst,
-			int weight) {
+			int weight, HashMap<Integer, Integer> nodeDegreeMap) {
 		Iterator<IElement> ite = g.getEdges().iterator();
 
 		boolean fin = false;
@@ -235,9 +304,11 @@ public class M1BatchTimed2 extends M1Batch {
 				// change weight or remove
 				if (weight > 0)
 					b.add(new EdgeWeight(edge, new IntWeight(weight)));
-				else
+				else {
+					decrementDegreeChanges(src, nodeDegreeMap);
+					decrementDegreeChanges(dst, nodeDegreeMap);
 					b.add(new EdgeRemoval(edge));
-
+				}
 				fin = true;
 			}
 		}

@@ -46,7 +46,9 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected HashMap<NetworkEdge, LongWeight> edgeWeightMap;
 
-	protected boolean removeZeroDegreeNodes = true;
+	protected boolean removeZeroDegreeNodes = false;
+	protected boolean removeInactiveEdges = false;
+	protected long edgeLifetimeMillis = 60000;
 
 	protected DateTime initTimestamp;
 
@@ -237,6 +239,11 @@ public class TCPEventReader extends NetworkEventReader {
 		return activeNodes.contains(id);
 	}
 
+	public void removeNode(String id) {
+		if (activeNodes.contains(id))
+			activeNodes.remove(activeNodes.indexOf(id));
+	}
+
 	/** Maps a port to its id. **/
 	public int mapPort(int port) {
 		return port;
@@ -284,7 +291,19 @@ public class TCPEventReader extends NetworkEventReader {
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
-		return removeZeroDegreeNodes;
+		return this.removeZeroDegreeNodes;
+	}
+
+	public void setRemoveZeroDegreeNodes(boolean flag) {
+		this.removeZeroDegreeNodes = flag;
+	}
+
+	public void setRemoveInactiveEdges(boolean flag) {
+		this.removeInactiveEdges = flag;
+	}
+
+	public boolean isRemoveInactiveEdges() {
+		return this.removeInactiveEdges;
 	}
 
 	public void printMappings() {
