@@ -17,6 +17,7 @@ import dna.graph.generators.network.weights.NetworkWeight.ElementType;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedEdge;
 import dna.graph.weights.IWeightedNode;
+import dna.graph.weights.IntWeight;
 import dna.graph.weights.LongWeight;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
@@ -51,9 +52,9 @@ public class M1BatchTimed2 extends M1Batch {
 	}
 
 	/** Returns a map with the sum of all weight decrementals per edge. **/
-	protected HashMap<String, Long> getWeightDecrementals(
+	protected HashMap<String, Integer> getWeightDecrementals(
 			ArrayList<NetworkEdge> allEdges) {
-		HashMap<String, Long> wcMap = new HashMap<String, Long>();
+		HashMap<String, Integer> wcMap = new HashMap<String, Integer>();
 		for (int i = 0; i < allEdges.size(); i++) {
 			NetworkEdge e = allEdges.get(i);
 			decrementWeightChanges(e.getSrc(), e.getDst(), wcMap);
@@ -67,30 +68,30 @@ public class M1BatchTimed2 extends M1Batch {
 	}
 
 	protected void incrementWeightChanges(int src, int dst,
-			HashMap<String, Long> map) {
+			HashMap<String, Integer> map) {
 		// add incrementals to map
 		String identifier = getIdentifier(src, dst);
 		if (map.containsKey(identifier)) {
 			map.put(identifier, map.get(identifier) + 1);
 		} else {
-			map.put(identifier, 1L);
+			map.put(identifier, 1);
 		}
 	}
 
 	protected void decrementWeightChanges(int src, int dst,
-			HashMap<String, Long> map) {
+			HashMap<String, Integer> map) {
 		// add incrementals to map
 		String identifier = getIdentifier(src, dst);
 		if (map.containsKey(identifier)) {
 			map.put(identifier, map.get(identifier) - 1);
 		} else {
-			map.put(identifier, -1L);
+			map.put(identifier, -1);
 		}
 	}
 
 	@Override
 	public Batch craftBatch(Graph g, DateTime timestamp,
-			ArrayList<TCPEvent> events, HashMap<String, Long> map) {
+			ArrayList<TCPEvent> events, HashMap<String, Integer> map) {
 		// init batch
 		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
 				TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()), 0, 0,
@@ -213,14 +214,14 @@ public class M1BatchTimed2 extends M1Batch {
 
 		IWeightedEdge e = (IWeightedEdge) g.getGraphDatastructures()
 				.newEdgeInstance(sNode, dNode);
-		e.setWeight(new LongWeight(1L));
+		e.setWeight(new IntWeight(1));
 
 		b.add(new EdgeAddition(e));
 		// b.add(new EdgeWeight(e, new LongWeight(ne.getTime())));
 	}
 
 	protected void changeEdgeWeights(Batch b, Graph g, int src, int dst,
-			long weight) {
+			int weight) {
 		Iterator<IElement> ite = g.getEdges().iterator();
 
 		boolean fin = false;
@@ -228,12 +229,12 @@ public class M1BatchTimed2 extends M1Batch {
 			IWeightedEdge edge = (IWeightedEdge) ite.next();
 			if (edge.getN1().getIndex() == src
 					&& edge.getN2().getIndex() == dst) {
-				LongWeight w = (LongWeight) edge.getWeight();
+				IntWeight w = (IntWeight) edge.getWeight();
 				weight += w.getWeight();
 
 				// change weight or remove
 				if (weight > 0)
-					b.add(new EdgeWeight(edge, new LongWeight(weight)));
+					b.add(new EdgeWeight(edge, new IntWeight(weight)));
 				else
 					b.add(new EdgeRemoval(edge));
 
@@ -268,7 +269,7 @@ public class M1BatchTimed2 extends M1Batch {
 
 	// @Override
 	public Batch craftBatch2(Graph g, ArrayList<TCPEvent> events,
-			HashMap<String, Long> weightChangesMap2) {
+			HashMap<String, Integer> weightChangesMap2) {
 		ArrayList<String> addedNodes = new ArrayList<String>();
 		ArrayList<Node> addedNodesNodes = new ArrayList<Node>();
 		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();
@@ -285,7 +286,7 @@ public class M1BatchTimed2 extends M1Batch {
 				.getDecrementEdges(lastTime);
 
 		// get the amount of weight-decrements per edge
-		HashMap<String, Long> weightChangesMap = getWeightDecrementals(decrementEdges);
+		HashMap<String, Integer> weightChangesMap = getWeightDecrementals(decrementEdges);
 
 		// gather changes inside events
 		for (int i = 0; i < events.size(); i++) {

@@ -52,7 +52,8 @@ public class M1BatchTimed extends M1Batch {
 
 	@Override
 	public Batch craftBatch(Graph g, DateTime timestamp,
-			ArrayList<TCPEvent> events, HashMap<String, Long> weightChangesMap) {
+			ArrayList<TCPEvent> events,
+			HashMap<String, Integer> weightChangesMap) {
 		ArrayList<String> addedNodes = new ArrayList<String>();
 		ArrayList<Node> addedNodesNodes = new ArrayList<Node>();
 		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();

@@ -379,9 +379,9 @@ public class TCPEventReader extends NetworkEventReader {
 	}
 
 	/** Returns a map with the sum of all weight decrementals per edge. **/
-	public HashMap<String, Long> getWeightDecrementals(
+	public HashMap<String, Integer> getWeightDecrementals(
 			ArrayList<NetworkEdge> allEdges) {
-		HashMap<String, Long> wcMap = new HashMap<String, Long>();
+		HashMap<String, Integer> wcMap = new HashMap<String, Integer>();
 		for (int i = 0; i < allEdges.size(); i++) {
 			NetworkEdge e = allEdges.get(i);
 			decrementWeightChanges(e.getSrc(), e.getDst(), wcMap);
@@ -406,13 +406,13 @@ public class TCPEventReader extends NetworkEventReader {
 	}
 
 	protected void decrementWeightChanges(int src, int dst,
-			HashMap<String, Long> map) {
+			HashMap<String, Integer> map) {
 		// add incrementals to map
 		String identifier = getIdentifier(src, dst);
 		if (map.containsKey(identifier)) {
 			map.put(identifier, map.get(identifier) - 1);
 		} else {
-			map.put(identifier, -1L);
+			map.put(identifier, -1);
 		}
 	}
 }

@@ -15,7 +15,7 @@ import dna.graph.generators.network.m1.M1BatchTimed;
 import dna.graph.generators.network.m1.M1BatchTimed2;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
-import dna.graph.generators.random.RandomGraph;
+import dna.graph.weights.IntWeight;
 import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.metrics.Metric;
@@ -23,6 +23,7 @@ import dna.metrics.MetricNotApplicableException;
 import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.degree.DegreeDistributionU;
 import dna.metrics.motifs.DirectedMotifsU;
+import dna.metrics.weights.EdgeWeightsR;
 import dna.plot.Plotting;
 import dna.plot.PlottingConfig;
 import dna.plot.PlottingConfig.PlotFlag;
@@ -51,6 +52,8 @@ public class TEST {
 				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_NODE_DEFAULT_SIZE", "14");
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
+		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 
 		Config.zipBatches();
 		GraphVisualization.enable();
@@ -66,7 +69,7 @@ public class TEST {
 		boolean w2tuesdayPlot = false;
 
 		int secondsPerBatch = 1;
-		int maxBatches = 1;
+		int maxBatches = 10000;
 		long lifeTimePerEdge = 60000;
 
 		String dir = "data/tcp_test/10/";
@@ -279,17 +282,17 @@ public class TEST {
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
 		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
-				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
+				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
 				timestampSeconds);
-//		
-//		gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
-//				WeightSelection.None, LongWeight.class, WeightSelection.Zero), 0,0);
-//		
+		//
+		// gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
+		// WeightSelection.None, LongWeight.class, WeightSelection.Zero), 0,0);
+		//
 		BatchGenerator bg = new M1BatchTimed2(reader, seconds, millis);
 		((M1BatchTimed2) bg).setDebug(debug);
 
-		Metric[] metrics = new Metric[] { new DegreeDistributionU(), new DegreeDistributionR(),
-				new DirectedMotifsU() };
+		Metric[] metrics = new Metric[] { new EdgeWeightsR(1.0),
+				new DegreeDistributionR(), new DirectedMotifsU() };
 
 		Series s = new Series(gg, bg, metrics, dir + seconds
 				+ "_timed2/series/", "s1");
@@ -303,7 +306,7 @@ public class TEST {
 					+ "\tw= "
 					+ reader.getEdgeWeightMap().get(netEdge).getWeight());
 		}
-		
+
 		// -1
 
 		Log.info("SET2");
