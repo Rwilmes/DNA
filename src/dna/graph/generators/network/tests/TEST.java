@@ -54,20 +54,20 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 
 		Config.zipBatches();
-		GraphVisualization.enable();
+		// GraphVisualization.enable();
 
 		boolean plot = true;
 		boolean debug = false;
 
 		boolean normalTest = false;
 		boolean timedTest = false;
-		boolean timedTest2 = true;
+		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
-		boolean w2tuesdayGen = false;
-		boolean w2tuesdayPlot = false;
+		boolean w2tuesdayGen = true;
+		boolean w2tuesdayPlot = true;
 
 		int secondsPerBatch = 1;
-		int maxBatches = 10000;
+		int maxBatches = 100000;
 		long lifeTimePerEdge = 60000;
 
 		String dir = "data/tcp_test/10/";
@@ -245,19 +245,21 @@ public class TEST {
 		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
 		reader.setBatchInterval(seconds);
 		reader.setEdgeLifeTime(millis);
+
 		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
 
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
 		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
-				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
+				WeightSelection.None, IntWeight.class, 
+				 WeightSelection.Zero),
 				timestampSeconds);
 		BatchGenerator bg = new M1Batch(reader);
 		((M1Batch) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
-				new DirectedMotifsU() };
+				new EdgeWeightsR(1.0), new DirectedMotifsU() };
 
 		Series s = new Series(gg, bg, metrics,
 				dir + seconds + "_timed/series/", "s1");
