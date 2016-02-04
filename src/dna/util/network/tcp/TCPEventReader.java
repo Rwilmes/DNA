@@ -28,6 +28,17 @@ import dna.util.network.tcp.TCPEvent.TCPEventField;
  */
 public class TCPEventReader extends NetworkEventReader {
 
+	// STATICS
+	public static final int defaultBatchLengthSeconds = 1;
+	public static final long defaultEdgeLifeTimeMillis = 60000;
+
+	public static final boolean defaultRemoveInactiveEdges = true;
+	public static final boolean defaultRemoveZeroDegreeNodes = true;
+
+	public static final int defaultEdgeWeightIncrSteps = 1;
+	public static final int defaultEdgeWeightDecrSteps = 1;
+
+	// CLASS
 	protected static final int ipOffset = 100000;
 
 	protected TCPEvent bufferedEvent;
@@ -53,6 +64,8 @@ public class TCPEventReader extends NetworkEventReader {
 	protected int edgeWeightsIncrSteps;
 	protected int edgeWeightsDecrSteps;
 
+	protected int batchIntervalInSeconds;
+
 	protected DateTime initTimestamp;
 
 	public TCPEventReader(String dir, String filename, TCPEventField... fields)
@@ -66,23 +79,37 @@ public class TCPEventReader extends NetworkEventReader {
 			String timeFormat, String durationFormat, TCPEventField... fields)
 			throws FileNotFoundException {
 		this(dir, filename, separator, timeFormat, durationFormat,
+				defaultBatchLengthSeconds, defaultRemoveZeroDegreeNodes,
+				defaultRemoveInactiveEdges, defaultEdgeLifeTimeMillis,
+				defaultEdgeWeightIncrSteps, defaultEdgeWeightDecrSteps,
 				new ArrayList<Integer>(), new HashMap<Integer, Integer>(),
 				new ArrayList<String>(), new HashMap<String, Integer>(),
 				new ArrayList<String>(),
-				new HashMap<NetworkEdge, LongWeight>(), false, false, 60000, 1,
-				1, fields);
+				new HashMap<NetworkEdge, LongWeight>(), fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
-			String timeFormat, String durationFormat, ArrayList<Integer> ports,
-			HashMap<Integer, Integer> portMap, ArrayList<String> ips,
-			HashMap<String, Integer> ipMap, ArrayList<String> activeNodes,
+			String timeFormat, String durationFormat,
+			int batchIntervalInSeconds, boolean removeZeroDegreeNodes,
+			boolean removeInactiveEdges, long edgeLifetimeMillis,
+			int edgeWeightIncrSteps, int edgeWeightDecrSteps,
+			ArrayList<Integer> ports, HashMap<Integer, Integer> portMap,
+			ArrayList<String> ips, HashMap<String, Integer> ipMap,
+			ArrayList<String> activeNodes,
 			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
-			boolean removeZeroDegreeNodes, boolean removeInactiveEdges,
-			long edgeLifetimeMillis, int edgeWeightIncrSteps,
-			int edgeWeightDecrSteps, TCPEventField... fields)
-			throws FileNotFoundException {
+			TCPEventField... fields) throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
+
+		// init
+		this.batchIntervalInSeconds = batchIntervalInSeconds;
+
+		this.removeZeroDegreeNodes = removeZeroDegreeNodes;
+
+		this.removeInactiveEdges = removeInactiveEdges;
+		this.edgeLifetimeMillis = edgeLifetimeMillis;
+		this.edgeWeightsIncrSteps = edgeWeightIncrSteps;
+		this.edgeWeightsDecrSteps = edgeWeightDecrSteps;
+
 		this.durationFormatPattern = durationFormat;
 		this.durationFormat = DateTimeFormat.forPattern(durationFormat);
 		this.fields = fields;
@@ -96,13 +123,6 @@ public class TCPEventReader extends NetworkEventReader {
 		this.edgeWeightMap = edgeWeightMap;
 		this.eq = new LinkedList<NetworkEdge>();
 
-		this.removeZeroDegreeNodes = removeZeroDegreeNodes;
-
-		this.removeInactiveEdges = removeInactiveEdges;
-		this.edgeLifetimeMillis = edgeLifetimeMillis;
-		this.edgeWeightsIncrSteps = edgeWeightIncrSteps;
-		this.edgeWeightsDecrSteps = edgeWeightDecrSteps;
-
 		try {
 			this.bufferedEvent = parseLine(readString());
 			this.initTimestamp = this.bufferedEvent.getTime();
@@ -114,15 +134,6 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public DateTime getInitTimestamp() {
 		return this.initTimestamp;
-	}
-
-	public void setAll(ArrayList<Integer> ports,
-			HashMap<Integer, Integer> portMap, ArrayList<String> ips,
-			HashMap<String, Integer> ipMap) {
-		this.ports = ports;
-		this.portMap = portMap;
-		this.ips = ips;
-		this.ipMap = ipMap;
 	}
 
 	@Override
@@ -298,10 +309,10 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public TCPEventReader copy() throws FileNotFoundException {
 		return new TCPEventReader(dir, filename, separator, timeFormatPattern,
-				durationFormatPattern, ports, portMap, ips, ipMap, activeNodes,
-				edgeWeightMap, removeZeroDegreeNodes, removeInactiveEdges,
-				edgeLifetimeMillis, edgeWeightsIncrSteps, edgeWeightsDecrSteps,
-				fields);
+				durationFormatPattern, batchIntervalInSeconds,
+				removeZeroDegreeNodes, removeInactiveEdges, edgeLifetimeMillis,
+				edgeWeightsIncrSteps, edgeWeightsDecrSteps, ports, portMap,
+				ips, ipMap, activeNodes, edgeWeightMap, fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
@@ -318,6 +329,22 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public boolean isRemoveInactiveEdges() {
 		return this.removeInactiveEdges;
+	}
+
+	public int getBatchInterval() {
+		return this.batchIntervalInSeconds;
+	}
+
+	public void setBatchInterval(int seconds) {
+		this.batchIntervalInSeconds = seconds;
+	}
+
+	public long getEdgeLifeTimeMillis() {
+		return this.edgeLifetimeMillis;
+	}
+
+	public void setEdgeLifeTime(long millis) {
+		this.edgeLifetimeMillis = millis;
 	}
 
 	public void printMappings() {

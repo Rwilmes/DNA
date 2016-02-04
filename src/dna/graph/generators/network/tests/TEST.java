@@ -10,7 +10,6 @@ import dna.graph.datastructures.GDS;
 import dna.graph.generators.GraphGenerator;
 import dna.graph.generators.network.EmptyNetwork;
 import dna.graph.generators.network.NetworkEdge;
-import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1BatchTimed2;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
@@ -166,6 +165,9 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
 		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
+		reader.setBatchInterval(seconds);
+		reader.setEdgeLifeTime(millis);
+
 		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
 
 		long timestampMillis = reader.getInitTimestamp().getMillis();
@@ -176,7 +178,7 @@ public class TEST {
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		BatchGenerator bg = new M1BatchTimed2(reader, seconds, millis);
+		BatchGenerator bg = new M1BatchTimed2(reader);
 		((M1BatchTimed2) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
@@ -203,6 +205,8 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
 		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
+		reader.setBatchInterval(seconds);
+
 		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
 
 		long timestampMillis = reader.getInitTimestamp().getMillis();
@@ -211,8 +215,8 @@ public class TEST {
 		gg = new EmptyNetwork(GDS.directedV(NetworkWeight.class,
 				WeightSelection.None), timestampSeconds);
 
-		BatchGenerator bg = new M1Batch(reader, seconds);
-		((M1Batch) bg).setDebug(debug);
+		BatchGenerator bg = new M1BatchTimed2(reader);
+		((M1BatchTimed2) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
@@ -239,6 +243,8 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
 		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
+		reader.setBatchInterval(seconds);
+		reader.setEdgeLifeTime(millis);
 		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
 
 		long timestampMillis = reader.getInitTimestamp().getMillis();
@@ -247,7 +253,7 @@ public class TEST {
 		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
-		BatchGenerator bg = new M1BatchTimed2(reader, seconds, millis);
+		BatchGenerator bg = new M1BatchTimed2(reader);
 		((M1BatchTimed2) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
@@ -277,6 +283,8 @@ public class TEST {
 		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
 		reader.setRemoveInactiveEdges(true);
 		reader.setRemoveZeroDegreeNodes(true);
+		reader.setBatchInterval(seconds);
+		reader.setEdgeLifeTime(millis);
 		GraphGenerator gg = new M1Graph(GDS.directed(), reader);
 
 		long timestampMillis = reader.getInitTimestamp().getMillis();
@@ -289,7 +297,7 @@ public class TEST {
 		// gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
 		// WeightSelection.None, LongWeight.class, WeightSelection.Zero), 0,0);
 		//
-		BatchGenerator bg = new M1BatchTimed2(reader, seconds, millis);
+		BatchGenerator bg = new M1BatchTimed2(reader);
 		((M1BatchTimed2) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new EdgeWeightsR(1.0),

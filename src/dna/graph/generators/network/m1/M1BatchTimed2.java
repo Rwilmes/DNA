@@ -39,7 +39,7 @@ import dna.util.network.tcp.TCPEventReader;
  */
 public class M1BatchTimed2 extends NetworkBatch {
 
-	protected long interval;
+	protected long edgeLifeTimeMillis;
 
 	protected boolean debug;
 
@@ -47,11 +47,10 @@ public class M1BatchTimed2 extends NetworkBatch {
 		NOTHING, REMOVE_ON_ZERO_DEGREE
 	};
 
-	public M1BatchTimed2(TCPEventReader reader, int batchIntervalInSeconds,
-			long edgeLifetimeInMillis) throws IOException {
-		super("M1-BatchGenerator", reader, batchIntervalInSeconds);
-		this.interval = edgeLifetimeInMillis;
-		if (edgeLifetimeInMillis * 1000 <= batchIntervalInSeconds)
+	public M1BatchTimed2(TCPEventReader reader) throws IOException {
+		super("M1-BatchGenerator", reader, reader.getBatchInterval());
+		this.edgeLifeTimeMillis = reader.getEdgeLifeTimeMillis();
+		if (reader.getEdgeLifeTimeMillis() * 1000 <= reader.getBatchInterval())
 			Log.warn("interval < batch-interval!");
 	}
 
@@ -140,9 +139,9 @@ public class M1BatchTimed2 extends NetworkBatch {
 
 			// add events to queue when to decrement edges
 			reader.addEdgeToQueue(new NetworkEdge(srcIpMapping, portMapping,
-					(t + this.interval)));
+					(t + this.edgeLifeTimeMillis)));
 			reader.addEdgeToQueue(new NetworkEdge(portMapping, dstIpMapping,
-					(t + this.interval)));
+					(t + this.edgeLifeTimeMillis)));
 
 			// account weight changes
 			incrementWeightChanges(srcIpMapping, portMapping, edgeWeightMap);
@@ -372,9 +371,9 @@ public class M1BatchTimed2 extends NetworkBatch {
 
 			// add events to queue when to decrement edges
 			reader.addEdgeToQueue(new NetworkEdge(srcIpMapping, portMapping,
-					(t + this.interval)));
+					(t + this.edgeLifeTimeMillis)));
 			reader.addEdgeToQueue(new NetworkEdge(portMapping, dstIpMapping,
-					(t + this.interval)));
+					(t + this.edgeLifeTimeMillis)));
 
 			// account weight changes
 			incrementWeightChanges(srcIpMapping, portMapping, weightChangesMap);
@@ -556,7 +555,7 @@ public class M1BatchTimed2 extends NetworkBatch {
 			}
 
 			if (!added) {
-				if (lastTime > w.getWeight() + interval)
+				if (lastTime > w.getWeight() + edgeLifeTimeMillis)
 					b.add(new EdgeRemoval(edge));
 			}
 		}
