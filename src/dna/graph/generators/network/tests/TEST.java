@@ -54,17 +54,20 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 
 		Config.zipBatches();
-		// GraphVisualization.enable();
+		 GraphVisualization.enable();
 
 		boolean plot = true;
 		boolean debug = false;
 
-		boolean normalTest = false;
+		boolean removeInactiveEdges = false;
+		boolean removeZeroDegreeNodes = false;
+
+		boolean normalTest = true;
 		boolean timedTest = false;
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
-		boolean w2tuesdayGen = true;
-		boolean w2tuesdayPlot = true;
+		boolean w2tuesdayGen = false;
+		boolean w2tuesdayPlot = false;
 
 		int secondsPerBatch = 1;
 		int maxBatches = 100000;
@@ -81,10 +84,13 @@ public class TEST {
 		Log.info("maxBatches:\t" + maxBatches);
 		Log.infoSep();
 
-		if (normalTest)
-			TCPTEST1("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
-					maxBatches, plot, debug);
-
+		if (normalTest) {
+			// TCPTEST1("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
+			// maxBatches, plot, debug);
+			modell_1_test("data/tcp_test/10/", "out_10_3.list",
+					secondsPerBatch, maxBatches, false, false, lifeTimePerEdge,
+					plot, debug);
+		}
 		if (timedTest)
 			TCPTEST1TIMED("data/tcp_test/10/", "out_10_3.list",
 					secondsPerBatch, lifeTimePerEdge, maxBatches, plot, debug);
@@ -197,6 +203,53 @@ public class TEST {
 		Log.infoSep();
 	}
 
+	public static void modell_1_test(String dir, String filename,
+			int batchLength, int maxBatches, boolean removeInactiveEdges,
+			boolean removeZeroDegreeNodes, long edgeLifeTime, boolean plot,
+			boolean debug) throws IOException, ParseException,
+			AggregationException, MetricNotApplicableException,
+			InterruptedException {
+		Log.info("Modell 1 test!");
+		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
+
+		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
+		reader.setBatchInterval(batchLength);
+		reader.setEdgeLifeTime(edgeLifeTime);
+		reader.setRemoveInactiveEdges(removeInactiveEdges);
+		reader.setRemoveZeroDegreeNodes(removeZeroDegreeNodes);
+
+		// init graph generator
+		long timestampMillis = reader.getInitTimestamp().getMillis();
+		long timestampSeconds = TimeUnit.MILLISECONDS
+				.toSeconds(timestampMillis);
+		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(
+				NetworkWeight.class, WeightSelection.None, IntWeight.class,
+				WeightSelection.Zero), timestampSeconds);
+
+		// init batch generator
+		BatchGenerator bg = new M1Batch(reader);
+		((M1Batch) bg).setDebug(debug);
+
+		// init metrics
+		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
+				new EdgeWeightsR(1.0), new DirectedMotifsU() };
+
+		// init series
+		Series s = new Series(gg, bg, metrics, dir + batchLength
+				+ "_timed/series/", "s1");
+
+		// generate
+		SeriesData sd = s.generate(1, maxBatches, false);
+
+		// plot
+		if (plot) {
+			plot(sd, dir + batchLength + "_timed/plots/", true, false);
+		}
+
+		GraphVisualization.setText("Finished");
+		Log.infoSep();
+	}
+
 	public static void TCPTEST1(String dir, String filename, int seconds,
 			int maxBatches, boolean plot, boolean debug) throws IOException,
 			ParseException, AggregationException, MetricNotApplicableException,
@@ -252,8 +305,7 @@ public class TEST {
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
 		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
-				WeightSelection.None, IntWeight.class, 
-				 WeightSelection.Zero),
+				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 		BatchGenerator bg = new M1Batch(reader);
 		((M1Batch) bg).setDebug(debug);
