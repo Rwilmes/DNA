@@ -215,9 +215,8 @@ public class M1Batch extends NetworkBatch {
 			addEdgeToBatch(b, g, addedNodes, addedEdges.get(j), nodeDegreeMap);
 		}
 
-		// change edge weights, possibly delete nodes
-		if (reader.isRemoveInactiveEdges())
-			handleEdgeWeights(b, g, edgeWeightMap, nodeDegreeMap);
+		// change edge weights, possibly delete edges
+		handleEdgeWeights(b, g, edgeWeightMap, nodeDegreeMap);
 
 		// remove nodes with degree == 0
 		if (reader.isRemoveZeroDegreeNodes())
@@ -298,14 +297,18 @@ public class M1Batch extends NetworkBatch {
 				IntWeight w = (IntWeight) edge.getWeight();
 				weight += w.getWeight();
 
+				if (weight < 0)
+					weight = 0;
+
 				// change weight or remove
-				if (weight > 0)
-					b.add(new EdgeWeight(edge, new IntWeight(weight)));
-				else {
+				if (weight == 0 && reader.isRemoveInactiveEdges()) {
 					decrementDegreeChanges(src, nodeDegreeMap);
 					decrementDegreeChanges(dst, nodeDegreeMap);
 					b.add(new EdgeRemoval(edge));
+				} else {
+					b.add(new EdgeWeight(edge, new IntWeight(weight)));
 				}
+
 				fin = true;
 			}
 		}
