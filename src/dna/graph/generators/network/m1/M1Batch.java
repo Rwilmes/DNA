@@ -37,7 +37,7 @@ import dna.util.network.tcp.TCPEventReader;
  * @author Rwilmes
  * 
  */
-public class M1BatchTimed2 extends NetworkBatch {
+public class M1Batch extends NetworkBatch {
 
 	protected long edgeLifeTimeMillis;
 
@@ -47,7 +47,7 @@ public class M1BatchTimed2 extends NetworkBatch {
 		NOTHING, REMOVE_ON_ZERO_DEGREE
 	};
 
-	public M1BatchTimed2(TCPEventReader reader) throws IOException {
+	public M1Batch(TCPEventReader reader) throws IOException {
 		super("M1-BatchGenerator", reader, reader.getBatchInterval());
 		this.edgeLifeTimeMillis = reader.getEdgeLifeTimeMillis();
 		if (reader.getEdgeLifeTimeMillis() * 1000 <= reader.getBatchInterval())

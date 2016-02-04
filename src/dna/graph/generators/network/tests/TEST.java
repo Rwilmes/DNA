@@ -10,7 +10,7 @@ import dna.graph.datastructures.GDS;
 import dna.graph.generators.GraphGenerator;
 import dna.graph.generators.network.EmptyNetwork;
 import dna.graph.generators.network.NetworkEdge;
-import dna.graph.generators.network.m1.M1BatchTimed2;
+import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
 import dna.graph.weights.IntWeight;
@@ -178,8 +178,8 @@ public class TEST {
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		BatchGenerator bg = new M1BatchTimed2(reader);
-		((M1BatchTimed2) bg).setDebug(debug);
+		BatchGenerator bg = new M1Batch(reader);
+		((M1Batch) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
@@ -215,8 +215,8 @@ public class TEST {
 		gg = new EmptyNetwork(GDS.directedV(NetworkWeight.class,
 				WeightSelection.None), timestampSeconds);
 
-		BatchGenerator bg = new M1BatchTimed2(reader);
-		((M1BatchTimed2) bg).setDebug(debug);
+		BatchGenerator bg = new M1Batch(reader);
+		((M1Batch) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
@@ -253,8 +253,8 @@ public class TEST {
 		gg = new EmptyNetwork(GDS.directedVE(NetworkWeight.class,
 				WeightSelection.None, LongWeight.class, WeightSelection.Zero),
 				timestampSeconds);
-		BatchGenerator bg = new M1BatchTimed2(reader);
-		((M1BatchTimed2) bg).setDebug(debug);
+		BatchGenerator bg = new M1Batch(reader);
+		((M1Batch) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
 				new DirectedMotifsU() };
@@ -297,8 +297,8 @@ public class TEST {
 		// gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
 		// WeightSelection.None, LongWeight.class, WeightSelection.Zero), 0,0);
 		//
-		BatchGenerator bg = new M1BatchTimed2(reader);
-		((M1BatchTimed2) bg).setDebug(debug);
+		BatchGenerator bg = new M1Batch(reader);
+		((M1Batch) bg).setDebug(debug);
 
 		Metric[] metrics = new Metric[] { new EdgeWeightsR(1.0),
 				new DegreeDistributionR(), new DirectedMotifsU() };
