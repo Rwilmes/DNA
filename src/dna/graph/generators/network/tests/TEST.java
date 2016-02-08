@@ -13,6 +13,7 @@ import dna.graph.generators.network.NetworkEdge;
 import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
+import dna.graph.generators.random.RandomGraph;
 import dna.graph.weights.IntWeight;
 import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
@@ -40,6 +41,7 @@ public class TEST {
 	public static final String gnuplot_xtics = "GNUPLOT_XTICS";
 	public static final String gnuplot_datetime = "GNUPLOT_DATETIME";
 	public static final String gnuplot_plotdatetime = "GNUPLOT_PLOTDATETIME";
+	public static final String gnuplot_xoffset = "GNUPLOT_XOFFSET";
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException, AggregationException,
@@ -54,7 +56,7 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 
 		Config.zipBatches();
-		 GraphVisualization.enable();
+		// GraphVisualization.enable();
 
 		boolean plot = true;
 		boolean debug = false;
@@ -62,12 +64,22 @@ public class TEST {
 		boolean removeInactiveEdges = false;
 		boolean removeZeroDegreeNodes = false;
 
-		boolean normalTest = true;
+		boolean normalTest = false;
 		boolean timedTest = false;
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
+
+		boolean w2mondayGen = false;
+		boolean w2mondayPlot = true;
+
 		boolean w2tuesdayGen = false;
 		boolean w2tuesdayPlot = false;
+
+		boolean w5thursdayGen = false;
+		boolean w5thursdayPlot = false;
+
+		boolean w5thursday11Gen = false;
+		boolean w5thursday11Plot = false;
 
 		int secondsPerBatch = 1;
 		int maxBatches = 100000;
@@ -75,6 +87,8 @@ public class TEST {
 
 		String dir = "data/tcp_test/10/";
 		String file = "out_10_3.list";
+
+		String name = secondsPerBatch + "_" + lifeTimePerEdge;
 
 		Log.infoSep();
 		Log.info("NETWORK-TESTS");
@@ -87,7 +101,7 @@ public class TEST {
 		if (normalTest) {
 			// TCPTEST1("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
 			// maxBatches, plot, debug);
-			modell_1_test("data/tcp_test/10/", "out_10_3.list",
+			modell_1_test("data/tcp_test/10/", "out_10_3.list", "normal",
 					secondsPerBatch, maxBatches, false, false, lifeTimePerEdge,
 					plot, debug);
 		}
@@ -105,18 +119,59 @@ public class TEST {
 			NodeTypeTest("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
 					lifeTimePerEdge, maxBatches, plot, debug);
 
-		if (w2tuesdayGen)
-			TCPTEST1TIMED("data/tcp_test/w2tuesday/", "w2tuesday.list",
-					secondsPerBatch, lifeTimePerEdge, maxBatches, false, debug);
+		if (w2mondayGen) {
+			modell_1_test("data/tcp_test/w2monday/", "w2monday.list", name,
+					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
+					false, debug);
+		}
+		if (w2mondayPlot) {
+			Log.info("reading w2 monday data");
+			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
+					+ "/series/", "w2-monday", false, false);
+			Log.info("plotting w2 monday data");
+			plotW2(sd, "data/tcp_test/w2monday/" + name + "/series/plots/");
+		}
 
+		if (w2tuesdayGen) {
+			modell_1_test("data/tcp_test/w2tuesday/", "w2tuesday.list", name,
+					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
+					false, debug);
+		}
 		if (w2tuesdayPlot) {
 			Log.info("reading w2 tuesday data");
-			SeriesData sd = SeriesData.read(
-					"data/tcp_test/w2tuesday/1_timed/series/", "w2-tuesday",
-					false, false);
+			SeriesData sd = SeriesData.read("data/tcp_test/w2tuesday/" + name
+					+ "/series/", "w2-tuesday", false, false);
 			Log.info("plotting w2 tuesday data");
-			plotW2(sd, "data/tcp_test/w2tuesday/1_timed/series/plots/");
+			plotW2(sd, "data/tcp_test/w2tuesday/" + name + "/series/plots/");
 		}
+
+		if (w5thursdayGen) {
+			modell_1_test("data/tcp_test/w5thursday/", "w5thursday.list", name,
+					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
+					false, debug);
+		}
+		if (w5thursdayPlot) {
+			Log.info("reading w5 thursday data");
+			SeriesData sd = SeriesData.read("data/tcp_test/w5thursday/" + name
+					+ "/series/", "w5-thursday", false, false);
+			Log.info("plotting w5 thursday data");
+			plotW5(sd, "data/tcp_test/w5thursday/" + name + "/series/plots/");
+		}
+
+		if (w5thursday11Gen) {
+			modell_1_test("data/tcp_test/w5thursday-11/", "w5thursday-11.list",
+					name, secondsPerBatch, maxBatches, true, true,
+					lifeTimePerEdge, false, debug);
+		}
+
+		if (w5thursday11Plot) {
+			Log.info("reading w5 thursday data");
+			SeriesData sd = SeriesData.read("data/tcp_test/w5thursday-11/"
+					+ name + "/series/", "w5-thursday-11", false, false);
+			Log.info("plotting w5 thursday data");
+			plotW2(sd, "data/tcp_test/w5thursday-11/" + name + "/series/plots/");
+		}
+
 	}
 
 	public static void blub2(long start, long end) throws FileNotFoundException {
@@ -144,6 +199,25 @@ public class TEST {
 			blub2(0, i);
 		}
 
+	}
+
+	public static void plotW5(SeriesData sd, String dir) throws IOException,
+			InterruptedException {
+		String defXTics = Config.get(gnuplot_xtics);
+		String defDateTime = Config.get(gnuplot_datetime);
+		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
+		String defXOffset = Config.get(gnuplot_xoffset);
+		Config.overwrite(gnuplot_xtics, "7200");
+		Config.overwrite(gnuplot_datetime, "%H:%M");
+		Config.overwrite(gnuplot_plotdatetime, "true");
+		// Config.overwrite(gnuplot_xoffset, "7200");
+		GraphVisualization.setText("Generating single scalar plots");
+		Plotting.plot(sd, dir, new PlottingConfig(
+				PlotFlag.plotSingleScalarValues));
+		Config.overwrite(gnuplot_xtics, defXTics);
+		Config.overwrite(gnuplot_datetime, defDateTime);
+		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
+		Config.overwrite(gnuplot_xoffset, defXOffset);
 	}
 
 	public static void plotW2(SeriesData sd, String dir) throws IOException,
@@ -203,7 +277,7 @@ public class TEST {
 		Log.infoSep();
 	}
 
-	public static void modell_1_test(String dir, String filename,
+	public static void modell_1_test(String dir, String filename, String name,
 			int batchLength, int maxBatches, boolean removeInactiveEdges,
 			boolean removeZeroDegreeNodes, long edgeLifeTime, boolean plot,
 			boolean debug) throws IOException, ParseException,
@@ -226,6 +300,10 @@ public class TEST {
 				NetworkWeight.class, WeightSelection.None, IntWeight.class,
 				WeightSelection.Zero), timestampSeconds);
 
+//		gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
+//				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
+//				0, 0, timestampSeconds);
+
 		// init batch generator
 		BatchGenerator bg = new M1Batch(reader);
 		((M1Batch) bg).setDebug(debug);
@@ -235,15 +313,14 @@ public class TEST {
 				new EdgeWeightsR(1.0), new DirectedMotifsU() };
 
 		// init series
-		Series s = new Series(gg, bg, metrics, dir + batchLength
-				+ "_timed/series/", "s1");
+		Series s = new Series(gg, bg, metrics, dir + name + "/series/", "s1");
 
 		// generate
 		SeriesData sd = s.generate(1, maxBatches, false);
 
 		// plot
 		if (plot) {
-			plot(sd, dir + batchLength + "_timed/plots/", true, false);
+			plot(sd, dir + batchLength + name + "/plots/", true, false);
 		}
 
 		GraphVisualization.setText("Finished");
