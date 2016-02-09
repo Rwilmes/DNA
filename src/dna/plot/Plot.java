@@ -299,8 +299,12 @@ public class Plot {
 			if (this.data[i] instanceof FunctionData) {
 				// do nothing
 			} else {
-				this.fileWriter
-						.writeln(this.bufferedData[mappedIndex - offset]);
+				String temp = this.bufferedData[mappedIndex - offset];
+
+				// if data = NaN, replace with 0.0 (else empty legend in plot)
+				if (temp.endsWith("NaN"))
+					temp = temp.replace("NaN", "0.0");
+				this.fileWriter.writeln(temp);
 				this.appendEOF();
 			}
 		}
