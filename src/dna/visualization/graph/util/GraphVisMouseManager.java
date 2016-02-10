@@ -9,15 +9,9 @@ import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.util.DefaultMouseManager;
 
 import dna.visualization.graph.GraphPanel;
-<<<<<<< 590f68b0c6334e6d7eb0d81b88f6fdab451e4d79
 import dna.visualization.graph.toolTips.ToolTip;
 import dna.visualization.graph.toolTips.button.FreezeButton;
 import dna.visualization.graph.toolTips.button.HighlightButton;
-=======
-import dna.visualization.graph.ToolTip.ToolTip;
-import dna.visualization.graph.ToolTip.button.FreezeButton;
-import dna.visualization.graph.ToolTip.button.HighlightButton;
->>>>>>> gvis: more resolving
 
 /**
  * The GraphVisMouseManager extends the GraphStream DefaultMouseManager. It
