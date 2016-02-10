@@ -1,9 +1,9 @@
-package dna.visualization.graph.ToolTip.button;
+package dna.visualization.graph.toolTips.button;
 
 import org.graphstream.ui.spriteManager.Sprite;
 
 import dna.visualization.graph.GraphVisualization;
-import dna.visualization.graph.ToolTip.ToolTip;
+import dna.visualization.graph.toolTips.ToolTip;
 
 /**
  * Button is a wrapper-class for the GraphStream Sprite class. It is also an

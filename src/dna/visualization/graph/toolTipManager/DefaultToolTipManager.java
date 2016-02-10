@@ -1,7 +1,7 @@
 package dna.visualization.graph.toolTipManager;
 
 import dna.visualization.graph.GraphPanel;
-import dna.visualization.graph.ToolTip.ToolTip.ToolTipType;
+import dna.visualization.graph.toolTips.ToolTip.ToolTipType;
 
 /**
  * The default ToolTipManager used in the GraphVisualization.

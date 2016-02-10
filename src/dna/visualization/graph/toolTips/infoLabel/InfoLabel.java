@@ -1,9 +1,9 @@
-package dna.visualization.graph.ToolTip.infoLabel;
+package dna.visualization.graph.toolTips.infoLabel;
 
 import org.graphstream.ui.spriteManager.Sprite;
 
 import dna.visualization.graph.GraphVisualization;
-import dna.visualization.graph.ToolTip.ToolTip;
+import dna.visualization.graph.toolTips.ToolTip;
 
 /**
  * InfoLabel extends ToolTip and is therefore a wrapper for a GraphStream
