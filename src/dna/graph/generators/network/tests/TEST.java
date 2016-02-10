@@ -33,6 +33,7 @@ import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEventReader;
+import dna.visualization.VisualizationUtils;
 import dna.visualization.graph.GraphPanel;
 import dna.visualization.graph.GraphVisualization;
 
@@ -43,16 +44,18 @@ public class TEST {
 	public static final String gnuplot_plotdatetime = "GNUPLOT_PLOTDATETIME";
 	public static final String gnuplot_xoffset = "GNUPLOT_XOFFSET";
 
+	public static final long w2mon_start = 897285347;
+	public static final long w2tue_start = 897371832;
+	public static final long w5thu_start = 899359214;
+
+	public static final long second = 1;
+	public static final long minute = 60 * second;
+	public static final long hour = 60 * minute;
+
 	public static void main(String[] args) throws IOException,
 			InterruptedException, AggregationException,
 			MetricNotApplicableException, ClassNotFoundException,
 			ParseException {
-
-		
-		GraphPanel x = null;
-		
-		
-		
 		Config.overwrite("GNUPLOT_PATH",
 				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
@@ -74,14 +77,15 @@ public class TEST {
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
 
-		boolean w2mondayGen = true;
-		boolean w2mondayPlot = true;
+		boolean w2mondayGen = false;
+		boolean w2mondayPlot = false;
+		boolean w2mondayStepPlot = false;
 
 		boolean w2tuesdayGen = false;
 		boolean w2tuesdayPlot = false;
 
 		boolean w5thursdayGen = false;
-		boolean w5thursdayPlot = false;
+		boolean w5thursdayPlot = true;
 
 		boolean w5thursday11Gen = false;
 		boolean w5thursday11Plot = false;
@@ -89,7 +93,7 @@ public class TEST {
 		int secondsPerBatch = 1;
 		int maxBatches = 100000;
 
-		long lifeTimePerEdgeSeconds = 60;
+		long lifeTimePerEdgeSeconds = 60 * 60;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 
 		String dir = "data/tcp_test/10/";
@@ -127,26 +131,38 @@ public class TEST {
 					lifeTimePerEdge, maxBatches, plot, debug);
 
 		if (w2mondayGen) {
-//			modell_1_test("data/tcp_test/w2monday/", "w2monday.list", name,
-//					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
-//					false, debug);
-
-			modell_1_test("data/tcp_test/w2mon-00-19/", "out00-19.list", name,
+			modell_1_test("data/tcp_test/w2monday/", "w2monday.list", name,
 					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
 					false, debug);
+
+			// modell_1_test("data/tcp_test/w2mon-00-19/", "out00-19.list",
+			// name,
+			// secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
+			// false, debug);
 		}
 		if (w2mondayPlot) {
-//			Log.info("reading w2 monday data");
-//			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
-//					+ "/series/", "w2-monday", false, false);
-//			Log.info("plotting w2 monday data");
-//			plotW2(sd, "data/tcp_test/w2monday/" + name + "/series/plots/");
-			
 			Log.info("reading w2 monday data");
-			SeriesData sd = SeriesData.read("data/tcp_test/w2mon-00-19/" + name
-					+ "/series/", "w2-monday-00-19", false, false);
+			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
+					+ "/series/", "w2-monday", false, false);
 			Log.info("plotting w2 monday data");
-			plotW2(sd, "data/tcp_test/w2mon-00-19/" + name + "/series/plots/");
+			plotW2(sd, "data/tcp_test/w2monday/" + name + "/series/plots/");
+
+			// Log.info("reading w2 monday data");
+			// SeriesData sd = SeriesData.read("data/tcp_test/w2mon-00-19/" +
+			// name
+			// + "/series/", "w2-monday-00-19", false, false);
+			// Log.info("plotting w2 monday data");
+			// plotW2(sd, "data/tcp_test/w2mon-00-19/" + name +
+			// "/series/plots/");
+		}
+
+		if (w2mondayStepPlot) {
+			Log.info("reading w2 monday data");
+			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
+					+ "/series/", "w2-monday", false, false);
+			Log.info("plotting w2 monday data");
+			plotIntervals(sd, "data/tcp_test/w2monday/" + name + "/plots/",
+					w2mon_start, 3 * hour, 3, PlotFlag.plotSingleScalarValues);
 		}
 
 		if (w2tuesdayGen) {
@@ -235,6 +251,39 @@ public class TEST {
 		Config.overwrite(gnuplot_datetime, defDateTime);
 		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
 		Config.overwrite(gnuplot_xoffset, defXOffset);
+	}
+
+	public static void plotIntervals(SeriesData sd, String dir, long from,
+			long interval, int steps, PlotFlag... flags) throws IOException,
+			InterruptedException {
+		for (int i = 0; i < steps; i++) {
+			plotFromToSingle(sd, dir + "i/", from, from + (i + 1) * interval,
+					flags);
+		}
+		
+		GraphPanel x = null;
+
+	}
+
+	public static void plotFromToSingle(SeriesData sd, String dir, long from,
+			long to, PlotFlag... flags) throws IOException,
+			InterruptedException {
+		String defXTics = Config.get(gnuplot_xtics);
+		String defDateTime = Config.get(gnuplot_datetime);
+		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
+		Config.overwrite(gnuplot_xtics, "7200");
+		Config.overwrite(gnuplot_datetime, "%H:%M");
+		Config.overwrite(gnuplot_plotdatetime, "true");
+		PlottingConfig pcfg = new PlottingConfig(flags);
+		pcfg.setPlotInterval(from, to, 1);
+		Log.info("Generating plots from " + from + " to " + to + ". -> '" + dir
+				+ "'");
+		GraphVisualization.setText("Generating plots from " + from + " to "
+				+ to + ".");
+		Plotting.plotRun(sd, 0, dir, pcfg);
+		Config.overwrite(gnuplot_xtics, defXTics);
+		Config.overwrite(gnuplot_datetime, defDateTime);
+		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
 	}
 
 	public static void plotW2(SeriesData sd, String dir) throws IOException,
