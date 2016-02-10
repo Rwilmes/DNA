@@ -13,7 +13,6 @@ import dna.graph.generators.network.NetworkEdge;
 import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
-import dna.graph.generators.random.RandomGraph;
 import dna.graph.weights.IntWeight;
 import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
@@ -34,6 +33,7 @@ import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEventReader;
+import dna.visualization.graph.GraphPanel;
 import dna.visualization.graph.GraphVisualization;
 
 public class TEST {
@@ -48,6 +48,11 @@ public class TEST {
 			MetricNotApplicableException, ClassNotFoundException,
 			ParseException {
 
+		
+		GraphPanel x = null;
+		
+		
+		
 		Config.overwrite("GNUPLOT_PATH",
 				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
@@ -69,7 +74,7 @@ public class TEST {
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
 
-		boolean w2mondayGen = false;
+		boolean w2mondayGen = true;
 		boolean w2mondayPlot = true;
 
 		boolean w2tuesdayGen = false;
@@ -83,7 +88,9 @@ public class TEST {
 
 		int secondsPerBatch = 1;
 		int maxBatches = 100000;
-		long lifeTimePerEdge = 60000;
+
+		long lifeTimePerEdgeSeconds = 60;
+		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 
 		String dir = "data/tcp_test/10/";
 		String file = "out_10_3.list";
@@ -120,16 +127,26 @@ public class TEST {
 					lifeTimePerEdge, maxBatches, plot, debug);
 
 		if (w2mondayGen) {
-			modell_1_test("data/tcp_test/w2monday/", "w2monday.list", name,
+//			modell_1_test("data/tcp_test/w2monday/", "w2monday.list", name,
+//					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
+//					false, debug);
+
+			modell_1_test("data/tcp_test/w2mon-00-19/", "out00-19.list", name,
 					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
 					false, debug);
 		}
 		if (w2mondayPlot) {
+//			Log.info("reading w2 monday data");
+//			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
+//					+ "/series/", "w2-monday", false, false);
+//			Log.info("plotting w2 monday data");
+//			plotW2(sd, "data/tcp_test/w2monday/" + name + "/series/plots/");
+			
 			Log.info("reading w2 monday data");
-			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
-					+ "/series/", "w2-monday", false, false);
+			SeriesData sd = SeriesData.read("data/tcp_test/w2mon-00-19/" + name
+					+ "/series/", "w2-monday-00-19", false, false);
 			Log.info("plotting w2 monday data");
-			plotW2(sd, "data/tcp_test/w2monday/" + name + "/series/plots/");
+			plotW2(sd, "data/tcp_test/w2mon-00-19/" + name + "/series/plots/");
 		}
 
 		if (w2tuesdayGen) {
@@ -300,9 +317,9 @@ public class TEST {
 				NetworkWeight.class, WeightSelection.None, IntWeight.class,
 				WeightSelection.Zero), timestampSeconds);
 
-//		gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
-//				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
-//				0, 0, timestampSeconds);
+		// gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
+		// WeightSelection.None, IntWeight.class, WeightSelection.Zero),
+		// 0, 0, timestampSeconds);
 
 		// init batch generator
 		BatchGenerator bg = new M1Batch(reader);
