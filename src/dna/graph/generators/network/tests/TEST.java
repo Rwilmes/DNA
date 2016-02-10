@@ -33,8 +33,6 @@ import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEventReader;
-import dna.visualization.VisualizationUtils;
-import dna.visualization.graph.GraphPanel;
 import dna.visualization.graph.GraphVisualization;
 
 public class TEST {
@@ -82,10 +80,12 @@ public class TEST {
 		boolean w2mondayStepPlot = false;
 
 		boolean w2tuesdayGen = false;
-		boolean w2tuesdayPlot = false;
+		boolean w2tuesdayPlot = true;
+		boolean w2tuesdayStepPlot = false;
 
 		boolean w5thursdayGen = false;
-		boolean w5thursdayPlot = true;
+		boolean w5thursdayPlot = false;
+		boolean w5thursdayStepPlot = false;
 
 		boolean w5thursday11Gen = false;
 		boolean w5thursday11Plot = false;
@@ -93,7 +93,11 @@ public class TEST {
 		int secondsPerBatch = 1;
 		int maxBatches = 100000;
 
-		long lifeTimePerEdgeSeconds = 60 * 60;
+		long plotInterval = 6 * hour;
+		int plotIntervalSteps = 8;
+		double plotOverlapPercent = 0.5;
+
+		long lifeTimePerEdgeSeconds = 30 * 60;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 
 		String dir = "data/tcp_test/10/";
@@ -162,7 +166,8 @@ public class TEST {
 					+ "/series/", "w2-monday", false, false);
 			Log.info("plotting w2 monday data");
 			plotIntervals(sd, "data/tcp_test/w2monday/" + name + "/plots/",
-					w2mon_start, 3 * hour, 3, PlotFlag.plotSingleScalarValues);
+					w2mon_start, plotInterval, plotOverlapPercent,
+					plotIntervalSteps, PlotFlag.plotSingleScalarValues);
 		}
 
 		if (w2tuesdayGen) {
@@ -177,6 +182,15 @@ public class TEST {
 			Log.info("plotting w2 tuesday data");
 			plotW2(sd, "data/tcp_test/w2tuesday/" + name + "/series/plots/");
 		}
+		if (w2tuesdayStepPlot) {
+			Log.info("reading w2 tuesday data");
+			SeriesData sd = SeriesData.read("data/tcp_test/w2tuesday/" + name
+					+ "/series/", "w2-tuesday", false, false);
+			Log.info("plotting w2 tuesday data");
+			plotIntervals(sd, "data/tcp_test/w2tuesday/" + name + "/plots/",
+					w2tue_start, plotInterval, plotOverlapPercent,
+					plotIntervalSteps, PlotFlag.plotSingleScalarValues);
+		}
 
 		if (w5thursdayGen) {
 			modell_1_test("data/tcp_test/w5thursday/", "w5thursday.list", name,
@@ -189,6 +203,15 @@ public class TEST {
 					+ "/series/", "w5-thursday", false, false);
 			Log.info("plotting w5 thursday data");
 			plotW5(sd, "data/tcp_test/w5thursday/" + name + "/series/plots/");
+		}
+		if (w5thursdayStepPlot) {
+			Log.info("reading w5 thursday data");
+			SeriesData sd = SeriesData.read("data/tcp_test/w5thursday/" + name
+					+ "/series/", "w5-thursday", false, false);
+			Log.info("plotting w5 thursday data");
+			plotIntervals(sd, "data/tcp_test/w5thursday/" + name + "/plots/",
+					w5thu_start, plotInterval, plotOverlapPercent,
+					plotIntervalSteps, PlotFlag.plotSingleScalarValues);
 		}
 
 		if (w5thursday11Gen) {
@@ -243,7 +266,6 @@ public class TEST {
 		Config.overwrite(gnuplot_xtics, "7200");
 		Config.overwrite(gnuplot_datetime, "%H:%M");
 		Config.overwrite(gnuplot_plotdatetime, "true");
-		// Config.overwrite(gnuplot_xoffset, "7200");
 		GraphVisualization.setText("Generating single scalar plots");
 		Plotting.plot(sd, dir, new PlottingConfig(
 				PlotFlag.plotSingleScalarValues));
@@ -254,15 +276,17 @@ public class TEST {
 	}
 
 	public static void plotIntervals(SeriesData sd, String dir, long from,
-			long interval, int steps, PlotFlag... flags) throws IOException,
-			InterruptedException {
-		for (int i = 0; i < steps; i++) {
-			plotFromToSingle(sd, dir + "i/", from, from + (i + 1) * interval,
-					flags);
-		}
-		
-		GraphPanel x = null;
+			long interval, double overlapPercent, int steps, PlotFlag... flags)
+			throws IOException, InterruptedException {
 
+		long inset = (long) Math.floor((overlapPercent * interval));
+
+		for (int i = 0; i < steps; i++) {
+			long begin = from + i
+					* (interval - (long) Math.floor(overlapPercent * interval));
+			long end = begin + interval;
+			plotFromToSingle(sd, dir + i + "/", begin, end, flags);
+		}
 	}
 
 	public static void plotFromToSingle(SeriesData sd, String dir, long from,
@@ -271,7 +295,7 @@ public class TEST {
 		String defXTics = Config.get(gnuplot_xtics);
 		String defDateTime = Config.get(gnuplot_datetime);
 		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
-		Config.overwrite(gnuplot_xtics, "7200");
+		// Config.overwrite(gnuplot_xtics, "7200");
 		Config.overwrite(gnuplot_datetime, "%H:%M");
 		Config.overwrite(gnuplot_plotdatetime, "true");
 		PlottingConfig pcfg = new PlottingConfig(flags);
