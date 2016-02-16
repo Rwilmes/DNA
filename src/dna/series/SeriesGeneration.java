@@ -685,6 +685,13 @@ public class SeriesGeneration {
 			batchData.getMetrics().add(data);
 		}
 
+		// compute labels
+		for (Labeller labeller : series.getLabeller()) {
+			for (Label l : labeller.computeLabels(batchData, series.getMetrics())) {
+				batchData.getLabels().add(l);
+			}
+		}
+
 		return batchData;
 	}
 
