@@ -37,7 +37,7 @@ public abstract class Labeller {
 	 **/
 	public boolean isApplicable(IMetric[] metrics) {
 		String[] reqMetrics = getRequiredMetrics();
-		MetricRequirement req = getRequirementStrategy();
+		MetricRequirement req = getMetricRequirement();
 		boolean[] flags = new boolean[reqMetrics.length];
 
 		// cross-check metrics and set flags
@@ -67,10 +67,10 @@ public abstract class Labeller {
 		}
 	}
 
-	public abstract ArrayList<Label> computeLabels(BatchData batchData,
+	public abstract ArrayList<Label> compute(BatchData batchData,
 			IMetric[] metrics);
 
 	public abstract String[] getRequiredMetrics();
 
-	public abstract MetricRequirement getRequirementStrategy();
+	public abstract MetricRequirement getMetricRequirement();
 }
