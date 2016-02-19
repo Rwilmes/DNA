@@ -276,6 +276,10 @@ public class TCPEventReader extends NetworkEventReader {
 	public int mapIp(String ip) {
 		return (this.ips.size() - 1) + ipOffset;
 	}
+	
+	public int getNextMapping() {
+		return (this.ips.size() + this.ports.size());
+	}
 
 	public boolean containsPort(int port) {
 		return this.ports.contains(port);
@@ -285,7 +289,8 @@ public class TCPEventReader extends NetworkEventReader {
 		if (this.ips.contains(ip)) {
 			return ipMap.get(ip);
 		} else {
-			int mapping = mapIp(ip);
+//			int mapping = mapIp(ip);
+			int mapping = getNextMapping();
 			this.ips.add(ip);
 			this.ipMap.put(ip, mapping);
 			return mapping;
@@ -296,7 +301,8 @@ public class TCPEventReader extends NetworkEventReader {
 		if (this.ports.contains(port)) {
 			return portMap.get(port);
 		} else {
-			int mapping = mapPort(port);
+//			int mapping = mapPort(port);
+			int mapping = getNextMapping();
 			this.ports.add(port);
 			this.portMap.put(port, mapping);
 			return mapping;

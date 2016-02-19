@@ -18,9 +18,18 @@ import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.metrics.Metric;
 import dna.metrics.MetricNotApplicableException;
+import dna.metrics.assortativity.AssortativityU;
+import dna.metrics.centrality.BetweennessCentralityU;
+import dna.metrics.clustering.DirectedClusteringCoefficientU;
+import dna.metrics.clustering.local.DirectedLocalClusteringCoefficientR;
 import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.degree.DegreeDistributionU;
 import dna.metrics.motifs.DirectedMotifsU;
+import dna.metrics.paths.IntWeightedAllPairsShortestPathsU;
+import dna.metrics.paths.UnweightedAllPairsShortestPathsU;
+import dna.metrics.richClub.RichClubConnectivityByDegreeU;
+import dna.metrics.similarityMeasures.matching.MatchingU;
+import dna.metrics.similarityMeasures.overlap.OverlapU;
 import dna.metrics.weights.EdgeWeightsR;
 import dna.plot.Plotting;
 import dna.plot.PlottingConfig;
@@ -49,6 +58,23 @@ public class TEST {
 	public static final long second = 1;
 	public static final long minute = 60 * second;
 	public static final long hour = 60 * minute;
+
+	// public static final Metric[] metrics = new Metric[] {
+	// new DegreeDistributionU(), new EdgeWeightsR(1.0),
+	// new DirectedMotifsU() };
+
+	public static final Metric[] metrics = new Metric[] {
+			new AssortativityU(),
+			new BetweennessCentralityU(),
+			new DirectedClusteringCoefficientU(),
+			new DirectedLocalClusteringCoefficientR(),
+			// new StrongConnectivityU(),
+			// new WeakConnectivityU(),
+			new UnweightedAllPairsShortestPathsU(),
+			new IntWeightedAllPairsShortestPathsU(),
+			new RichClubConnectivityByDegreeU(), new MatchingU(),
+			new OverlapU(), new DegreeDistributionU(), new EdgeWeightsR(1.0),
+			new DirectedMotifsU() };
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException, AggregationException,
@@ -81,7 +107,7 @@ public class TEST {
 
 		boolean w2tuesdayGen = false;
 		boolean w2tuesdayPlot = true;
-		boolean w2tuesdayStepPlot = false;
+		boolean w2tuesdayStepPlot = true;
 
 		boolean w5thursdayGen = false;
 		boolean w5thursdayPlot = false;
@@ -97,7 +123,7 @@ public class TEST {
 		int plotIntervalSteps = 8;
 		double plotOverlapPercent = 0.5;
 
-		long lifeTimePerEdgeSeconds = 30 * 60;
+		long lifeTimePerEdgeSeconds = minute * 30;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 
 		String dir = "data/tcp_test/10/";
@@ -149,7 +175,8 @@ public class TEST {
 			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
 					+ "/series/", "w2-monday", false, false);
 			Log.info("plotting w2 monday data");
-			plotW2(sd, "data/tcp_test/w2monday/" + name + "/series/plots/");
+			plotW2Single(sd, "data/tcp_test/w2monday/" + name
+					+ "/series/plots/");
 
 			// Log.info("reading w2 monday data");
 			// SeriesData sd = SeriesData.read("data/tcp_test/w2mon-00-19/" +
@@ -167,7 +194,7 @@ public class TEST {
 			Log.info("plotting w2 monday data");
 			plotIntervals(sd, "data/tcp_test/w2monday/" + name + "/plots/",
 					w2mon_start, plotInterval, plotOverlapPercent,
-					plotIntervalSteps, PlotFlag.plotSingleScalarValues);
+					plotIntervalSteps, true, false);
 		}
 
 		if (w2tuesdayGen) {
@@ -180,7 +207,10 @@ public class TEST {
 			SeriesData sd = SeriesData.read("data/tcp_test/w2tuesday/" + name
 					+ "/series/", "w2-tuesday", false, false);
 			Log.info("plotting w2 tuesday data");
-			plotW2(sd, "data/tcp_test/w2tuesday/" + name + "/series/plots/");
+			plotW2Single(sd, "data/tcp_test/w2tuesday/" + name
+					+ "/series/plots/");
+			// plotW2Multi(sd, "data/tcp_test/w2tuesday/" + name
+			// + "/series/plots/");
 		}
 		if (w2tuesdayStepPlot) {
 			Log.info("reading w2 tuesday data");
@@ -189,7 +219,7 @@ public class TEST {
 			Log.info("plotting w2 tuesday data");
 			plotIntervals(sd, "data/tcp_test/w2tuesday/" + name + "/plots/",
 					w2tue_start, plotInterval, plotOverlapPercent,
-					plotIntervalSteps, PlotFlag.plotSingleScalarValues);
+					plotIntervalSteps, true, false);
 		}
 
 		if (w5thursdayGen) {
@@ -211,7 +241,7 @@ public class TEST {
 			Log.info("plotting w5 thursday data");
 			plotIntervals(sd, "data/tcp_test/w5thursday/" + name + "/plots/",
 					w5thu_start, plotInterval, plotOverlapPercent,
-					plotIntervalSteps, PlotFlag.plotSingleScalarValues);
+					plotIntervalSteps, true, false);
 		}
 
 		if (w5thursday11Gen) {
@@ -225,7 +255,8 @@ public class TEST {
 			SeriesData sd = SeriesData.read("data/tcp_test/w5thursday-11/"
 					+ name + "/series/", "w5-thursday-11", false, false);
 			Log.info("plotting w5 thursday data");
-			plotW2(sd, "data/tcp_test/w5thursday-11/" + name + "/series/plots/");
+			plotW2Single(sd, "data/tcp_test/w5thursday-11/" + name
+					+ "/series/plots/");
 		}
 
 	}
@@ -276,8 +307,9 @@ public class TEST {
 	}
 
 	public static void plotIntervals(SeriesData sd, String dir, long from,
-			long interval, double overlapPercent, int steps, PlotFlag... flags)
-			throws IOException, InterruptedException {
+			long interval, double overlapPercent, int steps,
+			boolean plotSingle, boolean plotMulti) throws IOException,
+			InterruptedException {
 
 		long inset = (long) Math.floor((overlapPercent * interval));
 
@@ -285,7 +317,14 @@ public class TEST {
 			long begin = from + i
 					* (interval - (long) Math.floor(overlapPercent * interval));
 			long end = begin + interval;
-			plotFromToSingle(sd, dir + i + "/", begin, end, flags);
+
+			if (plotSingle)
+				plotFromToSingle(sd, dir + i + "/", begin, end,
+						PlotFlag.plotSingleScalarValues);
+
+			if (plotMulti)
+				plotFromToSingle(sd, dir + i + "/", begin, end,
+						PlotFlag.plotNodeValueLists);
 		}
 	}
 
@@ -310,8 +349,20 @@ public class TEST {
 		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
 	}
 
-	public static void plotW2(SeriesData sd, String dir) throws IOException,
+	public static void plotFromToMulti(SeriesData sd, String dir, long from,
+			long to, PlotFlag... flags) throws IOException,
 			InterruptedException {
+		PlottingConfig pcfg = new PlottingConfig(flags);
+		pcfg.setPlotInterval(from, to, 1);
+		Log.info("Generating plots from " + from + " to " + to + ". -> '" + dir
+				+ "'");
+		GraphVisualization.setText("Generating plots from " + from + " to "
+				+ to + ".");
+		Plotting.plotRun(sd, 0, dir, pcfg);
+	}
+
+	public static void plotW2Single(SeriesData sd, String dir)
+			throws IOException, InterruptedException {
 		String defXTics = Config.get(gnuplot_xtics);
 		String defDateTime = Config.get(gnuplot_datetime);
 		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
@@ -324,6 +375,12 @@ public class TEST {
 		Config.overwrite(gnuplot_xtics, defXTics);
 		Config.overwrite(gnuplot_datetime, defDateTime);
 		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
+	}
+
+	public static void plotW2Multi(SeriesData sd, String dir)
+			throws IOException, InterruptedException {
+		GraphVisualization.setText("Generating multi scalar plots");
+		Plotting.plot(sd, dir, new PlottingConfig(PlotFlag.plotNodeValueLists));
 	}
 
 	public static void NodeTypeTest(String dir, String filename, int seconds,
@@ -399,8 +456,7 @@ public class TEST {
 		((M1Batch) bg).setDebug(debug);
 
 		// init metrics
-		Metric[] metrics = new Metric[] { new DegreeDistributionU(),
-				new EdgeWeightsR(1.0), new DirectedMotifsU() };
+		Metric[] metrics = TEST.metrics;
 
 		// init series
 		Series s = new Series(gg, bg, metrics, dir + name + "/series/", "s1");
