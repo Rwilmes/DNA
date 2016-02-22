@@ -61,7 +61,7 @@ public class IntrusionDetectionLabeler1 extends Labeler {
 			double dmotif2 = motifs.getValues().get("DM02").getValue();
 
 			double rel = dmotif2 / total;
-			if (rel >= 0.4) {
+			if (rel >= 0.3) {
 				Label l = new Label(name, type, "true");
 				list.add(l);
 				Log.info(batchData.getTimestamp() + "  <-  " + l.toString());
