@@ -1217,13 +1217,6 @@ public class Plot {
 		script.add("set style " + Config.get("GNUPLOT_STYLE"));
 		script.add("set boxwidth " + Config.get("GNUPLOT_BOXWIDTH"));
 
-		// add labels
-		if (this.plotLabelsFlag) {
-			for (PlotLabel label : this.plotLabels) {
-				script.add(label.getLine());
-			}
-		}
-
 		ArrayList<String> buff = new ArrayList<String>();
 
 		// if no config is present
@@ -1261,6 +1254,11 @@ public class Plot {
 			}
 			if (!Config.get("GNUPLOT_YTICS").equals("null")) {
 				script.add("set ytics " + Config.get("GNUPLOT_YTICS"));
+			}
+			if (this.plotLabelsFlag) {
+				for (PlotLabel label : this.plotLabels) {
+					script.add(label.getLine());
+				}
 			}
 			for (int i = 0; i < this.data.length; i++) {
 				String line = "";
@@ -1337,6 +1335,11 @@ public class Plot {
 					script.add("set key "
 							+ Config.get(PlotConfig.gnuplotDefaultKeyKey));
 			}
+			if (this.plotLabelsFlag) {
+				for (PlotLabel label : this.plotLabels) {
+					script.add(label.getLine());
+				}
+			}
 			for (int i = 0; i < this.data.length; i++) {
 				String line = "";
 
@@ -1393,6 +1396,7 @@ public class Plot {
 
 		// return
 		return script;
+
 	}
 
 	/** Executes the gnuplot script **/
