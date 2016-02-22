@@ -1761,7 +1761,8 @@ public class Plot {
 			// generate and ad plot labels
 			LabelList llist = batch.getLabels();
 			for (Label l : llist.getList()) {
-				this.addPlotLabel(PlotLabel.generatePlotLabel(timestamp, l));
+				this.addPlotLabel(PlotLabel.generatePlotLabel(timestamp, l,
+						this.plotDateTime));
 			}
 		}
 	}
