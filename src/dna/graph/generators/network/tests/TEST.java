@@ -108,13 +108,20 @@ public class TEST {
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
 
-		boolean w1wednesdayGen = true;
-		boolean w1wednesdayPlot = true;
+		boolean w1wednesdayGen = false;
+		boolean w1wednesdayPlot = false;
 		boolean w1wednesdayStepPlot = false;
 
 		boolean w2mondayGen = false;
 		boolean w2mondayPlot = false;
 		boolean w2mondayStepPlot = false;
+
+		/** w3 thursday **/
+		String w3thursdayDir = "data/tcp_test/w3thursday/";
+		String w3thursdayListFile = "w3thursday.list";
+		boolean w3thursdayGen = false;
+		boolean w3thursdayPlot = true;
+		boolean w3thursdayStepPlot = false;
 
 		boolean w2tuesdayGen = false;
 		boolean w2tuesdayPlot = false;
@@ -183,14 +190,6 @@ public class TEST {
 			Log.info("plotting w1 wed data");
 			plotW2Single(sd, "data/tcp_test/w1wednesday/" + name
 					+ "/series/plots/");
-
-			// Log.info("reading w2 monday data");
-			// SeriesData sd = SeriesData.read("data/tcp_test/w2mon-00-19/" +
-			// name
-			// + "/series/", "w2-monday-00-19", false, false);
-			// Log.info("plotting w2 monday data");
-			// plotW2(sd, "data/tcp_test/w2mon-00-19/" + name +
-			// "/series/plots/");
 		}
 
 		if (w2mondayGen) {
@@ -253,6 +252,19 @@ public class TEST {
 			plotIntervals(sd, "data/tcp_test/w2tuesday/" + name + "/plots/",
 					w2tue_start, plotInterval, plotOverlapPercent,
 					plotIntervalSteps, true, false);
+		}
+
+		if (w3thursdayGen) {
+			modell_1_test(w3thursdayDir, w3thursdayListFile, name,
+					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
+					false, debug);
+		}
+		if (w3thursdayPlot) {
+			Log.info("reading w3 thursday data");
+			SeriesData sd = SeriesData.read(w3thursdayDir + name + "/series/",
+					"w3-thu", false, false);
+			Log.info("plotting w3 thursday data");
+			plotW2Single(sd, w3thursdayDir + name + "/series/plots/");
 		}
 
 		if (w5thursdayGen) {
@@ -399,7 +411,7 @@ public class TEST {
 		String defXTics = Config.get(gnuplot_xtics);
 		String defDateTime = Config.get(gnuplot_datetime);
 		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
-		Config.overwrite(gnuplot_xtics, "7200");
+//		Config.overwrite(gnuplot_xtics, "7200");
 		Config.overwrite(gnuplot_datetime, "%H:%M");
 		Config.overwrite(gnuplot_plotdatetime, "true");
 		GraphVisualization.setText("Generating single scalar plots");
