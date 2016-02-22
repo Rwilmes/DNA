@@ -19,6 +19,7 @@ import dna.graph.weights.Weight.WeightSelection;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.labels.labeler.ids.IntrusionDetectionLabeler1;
+import dna.labels.labeler.ids.IntrusionDetectionLabeler2;
 import dna.metrics.Metric;
 import dna.metrics.MetricNotApplicableException;
 import dna.metrics.assortativity.AssortativityU;
@@ -119,7 +120,7 @@ public class TEST {
 		/** w3 thursday **/
 		String w3thursdayDir = "data/tcp_test/w3thursday/";
 		String w3thursdayListFile = "w3thursday.list";
-		boolean w3thursdayGen = false;
+		boolean w3thursdayGen = true;
 		boolean w3thursdayPlot = true;
 		boolean w3thursdayStepPlot = false;
 
@@ -411,7 +412,7 @@ public class TEST {
 		String defXTics = Config.get(gnuplot_xtics);
 		String defDateTime = Config.get(gnuplot_datetime);
 		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
-//		Config.overwrite(gnuplot_xtics, "7200");
+		// Config.overwrite(gnuplot_xtics, "7200");
 		Config.overwrite(gnuplot_datetime, "%H:%M");
 		Config.overwrite(gnuplot_plotdatetime, "true");
 		GraphVisualization.setText("Generating single scalar plots");
@@ -504,7 +505,8 @@ public class TEST {
 		Metric[] metrics = TEST.metrics_m1;
 
 		// init labeler
-		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1() };
+		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
+				new IntrusionDetectionLabeler2() };
 
 		// init series
 		Series s = new Series(gg, bg, metrics, labeler,

@@ -117,7 +117,7 @@ public class PlotLabel {
 			buff += " " + "front";
 
 		if (colorSpec != null)
-			buff += " " + "textcolor" + " " + colorSpec;
+			buff += " " + "tc" + " " + colorSpec;
 
 		if (pointStyle != null)
 			buff += " " + "point" + " " + pointStyle;
@@ -142,8 +142,36 @@ public class PlotLabel {
 		// String text = timestamp + ":" + label.getType();
 		String text = "";
 		return new PlotLabel(-1, text, timestampString, "graph 0.95",
-				Orientation.left, false, 0, null, 0, false, true, null, "pt 1",
-				0);
+				Orientation.left, false, 0, null, 0, false, true, null,
+				getPointColor(label), 0);
 	}
+
+	/** Returns a color-spec based on the given label. **/
+	public static String getPointColor(Label l) {
+		String name = l.getName();
+		String type = l.getType();
+		String value = l.getValue();
+
+		switch (name) {
+		case "MetricRuntimeIntersectionLabeler":
+			return "pt 1";
+		case "IDS":
+			return "pt 2 lc rgb '#4dbeee'";
+		case "DoS1":
+			return "pt 3 lc rgb '#d95319'";
+		case "DoS2":
+			return "pt 4 lc rgb '#7e2f8e'";
+		}
+
+		return null;
+	}
+
+	// rgb '#0072bd' # blue
+	// rgb '#d95319' # orange
+	// rgb '#edb120' # yellow
+	// rgb '#7e2f8e' # purple
+	// rgb '#77ac30' # green
+	// rgb '#4dbeee' # light-blue
+	// rgb '#a2142f' # red
 
 }

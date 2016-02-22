@@ -29,7 +29,7 @@ import dna.util.Log;
 public class MetricRuntimeIntersectionLabeler extends Labeler {
 
 	private static String name = "MetricRuntimeIntersectionLabeler";
-	private String label;
+	public static String label = "A>B";
 	private String value = "true";
 
 	private String metricA;
@@ -42,7 +42,6 @@ public class MetricRuntimeIntersectionLabeler extends Labeler {
 		super(name);
 		this.metricA = metricA;
 		this.metricB = metricB;
-		this.label = "A>B";
 	}
 
 	@Override
@@ -80,7 +79,7 @@ public class MetricRuntimeIntersectionLabeler extends Labeler {
 		double diff = metricBMillis - metricAMillis;
 
 		if (oldDiff > 0 && diff <= 0) {
-			Label l = new Label(getName(), this.label, this.value);
+			Label l = new Label(getName(), label, this.value);
 			list.add(l);
 			Log.info(batchData.getTimestamp() + "  <-  " + l.toString());
 		}

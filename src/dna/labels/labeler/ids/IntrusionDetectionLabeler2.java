@@ -15,7 +15,7 @@ import dna.updates.generators.BatchGenerator;
 import dna.util.Log;
 
 /**
- * First approach of an IDS-labeler based on modell 1.
+ * Second approach of an IDS-labeler based on modell 1 and weights.
  * 
  * @author Rwilmes
  * 
@@ -55,12 +55,12 @@ public class IntrusionDetectionLabeler2 extends Labeler {
 		double avg = edgeWeights.getValues().get("AverageWeight").getValue();
 
 		if (max >= maxThreshold) {
-			Label l = new Label(name, maxType, "true");
+			Label l = new Label(name + "1", maxType, "true");
 			list.add(l);
 			Log.info(batchData.getTimestamp() + "  <-  " + l.toString());
 		}
 		if ((avg * max) >= avgMaxProductThreshold) {
-			Label l = new Label(name, avgMaxType, "true");
+			Label l = new Label(name + "2", avgMaxType, "true");
 			list.add(l);
 			Log.info(batchData.getTimestamp() + "  <-  " + l.toString());
 		}
