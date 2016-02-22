@@ -80,19 +80,20 @@ public class TEST {
 			new DirectedMotifsU() };
 
 	public static final Metric[] metrics_m1 = new Metric[] {
-			new DegreeDistributionU(), new DirectedMotifsU() };
+			new DegreeDistributionU(), new DirectedMotifsU(),
+			new EdgeWeightsR(1.0) };
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException, AggregationException,
 			MetricNotApplicableException, ClassNotFoundException,
 			ParseException, LabelerNotApplicableException {
-		Config.overwrite("GNUPLOT_PATH",
-				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
+		Config.overwrite("GNUPLOT_PATH", "C://files//gnuplot//bin//gnuplot.exe");
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_NODE_DEFAULT_SIZE", "14");
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
+		TCPEventReader.timestampOffset = (int) (2 * hour);
 		Config.zipBatches();
 		// GraphVisualization.enable();
 
@@ -107,8 +108,12 @@ public class TEST {
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
 
-		boolean w2mondayGen = true;
-		boolean w2mondayPlot = true;
+		boolean w1wednesdayGen = true;
+		boolean w1wednesdayPlot = true;
+		boolean w1wednesdayStepPlot = false;
+
+		boolean w2mondayGen = false;
+		boolean w2mondayPlot = false;
 		boolean w2mondayStepPlot = false;
 
 		boolean w2tuesdayGen = false;
@@ -165,6 +170,28 @@ public class TEST {
 		if (nodeTypeTest)
 			NodeTypeTest("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
 					lifeTimePerEdge, maxBatches, plot, debug);
+
+		if (w1wednesdayGen) {
+			modell_1_test("data/tcp_test/w1wednesday/", "w1wednesday.list",
+					name, secondsPerBatch, maxBatches, true, true,
+					lifeTimePerEdge, false, debug);
+		}
+		if (w1wednesdayPlot) {
+			Log.info("reading w1 wed data");
+			SeriesData sd = SeriesData.read("data/tcp_test/w1wednesday/" + name
+					+ "/series/", "w1-wed", false, false);
+			Log.info("plotting w1 wed data");
+			plotW2Single(sd, "data/tcp_test/w1wednesday/" + name
+					+ "/series/plots/");
+
+			// Log.info("reading w2 monday data");
+			// SeriesData sd = SeriesData.read("data/tcp_test/w2mon-00-19/" +
+			// name
+			// + "/series/", "w2-monday-00-19", false, false);
+			// Log.info("plotting w2 monday data");
+			// plotW2(sd, "data/tcp_test/w2mon-00-19/" + name +
+			// "/series/plots/");
+		}
 
 		if (w2mondayGen) {
 			modell_1_test("data/tcp_test/w2monday/", "w2monday.list", name,
@@ -445,7 +472,6 @@ public class TEST {
 		reader.setEdgeLifeTime(edgeLifeTime);
 		reader.setRemoveInactiveEdges(removeInactiveEdges);
 		reader.setRemoveZeroDegreeNodes(removeZeroDegreeNodes);
-
 		// init graph generator
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
