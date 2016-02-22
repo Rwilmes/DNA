@@ -16,6 +16,9 @@ import dna.graph.generators.network.weights.NetworkWeight;
 import dna.graph.weights.IntWeight;
 import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
+import dna.labels.labeler.Labeler;
+import dna.labels.labeler.LabelerNotApplicableException;
+import dna.labels.labeler.ids.IntrusionDetectionLabeler1;
 import dna.metrics.Metric;
 import dna.metrics.MetricNotApplicableException;
 import dna.metrics.assortativity.AssortativityU;
@@ -76,17 +79,20 @@ public class TEST {
 			new OverlapU(), new DegreeDistributionU(), new EdgeWeightsR(1.0),
 			new DirectedMotifsU() };
 
+	public static final Metric[] metrics_m1 = new Metric[] {
+			new DegreeDistributionU(), new DirectedMotifsU() };
+
 	public static void main(String[] args) throws IOException,
 			InterruptedException, AggregationException,
 			MetricNotApplicableException, ClassNotFoundException,
-			ParseException {
+			ParseException, LabelerNotApplicableException {
 		Config.overwrite("GNUPLOT_PATH",
 				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_NODE_DEFAULT_SIZE", "14");
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
-
+		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
 		Config.zipBatches();
 		// GraphVisualization.enable();
 
@@ -101,13 +107,13 @@ public class TEST {
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
 
-		boolean w2mondayGen = false;
-		boolean w2mondayPlot = false;
+		boolean w2mondayGen = true;
+		boolean w2mondayPlot = true;
 		boolean w2mondayStepPlot = false;
 
 		boolean w2tuesdayGen = false;
-		boolean w2tuesdayPlot = true;
-		boolean w2tuesdayStepPlot = true;
+		boolean w2tuesdayPlot = false;
+		boolean w2tuesdayStepPlot = false;
 
 		boolean w5thursdayGen = false;
 		boolean w5thursdayPlot = false;
@@ -123,7 +129,7 @@ public class TEST {
 		int plotIntervalSteps = 8;
 		double plotOverlapPercent = 0.5;
 
-		long lifeTimePerEdgeSeconds = minute * 30;
+		long lifeTimePerEdgeSeconds = hour;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 
 		String dir = "data/tcp_test/10/";
@@ -386,7 +392,8 @@ public class TEST {
 	public static void NodeTypeTest(String dir, String filename, int seconds,
 			long millis, int maxBatches, boolean plot, boolean debug)
 			throws IOException, ParseException, AggregationException,
-			MetricNotApplicableException, InterruptedException {
+			MetricNotApplicableException, InterruptedException,
+			LabelerNotApplicableException {
 		Log.info("M1-Batch test with node-types as weights!");
 		Log.info("Lifetime:\t" + millis + "ms");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
@@ -429,7 +436,7 @@ public class TEST {
 			boolean removeZeroDegreeNodes, long edgeLifeTime, boolean plot,
 			boolean debug) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
-			InterruptedException {
+			InterruptedException, LabelerNotApplicableException {
 		Log.info("Modell 1 test!");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
@@ -456,10 +463,14 @@ public class TEST {
 		((M1Batch) bg).setDebug(debug);
 
 		// init metrics
-		Metric[] metrics = TEST.metrics;
+		Metric[] metrics = TEST.metrics_m1;
+
+		// init labeler
+		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1() };
 
 		// init series
-		Series s = new Series(gg, bg, metrics, dir + name + "/series/", "s1");
+		Series s = new Series(gg, bg, metrics, labeler,
+				dir + name + "/series/", "s1");
 
 		// generate
 		SeriesData sd = s.generate(1, maxBatches, false);
@@ -476,7 +487,7 @@ public class TEST {
 	public static void TCPTEST1(String dir, String filename, int seconds,
 			int maxBatches, boolean plot, boolean debug) throws IOException,
 			ParseException, AggregationException, MetricNotApplicableException,
-			InterruptedException {
+			InterruptedException, LabelerNotApplicableException {
 		Log.info("M1-Batch test with permanent edges!");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
@@ -513,7 +524,8 @@ public class TEST {
 	public static void TCPTEST1TIMED(String dir, String filename, int seconds,
 			long millis, int maxBatches, boolean plot, boolean debug)
 			throws IOException, ParseException, AggregationException,
-			MetricNotApplicableException, InterruptedException {
+			MetricNotApplicableException, InterruptedException,
+			LabelerNotApplicableException {
 		Log.info("M1-Batch test with timed edges!");
 		Log.info("Lifetime:\t" + millis + "ms");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
@@ -552,7 +564,8 @@ public class TEST {
 	public static void TCPTEST1TIMED2(String dir, String filename, int seconds,
 			long millis, int maxBatches, boolean plot, boolean debug)
 			throws IOException, ParseException, AggregationException,
-			MetricNotApplicableException, InterruptedException {
+			MetricNotApplicableException, InterruptedException,
+			LabelerNotApplicableException {
 		Log.info("M1-Batch test with timed edges!");
 		Log.info("Lifetime:\t" + millis + "ms");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
