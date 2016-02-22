@@ -128,9 +128,22 @@ public class PlotLabel {
 	}
 
 	/** Crafts a PlotLabel based on the given Label. **/
-	public static PlotLabel generatePlotLabel(double timestamp, Label label) {
-		return new PlotLabel(timestamp + ":" + label.getType() + "="
-				+ label.getValue(), "" + timestamp, "graph 0.95",
-				Orientation.left, "pt 1");
+	public static PlotLabel generatePlotLabel(double timestamp, Label label,
+			boolean plotDateTime) {
+		// if plotDateTime -> add parantheses "
+		String timestampString = plotDateTime ? "" + '"' + timestamp + '"' : ""
+				+ timestamp;
+		// return new PlotLabel(timestamp + ":" + label.getType() + "="
+		// + label.getValue(), timestampString, "graph 0.95",
+		// Orientation.left, "pt 1");
+		//
+		//
+
+		// String text = timestamp + ":" + label.getType();
+		String text = "";
+		return new PlotLabel(-1, text, timestampString, "graph 0.95",
+				Orientation.left, false, 0, null, 0, false, true, null, "pt 1",
+				0);
 	}
+
 }
