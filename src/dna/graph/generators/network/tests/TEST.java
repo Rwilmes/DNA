@@ -16,6 +16,8 @@ import dna.graph.generators.network.weights.NetworkWeight;
 import dna.graph.weights.IntWeight;
 import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
+import dna.labels.Label;
+import dna.labels.LabelUtils;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.labels.labeler.ids.IntrusionDetectionLabeler1;
@@ -63,6 +65,46 @@ public class TEST {
 	public static final long minute = 60 * second;
 	public static final long hour = 60 * minute;
 
+	/** w1 wed **/
+	public static final Label[] w1wedAttacks = new Label[] { new Label("smurf") };
+	public static final int[] w1wedFroms = new int[] { 896861536 };
+	public static final int[] w1wedTos = new int[] { 896861537 };
+	public static final Label[] w1wedLabels = new Label[] { w1wedAttacks[0],
+			new Label("IDS"), new Label("DoS1"), new Label("DoS2") };
+
+	/** w2 mon **/
+	public static final Label w2monAtt = new Label("portsweep");
+	public static final int w2monStart = 897326877;
+	public static final int w2monEnd = 897326878;
+	public static final Label[] w2monlabels = new Label[] { w2monAtt,
+			new Label("IDS"), new Label("DoS1"), new Label("DoS2") };
+
+	/** w2 tue **/
+	public static final Label w2tueAtt = new Label("ipsweep");
+	public static final int w2tueStart = 897418831;
+	public static final int w2tueEnd = 897424374;
+	public static final Label[] w2tuelabels = new Label[] { w2tueAtt,
+			new Label("IDS"), new Label("DoS1"), new Label("DoS2") };
+
+	/** w3 thu **/
+	public static final Label[] w3thuAttacks = new Label[] { new Label(
+			"neptune") };
+	public static final int[] w3thuFroms = new int[] { 898182626 };
+	public static final int[] w3thuTos = new int[] { 898185736 };
+	public static final Label[] w3thuLabels = new Label[] { w3thuAttacks[0],
+			new Label("IDS"), new Label("DoS1"), new Label("DoS2") };
+
+	/** w6 fri **/
+	public static final Label[] w6friAttacks = new Label[] {
+			new Label("teardrop"), new Label("neptune"), new Label("smurf") };
+	public static final int[] w6friFroms = new int[] { 900059532, 900063112,
+			900097957 };
+	public static final int[] w6friTos = new int[] { 900059534, 900065821,
+			900099451 };
+	public static final Label[] w6friLabels = new Label[] { w6friAttacks[0],
+			w6friAttacks[1], new Label("IDS"), new Label("DoS1"),
+			new Label("DoS2") };
+
 	// public static final Metric[] metrics = new Metric[] {
 	// new DegreeDistributionU(), new EdgeWeightsR(1.0),
 	// new DirectedMotifsU() };
@@ -109,28 +151,44 @@ public class TEST {
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
 
+		/** w1 wed **/
 		boolean w1wednesdayGen = false;
 		boolean w1wednesdayPlot = false;
 		boolean w1wednesdayStepPlot = false;
+		boolean w1wedPlotAndWriteLabel = true;
 
+		/** w2 monday **/
 		boolean w2mondayGen = false;
 		boolean w2mondayPlot = false;
 		boolean w2mondayStepPlot = false;
+		boolean w2monPlotAndWriteLabel = false;
+
+		/** w2 tuesday **/
+		boolean w2tuesdayGen = false;
+		boolean w2tuesdayPlot = false;
+		boolean w2tuesdayStepPlot = false;
+		boolean w2tuesdayPlotAndWriteLabel = false;
 
 		/** w3 thursday **/
 		String w3thursdayDir = "data/tcp_test/w3thursday/";
 		String w3thursdayListFile = "w3thursday.list";
-		boolean w3thursdayGen = true;
-		boolean w3thursdayPlot = true;
+		boolean w3thursdayGen = false;
+		boolean w3thursdayPlot = false;
 		boolean w3thursdayStepPlot = false;
+		boolean w3thursdayPlotAndWriteLabel = true;
 
-		boolean w2tuesdayGen = false;
-		boolean w2tuesdayPlot = false;
-		boolean w2tuesdayStepPlot = false;
-
+		/** w5 thursday **/
 		boolean w5thursdayGen = false;
 		boolean w5thursdayPlot = false;
 		boolean w5thursdayStepPlot = false;
+
+		/** w6 friday **/
+		String w6fridayDir = "data/tcp_test/w6friday/";
+		String w6fridayListFile = "w6friday.list";
+		boolean w6fridayGen = false;
+		boolean w6fridayPlot = false;
+		boolean w6fridayStepPlot = false;
+		boolean w6fridayPlotAndWriteLabel = false;
 
 		boolean w5thursday11Gen = false;
 		boolean w5thursday11Plot = false;
@@ -158,66 +216,46 @@ public class TEST {
 		Log.info("maxBatches:\t" + maxBatches);
 		Log.infoSep();
 
-		if (normalTest) {
-			// TCPTEST1("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
-			// maxBatches, plot, debug);
-			modell_1_test("data/tcp_test/10/", "out_10_3.list", "normal",
-					secondsPerBatch, maxBatches, false, false, lifeTimePerEdge,
-					plot, debug);
-		}
-		if (timedTest)
-			TCPTEST1TIMED("data/tcp_test/10/", "out_10_3.list",
-					secondsPerBatch, lifeTimePerEdge, maxBatches, plot, debug);
-		if (timedTest2) {
-			TCPTEST1TIMED2("data/tcp_test/10/", "out_10_3.list",
-					secondsPerBatch, lifeTimePerEdge, maxBatches, plot, debug);
-
-			// blub();
-		}
-
-		if (nodeTypeTest)
-			NodeTypeTest("data/tcp_test/10/", "out_10_3.list", secondsPerBatch,
-					lifeTimePerEdge, maxBatches, plot, debug);
-
 		if (w1wednesdayGen) {
 			modell_1_test("data/tcp_test/w1wednesday/", "w1wednesday.list",
 					name, secondsPerBatch, maxBatches, true, true,
 					lifeTimePerEdge, false, debug);
 		}
-		if (w1wednesdayPlot) {
+		if (w1wednesdayPlot || w1wedPlotAndWriteLabel) {
 			Log.info("reading w1 wed data");
 			SeriesData sd = SeriesData.read("data/tcp_test/w1wednesday/" + name
 					+ "/series/", "w1-wed", false, false);
-			Log.info("plotting w1 wed data");
-			plotW2Single(sd, "data/tcp_test/w1wednesday/" + name
-					+ "/series/plots/");
+			if (w1wedPlotAndWriteLabel) {
+				Log.info("plotting w1 wednesday labels");
+				LabelUtils.writeAndPlotLabels(sd, w1wedLabels, w1wedAttacks,
+						w1wedFroms, w1wedTos, -60 * 60 * 2, false);
+			}
+			if (w1wednesdayPlot) {
+				Log.info("plotting w1 wed data");
+				plotW2Single(sd, "data/tcp_test/w1wednesday/" + name
+						+ "/series/plots/");
+			}
 		}
 
 		if (w2mondayGen) {
-			modell_1_test("data/tcp_test/w2monday/", "w2monday.list", name,
-					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
-					false, debug);
-
-			// modell_1_test("data/tcp_test/w2mon-00-19/", "out00-19.list",
-			// name,
-			// secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
-			// false, debug);
+			SeriesData sd = modell_1_test("data/tcp_test/w2monday/",
+					"w2monday.list", name, secondsPerBatch, maxBatches, true,
+					true, lifeTimePerEdge, false, debug);
 		}
-		if (w2mondayPlot) {
+		if (w2mondayPlot || w2monPlotAndWriteLabel) {
 			Log.info("reading w2 monday data");
 			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
 					+ "/series/", "w2-monday", false, false);
-			Log.info("plotting w2 monday data");
-			plotW2Single(sd, "data/tcp_test/w2monday/" + name
-					+ "/series/plots/");
-
-			// Log.info("reading w2 monday data");
-			// SeriesData sd = SeriesData.read("data/tcp_test/w2mon-00-19/" +
-			// name
-			// + "/series/", "w2-monday-00-19", false, false);
-			// Log.info("plotting w2 monday data");
-			// plotW2(sd, "data/tcp_test/w2mon-00-19/" + name +
-			// "/series/plots/");
+			if (w2monPlotAndWriteLabel) {
+				Log.info("plotting w2 modnay labels");
+				LabelUtils.writeAndPlotLabels(sd, w2monlabels, w2monAtt,
+						w2monStart, w2monEnd, -60 * 60 * 2, false);
+			}
+			if (w2mondayPlot) {
+				Log.info("plotting w2 monday data");
+				plotW2Single(sd, "data/tcp_test/w2monday/" + name
+						+ "/series/plots/");
+			}
 		}
 
 		if (w2mondayStepPlot) {
@@ -235,15 +273,20 @@ public class TEST {
 					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
 					false, debug);
 		}
-		if (w2tuesdayPlot) {
+		if (w2tuesdayPlot || w2tuesdayPlotAndWriteLabel) {
 			Log.info("reading w2 tuesday data");
 			SeriesData sd = SeriesData.read("data/tcp_test/w2tuesday/" + name
 					+ "/series/", "w2-tuesday", false, false);
-			Log.info("plotting w2 tuesday data");
-			plotW2Single(sd, "data/tcp_test/w2tuesday/" + name
-					+ "/series/plots/");
-			// plotW2Multi(sd, "data/tcp_test/w2tuesday/" + name
-			// + "/series/plots/");
+			if (w2tuesdayPlotAndWriteLabel) {
+				Log.info("plotting w2 tues labels");
+				LabelUtils.writeAndPlotLabels(sd, w2tuelabels, w2tueAtt,
+						w2tueStart, w2tueEnd, -60 * 60 * 2, false);
+			}
+			if (w2tuesdayPlot) {
+				Log.info("plotting w2 tuesday data");
+				plotW2Single(sd, "data/tcp_test/w2tuesday/" + name
+						+ "/series/plots/");
+			}
 		}
 		if (w2tuesdayStepPlot) {
 			Log.info("reading w2 tuesday data");
@@ -260,12 +303,19 @@ public class TEST {
 					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
 					false, debug);
 		}
-		if (w3thursdayPlot) {
+		if (w3thursdayPlot || w3thursdayPlotAndWriteLabel) {
 			Log.info("reading w3 thursday data");
 			SeriesData sd = SeriesData.read(w3thursdayDir + name + "/series/",
 					"w3-thu", false, false);
-			Log.info("plotting w3 thursday data");
-			plotW2Single(sd, w3thursdayDir + name + "/series/plots/");
+			if (w3thursdayPlotAndWriteLabel) {
+				Log.info("plotting w3 thursday labels");
+				LabelUtils.writeAndPlotLabels(sd, w3thuLabels, w3thuAttacks,
+						w3thuFroms, w3thuTos, -60 * 60 * 2, false);
+			}
+			if (w3thursdayPlot) {
+				Log.info("plotting w3 thursday data");
+				plotW2Single(sd, w3thursdayDir + name + "/series/plots/");
+			}
 		}
 
 		if (w5thursdayGen) {
@@ -290,19 +340,23 @@ public class TEST {
 					plotIntervalSteps, true, false);
 		}
 
-		if (w5thursday11Gen) {
-			modell_1_test("data/tcp_test/w5thursday-11/", "w5thursday-11.list",
-					name, secondsPerBatch, maxBatches, true, true,
-					lifeTimePerEdge, false, debug);
+		if (w6fridayGen) {
+			modell_1_test(w6fridayDir, w6fridayListFile, name, secondsPerBatch,
+					maxBatches, true, true, lifeTimePerEdge, false, debug);
 		}
-
-		if (w5thursday11Plot) {
-			Log.info("reading w5 thursday data");
-			SeriesData sd = SeriesData.read("data/tcp_test/w5thursday-11/"
-					+ name + "/series/", "w5-thursday-11", false, false);
-			Log.info("plotting w5 thursday data");
-			plotW2Single(sd, "data/tcp_test/w5thursday-11/" + name
-					+ "/series/plots/");
+		if (w6fridayPlot || w6fridayPlotAndWriteLabel) {
+			Log.info("reading w6 friday data");
+			SeriesData sd = SeriesData.read(w6fridayDir + name + "/series/",
+					"w6-fri", false, false);
+			if (w6fridayPlotAndWriteLabel) {
+				Log.info("plotting w6 friday labels");
+				LabelUtils.writeAndPlotLabels(sd, w6friLabels, w6friAttacks,
+						w6friFroms, w6friTos, -60 * 60 * 2, false);
+			}
+			if (w6fridayPlot) {
+				Log.info("plotting w6 friday data");
+				plotW2Single(sd, w6fridayDir + name + "/series/plots/");
+			}
 		}
 
 	}
@@ -471,11 +525,11 @@ public class TEST {
 		Log.infoSep();
 	}
 
-	public static void modell_1_test(String dir, String filename, String name,
-			int batchLength, int maxBatches, boolean removeInactiveEdges,
-			boolean removeZeroDegreeNodes, long edgeLifeTime, boolean plot,
-			boolean debug) throws IOException, ParseException,
-			AggregationException, MetricNotApplicableException,
+	public static SeriesData modell_1_test(String dir, String filename,
+			String name, int batchLength, int maxBatches,
+			boolean removeInactiveEdges, boolean removeZeroDegreeNodes,
+			long edgeLifeTime, boolean plot, boolean debug) throws IOException,
+			ParseException, AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
 		Log.info("Modell 1 test!");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
@@ -522,6 +576,8 @@ public class TEST {
 
 		GraphVisualization.setText("Finished");
 		Log.infoSep();
+
+		return sd;
 	}
 
 	public static void TCPTEST1(String dir, String filename, int seconds,
