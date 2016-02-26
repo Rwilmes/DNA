@@ -14,7 +14,7 @@ import dna.labels.Label;
 public class PlotLabel {
 
 	public enum Orientation {
-		left, center, middle
+		left, center, right
 	}
 
 	private int tag;
@@ -129,21 +129,18 @@ public class PlotLabel {
 
 	/** Crafts a PlotLabel based on the given Label. **/
 	public static PlotLabel generatePlotLabel(double timestamp, Label label,
-			boolean plotDateTime) {
-		// if plotDateTime -> add parantheses "
-		String timestampString = plotDateTime ? "" + '"' + timestamp + '"' : ""
-				+ timestamp;
-		// return new PlotLabel(timestamp + ":" + label.getType() + "="
-		// + label.getValue(), timestampString, "graph 0.95",
-		// Orientation.left, "pt 1");
-		//
-		//
+			int id) {
+		double position = 0.95 - (0.05 * id);
+		return new PlotLabel("", "" + timestamp, "graph " + position,
+				Orientation.right, "pt 2");
+	}
 
-		// String text = timestamp + ":" + label.getType();
-		String text = "";
-		return new PlotLabel(-1, text, timestampString, "graph 0.95",
-				Orientation.left, false, 0, null, 0, false, true, null,
-				getPointColor(label), 0);
+	/** Crafts the first PlotLabel based on the given Label. **/
+	public static PlotLabel generateFirstPlotLabel(double timestamp,
+			Label label, int id) {
+		double position = 0.95 - (0.05 * id);
+		return new PlotLabel(label.getName() + ":" + label.getType() + " ", ""
+				+ timestamp, "graph " + position, Orientation.right, "pt 2");
 	}
 
 	/** Returns a color-spec based on the given label. **/
