@@ -251,7 +251,7 @@ public class LabelUtils {
 				0,
 				"null",
 				"null",
-				null,
+				"null",
 				yTics,
 				"null",
 				"null",
