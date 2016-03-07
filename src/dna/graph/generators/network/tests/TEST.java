@@ -22,6 +22,7 @@ import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.labels.labeler.ids.IntrusionDetectionLabeler1;
 import dna.labels.labeler.ids.IntrusionDetectionLabeler2;
+import dna.labels.labeler.test.IntervalLabeler;
 import dna.metrics.Metric;
 import dna.metrics.MetricNotApplicableException;
 import dna.metrics.assortativity.AssortativityU;
@@ -136,7 +137,9 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
+		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
 		TCPEventReader.timestampOffset = (int) (2 * hour);
+
 		Config.zipBatches();
 		// GraphVisualization.enable();
 
@@ -155,11 +158,11 @@ public class TEST {
 		boolean w1wednesdayGen = false;
 		boolean w1wednesdayPlot = false;
 		boolean w1wednesdayStepPlot = false;
-		boolean w1wedPlotAndWriteLabel = true;
+		boolean w1wedPlotAndWriteLabel = false;
 
 		/** w2 monday **/
 		boolean w2mondayGen = false;
-		boolean w2mondayPlot = false;
+		boolean w2mondayPlot = true;
 		boolean w2mondayStepPlot = false;
 		boolean w2monPlotAndWriteLabel = false;
 
@@ -175,7 +178,7 @@ public class TEST {
 		boolean w3thursdayGen = false;
 		boolean w3thursdayPlot = false;
 		boolean w3thursdayStepPlot = false;
-		boolean w3thursdayPlotAndWriteLabel = true;
+		boolean w3thursdayPlotAndWriteLabel = false;
 
 		/** w5 thursday **/
 		boolean w5thursdayGen = false;
@@ -560,7 +563,8 @@ public class TEST {
 
 		// init labeler
 		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
-				new IntrusionDetectionLabeler2() };
+				new IntrusionDetectionLabeler2(),
+				new IntervalLabeler("portsweep", w2monStart, w2monEnd) };
 
 		// init series
 		Series s = new Series(gg, bg, metrics, labeler,
