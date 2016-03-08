@@ -138,6 +138,7 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
 		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
+		Config.overwrite("GNUPLOT_LABEL_FILTER_LIST", "DoS1:max, DoS2:product");
 		TCPEventReader.timestampOffset = (int) (2 * hour);
 
 		Config.zipBatches();
