@@ -2,6 +2,7 @@ package dna.plot;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -1784,6 +1785,9 @@ public class Plot {
 
 	/** Adds plot-labels to the plot. **/
 	public void addPlotLabelsWithoutArrows(BatchData[] batchData) {
+		String[] filteredLabelsArray = Config.keys("GNUPLOT_LABEL_FILTER_LIST");
+		List<String> filteredLabels = Arrays.asList(filteredLabelsArray);
+
 		for (BatchData batch : batchData) {
 			double timestamp = batch.getTimestamp();
 
@@ -1800,6 +1804,11 @@ public class Plot {
 			for (Label l : llist.getList()) {
 				PlotLabel plotLabel;
 				String identifier = l.getName() + ":" + l.getType();
+
+				// if supposed to filter -> filter
+				if (filteredLabels.contains(identifier))
+					continue;
+
 				if (plottedLabels.contains(identifier)) {
 					plotLabel = PlotLabel.generatePlotLabel(timestamp, l,
 							plottedLabels.indexOf(identifier));
@@ -1830,6 +1839,9 @@ public class Plot {
 		ArrayList<Double> intervalStart = new ArrayList<Double>();
 		ArrayList<Double> intervalEnd = new ArrayList<Double>();
 
+		String[] filteredLabelsArray = Config.keys("GNUPLOT_LABEL_FILTER_LIST");
+		List<String> filteredLabels = Arrays.asList(filteredLabelsArray);
+
 		for (int i = 0; i < batchData.length; i++) {
 			BatchData batch = batchData[i];
 			double timestamp = batch.getTimestamp();
@@ -1853,6 +1865,11 @@ public class Plot {
 			// check first for new labels
 			for (Label l : llist.getList()) {
 				String identifier = l.getName() + ":" + l.getType();
+
+				// if supposed to filter -> filter
+				if (filteredLabels.contains(identifier))
+					continue;
+
 				if (!plottedLabels.contains(identifier)) {
 					plottedLabels.add(identifier);
 					this.addPlotLabel(PlotLabel.generateFirstPlotLabel(
@@ -1869,6 +1886,11 @@ public class Plot {
 			for (Label l : llist.getList()) {
 				// get index of label
 				String identifier = l.getName() + ":" + l.getType();
+
+				// if supposed to filter -> filter
+				if (filteredLabels.contains(identifier))
+					continue;
+
 				int index = plottedLabels.indexOf(identifier);
 
 				if (intervalStart.get(index) == -1) {
