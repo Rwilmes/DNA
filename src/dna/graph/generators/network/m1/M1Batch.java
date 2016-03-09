@@ -18,6 +18,7 @@ import dna.graph.generators.network.weights.NetworkWeight.ElementType;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedEdge;
 import dna.graph.weights.IWeightedNode;
+import dna.graph.weights.TypedWeight;
 import dna.graph.weights.intW.IntWeight;
 import dna.graph.weights.longW.LongWeight;
 import dna.updates.batch.Batch;
@@ -323,9 +324,15 @@ public class M1Batch extends NetworkBatch {
 		n = g.getGraphDatastructures().newNodeInstance(mapping);
 
 		// set networkweight
+		// if (g.getGraphDatastructures().getNodeWeightType()
+		// .equals(NetworkWeight.class))
+		// ((IWeightedNode) n).setWeight(new NetworkWeight(type));
+
+		// set type-weight
 		if (g.getGraphDatastructures().getNodeWeightType()
-				.equals(NetworkWeight.class))
-			((IWeightedNode) n).setWeight(new NetworkWeight(type));
+				.equals(TypedWeight.class)) {
+			((IWeightedNode) n).setWeight(new TypedWeight(type.toString()));
+		}
 
 		return n;
 	}

@@ -7,7 +7,7 @@ import dna.graph.generators.GraphGenerator;
 import dna.labels.Label;
 import dna.labels.labeler.Labeler;
 import dna.metrics.IMetric;
-import dna.metrics.degree.DegreeDistributionU;
+import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.motifs.DirectedMotifsU;
 import dna.series.data.BatchData;
 import dna.series.data.MetricData;
@@ -33,8 +33,8 @@ public class IntrusionDetectionLabeler1 extends Labeler {
 	@Override
 	public boolean isApplicable(GraphGenerator gg, BatchGenerator bg,
 			IMetric[] metrics) {
-		if (Labeler.getMetric(metrics, DegreeDistributionU.class) == null) {
-			Log.warn(getName() + ": metric '" + "DegreeDistributionU"
+		if (Labeler.getMetric(metrics, DegreeDistributionR.class) == null) {
+			Log.warn(getName() + ": metric '" + "DegreeDistributionR"
 					+ "' not found!");
 			return false;
 		}
@@ -51,7 +51,7 @@ public class IntrusionDetectionLabeler1 extends Labeler {
 			BatchData batchData, IMetric[] metrics) {
 		ArrayList<Label> list = new ArrayList<Label>();
 
-		MetricData degree = batchData.getMetrics().get("DegreeDistributionU");
+		MetricData degree = batchData.getMetrics().get("DegreeDistributionR");
 		MetricData motifs = batchData.getMetrics().get("DirectedMotifsU");
 
 		// if graph to small -> do nothing

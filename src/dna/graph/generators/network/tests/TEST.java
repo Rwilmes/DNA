@@ -13,6 +13,7 @@ import dna.graph.generators.network.NetworkEdge;
 import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
+import dna.graph.weights.TypedWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.graph.weights.intW.IntWeight;
 import dna.graph.weights.longW.LongWeight;
@@ -21,7 +22,6 @@ import dna.labels.LabelUtils;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.labels.labeler.ids.IntrusionDetectionLabeler1;
-import dna.labels.labeler.ids.IntrusionDetectionLabeler2;
 import dna.labels.labeler.test.IntervalLabeler;
 import dna.metrics.Metric;
 import dna.metrics.MetricNotApplicableException;
@@ -136,6 +136,11 @@ public class TEST {
 			new OverlapU(), new DegreeDistributionU(), new EdgeWeightsR(1.0),
 			new DirectedMotifsU() };
 
+	public static final String[] metricHostFilter = new String[] { "HOST" };
+	public static final String[] metricPortFilter = new String[] { "PORT" };
+	public static final Metric[] metricHostM1 = new Metric[] {
+			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU() };
+
 	public static final Metric[] metrics_m1 = new Metric[] {
 			new DegreeDistributionU(), new DirectedMotifsU(),
 			new EdgeWeightsR(1.0) };
@@ -151,13 +156,13 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
 		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
-		// Config.overwrite("GNUPLOT_LABEL_FILTER_LIST",
-		// "DoS1:max, DoS2:product");
+		 Config.overwrite("GNUPLOT_LABEL_FILTER_LIST",
+		 "DoS1:max, DoS2:product");
 		Config.overwrite("GNUPLOT_LABEL_COLOR_OFFSET", "12");
 		TCPEventReader.timestampOffset = (int) (2 * hour);
 
 		Config.zipBatches();
-		// GraphVisualization.enable();
+		 GraphVisualization.enable();
 
 		boolean plot = true;
 		boolean debug = false;
@@ -184,7 +189,7 @@ public class TEST {
 
 		/** w2 tuesday **/
 		boolean w2tuesdayGen = true;
-		boolean w2tuesdayPlot = true;
+		boolean w2tuesdayPlot = false;
 		boolean w2tuesdayStepPlot = false;
 		boolean w2tuesdayPlotAndWriteLabel = false;
 
@@ -219,13 +224,14 @@ public class TEST {
 		int plotIntervalSteps = 8;
 		double plotOverlapPercent = 0.5;
 
-		long lifeTimePerEdgeSeconds = hour;
+		long lifeTimePerEdgeSeconds = 3*hour;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 
 		String dir = "data/tcp_test/10/";
 		String file = "out_10_3.list";
 
 		String baseDir = "data/tcp_test/";
+//		String w2name = "w2tuesday";
 		String w2name = "w2tuesday_attack";
 
 		String name = secondsPerBatch + "_" + lifeTimePerEdge;
@@ -565,9 +571,9 @@ public class TEST {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(
-				NetworkWeight.class, WeightSelection.None, IntWeight.class,
-				WeightSelection.Zero), timestampSeconds);
+		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(TypedWeight.class,
+				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
+				timestampSeconds);
 
 		// gg = new RandomGraph(GDS.directedVE(NetworkWeight.class,
 		// WeightSelection.None, IntWeight.class, WeightSelection.Zero),
@@ -578,12 +584,13 @@ public class TEST {
 		((M1Batch) bg).setDebug(debug);
 
 		// init metrics
-		Metric[] metrics = TEST.metrics_m1;
+		// Metric[] metrics = TEST.metrics_m1;
+		Metric[] metrics = TEST.metricHostM1;
 
 		// init labeler
 		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
-				new IntrusionDetectionLabeler2(), w2mon_1, w2tue_1, w3thu_1,
-				w6fri_1, w6fri_2, w6fri_3 };
+				// new IntrusionDetectionLabeler2(),
+				w2mon_1, w2tue_1, w3thu_1, w6fri_1, w6fri_2, w6fri_3 };
 
 		// init series
 		Series s = new Series(gg, bg, metrics, labeler,
