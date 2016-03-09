@@ -95,6 +95,19 @@ public class TEST {
 	public static final Label[] w3thuLabels = new Label[] { w3thuAttacks[0],
 			new Label("IDS"), new Label("DoS1"), new Label("DoS2") };
 
+	public static final Labeler w2mon_1 = new IntervalLabeler("portsweep",
+			897326877, 897326878);
+	public static final Labeler w2tue_1 = new IntervalLabeler("ipsweep",
+			897418831, 897424374);
+	public static final Labeler w3thu_1 = new IntervalLabeler("neptune",
+			898182626, 898185736);
+	public static final Labeler w6fri_1 = new IntervalLabeler("teardrop",
+			900059532, 900059534);
+	public static final Labeler w6fri_2 = new IntervalLabeler("neptune",
+			900063112, 900065821);
+	public static final Labeler w6fri_3 = new IntervalLabeler("smurf",
+			900097957, 900099451);
+
 	/** w6 fri **/
 	public static final Label[] w6friAttacks = new Label[] {
 			new Label("teardrop"), new Label("neptune"), new Label("smurf") };
@@ -138,7 +151,9 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
 		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
-		Config.overwrite("GNUPLOT_LABEL_FILTER_LIST", "DoS1:max, DoS2:product");
+		 Config.overwrite("GNUPLOT_LABEL_FILTER_LIST",
+		// "DoS1:max, DoS2:product");
+		Config.overwrite("GNUPLOT_LABEL_COLOR_OFFSET", "12");
 		TCPEventReader.timestampOffset = (int) (2 * hour);
 
 		Config.zipBatches();
@@ -163,13 +178,13 @@ public class TEST {
 
 		/** w2 monday **/
 		boolean w2mondayGen = false;
-		boolean w2mondayPlot = true;
+		boolean w2mondayPlot = false;
 		boolean w2mondayStepPlot = false;
 		boolean w2monPlotAndWriteLabel = false;
 
 		/** w2 tuesday **/
-		boolean w2tuesdayGen = false;
-		boolean w2tuesdayPlot = false;
+		boolean w2tuesdayGen = true;
+		boolean w2tuesdayPlot = true;
 		boolean w2tuesdayStepPlot = false;
 		boolean w2tuesdayPlotAndWriteLabel = false;
 
@@ -210,6 +225,10 @@ public class TEST {
 		String dir = "data/tcp_test/10/";
 		String file = "out_10_3.list";
 
+		String baseDir = "data/tcp_test/";
+		String w2name = "w2tuesday_attack";
+
+		
 		String name = secondsPerBatch + "_" + lifeTimePerEdge;
 
 		Log.infoSep();
@@ -273,13 +292,13 @@ public class TEST {
 		}
 
 		if (w2tuesdayGen) {
-			modell_1_test("data/tcp_test/w2tuesday/", "w2tuesday.list", name,
+			modell_1_test(baseDir + w2name + "/", w2name + ".list", name,
 					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
 					false, debug);
 		}
 		if (w2tuesdayPlot || w2tuesdayPlotAndWriteLabel) {
 			Log.info("reading w2 tuesday data");
-			SeriesData sd = SeriesData.read("data/tcp_test/w2tuesday/" + name
+			SeriesData sd = SeriesData.read(baseDir + w2name + "/" + name
 					+ "/series/", "w2-tuesday", false, false);
 			if (w2tuesdayPlotAndWriteLabel) {
 				Log.info("plotting w2 tues labels");
@@ -288,7 +307,7 @@ public class TEST {
 			}
 			if (w2tuesdayPlot) {
 				Log.info("plotting w2 tuesday data");
-				plotW2Single(sd, "data/tcp_test/w2tuesday/" + name
+				plotW2Single(sd, baseDir + w2name + "/" + name
 						+ "/series/plots/");
 			}
 		}
@@ -564,8 +583,8 @@ public class TEST {
 
 		// init labeler
 		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
-				new IntrusionDetectionLabeler2(),
-				new IntervalLabeler("portsweep", w2monStart, w2monEnd) };
+				new IntrusionDetectionLabeler2(), w2mon_1, w2tue_1, w3thu_1,
+				w6fri_1, w6fri_2, w6fri_3 };
 
 		// init series
 		Series s = new Series(gg, bg, metrics, labeler,
