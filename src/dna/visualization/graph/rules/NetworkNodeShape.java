@@ -5,7 +5,7 @@ import java.awt.Color;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Node;
 
-import dna.graph.generators.network.weights.NetworkWeight;
+import dna.graph.weights.TypedWeight;
 import dna.graph.weights.Weight;
 import dna.util.Config;
 import dna.visualization.graph.GraphVisualization;
@@ -43,17 +43,15 @@ public class NetworkNodeShape extends GraphStyleRule {
 
 	@Override
 	public void onNodeAddition(Node n) {
-		Weight w = n.getAttribute(GraphVisualization.weightKey);
-		if (w instanceof NetworkWeight) {
-			switch (((NetworkWeight) w).getWeight()) {
-			case HOST:
+		Weight weight = n.getAttribute(GraphVisualization.weightKey);
+		if (weight instanceof TypedWeight) {
+			TypedWeight w = (TypedWeight) weight;
+			if (w.getType().equals("HOST")) {
 				GraphStyleUtils.setShape(n, hostShape);
-				break;
-			case PORT:
+			} else if (w.getType().equals("PORT")) {
 				GraphStyleUtils.setShape(n, portShape);
 				colorPortNode(n);
-				break;
-			default:
+			} else {
 				GraphStyleUtils.setShape(n, defaultShape);
 			}
 		}
@@ -61,16 +59,14 @@ public class NetworkNodeShape extends GraphStyleRule {
 
 	@Override
 	public void onNodeWeightChange(Node n, Weight wNew, Weight wOld) {
-		if (wNew instanceof NetworkWeight) {
-			switch (((NetworkWeight) wNew).getWeight()) {
-			case HOST:
+		if (wNew instanceof TypedWeight) {
+			TypedWeight w = (TypedWeight) wNew;
+			if (w.getType().equals("HOST")) {
 				GraphStyleUtils.setShape(n, hostShape);
-				break;
-			case PORT:
+			} else if (w.getType().equals("PORT")) {
 				GraphStyleUtils.setShape(n, portShape);
 				colorPortNode(n);
-				break;
-			default:
+			} else {
 				GraphStyleUtils.setShape(n, defaultShape);
 			}
 		}
