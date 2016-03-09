@@ -13,9 +13,9 @@ import dna.graph.generators.network.NetworkEdge;
 import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.generators.network.m1.M1Graph;
 import dna.graph.generators.network.weights.NetworkWeight;
-import dna.graph.weights.IntWeight;
-import dna.graph.weights.LongWeight;
 import dna.graph.weights.Weight.WeightSelection;
+import dna.graph.weights.intW.IntWeight;
+import dna.graph.weights.longW.LongWeight;
 import dna.labels.Label;
 import dna.labels.LabelUtils;
 import dna.labels.labeler.Labeler;
@@ -151,7 +151,7 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
 		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
-		 Config.overwrite("GNUPLOT_LABEL_FILTER_LIST",
+		// Config.overwrite("GNUPLOT_LABEL_FILTER_LIST",
 		// "DoS1:max, DoS2:product");
 		Config.overwrite("GNUPLOT_LABEL_COLOR_OFFSET", "12");
 		TCPEventReader.timestampOffset = (int) (2 * hour);
@@ -228,7 +228,6 @@ public class TEST {
 		String baseDir = "data/tcp_test/";
 		String w2name = "w2tuesday_attack";
 
-		
 		String name = secondsPerBatch + "_" + lifeTimePerEdge;
 
 		Log.infoSep();

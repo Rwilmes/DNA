@@ -11,7 +11,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import dna.graph.generators.network.NetworkEdge;
-import dna.graph.weights.LongWeight;
+import dna.graph.weights.longW.LongWeight;
 import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.NetworkEventReader;
