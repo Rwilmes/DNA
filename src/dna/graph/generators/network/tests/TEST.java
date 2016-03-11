@@ -145,16 +145,17 @@ public class TEST {
 			new UnweightedAllPairsShortestPathsR(metricHostFilter) };
 
 	public static final Metric[] metrics_m1 = new Metric[] {
-			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU(),
+			new DegreeDistributionR(), new DirectedMotifsU(),
 			new EdgeWeightsR(1.0),
-			new WeightedDegreeDistributionR(metricHostFilter) };
+	// new WeightedDegreeDistributionR()
+	};
 
 	public static final Metric[] metrics_m1_onlyHosts = new Metric[] {
 			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU(),
 			new EdgeWeightsR(1.0),
 	// new WeightedDegreeDistributionR(metricHostFilter)
 	};
-	
+
 	public static final Metric[] metrics_m1_onlyPorts = new Metric[] {
 			new DegreeDistributionR(metricPortFilter), new DirectedMotifsU(),
 			new EdgeWeightsR(1.0),
@@ -169,15 +170,16 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_NODE_DEFAULT_SIZE", "14");
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
-		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
+		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "HH:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
 		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
 		Config.overwrite("GNUPLOT_LABEL_FILTER_LIST", "DoS1:max, DoS2:product");
 		Config.overwrite("GNUPLOT_LABEL_COLOR_OFFSET", "12");
 		TCPEventReader.timestampOffset = (int) (2 * hour);
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (2*hour));
 
 		Config.zipBatches();
-		// GraphVisualization.enable();
+		GraphVisualization.enable();
 
 		boolean plot = true;
 		boolean debug = false;
@@ -202,15 +204,15 @@ public class TEST {
 		String w2monName = "w2monday";
 		// String w2monName = "w2monday_start";
 		boolean w2mondayGen = !true;
-		boolean w2mondayPlot = true;
+		boolean w2mondayPlot = !true;
 		boolean w2mondayStepPlot = false;
 		boolean w2monPlotAndWriteLabel = false;
 
 		/** w2 tuesday **/
-		String w2tueName = "w2tuesday";
-		// String w2tueName = "w2tuesday_attack";
-		boolean w2tuesdayGen = !true;
-		boolean w2tuesdayPlot = true;
+		// String w2tueName = "w2tuesday";
+		String w2tueName = "w2tuesday_small";
+		boolean w2tuesdayGen = true;
+		boolean w2tuesdayPlot = !true;
 		boolean w2tuesdayStepPlot = false;
 		boolean w2tuesdayPlotAndWriteLabel = false;
 
@@ -240,7 +242,7 @@ public class TEST {
 		boolean w5thursday11Plot = false;
 
 		int secondsPerBatch = 1;
-		int maxBatches = 100000;
+		int maxBatches = 10;
 
 		long plotInterval = 6 * hour;
 		int plotIntervalSteps = 8;
@@ -519,7 +521,7 @@ public class TEST {
 		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
 		// Config.overwrite(gnuplot_xtics, "7200");
 		Config.overwrite(gnuplot_datetime, "%H:%M");
-		Config.overwrite(gnuplot_datetime, "%M:%S");
+		// Config.overwrite(gnuplot_datetime, "%M:%S");
 		Config.overwrite(gnuplot_plotdatetime, "true");
 		GraphVisualization.setText("Generating single scalar plots");
 		Plotting.plot(sd, dir, new PlottingConfig(
@@ -609,7 +611,7 @@ public class TEST {
 
 		// init metrics
 		// Metric[] metrics = TEST.metrics_m1;
-		Metric[] metrics = TEST.metrics_m1_onlyHosts;
+		Metric[] metrics = TEST.metrics_m1;
 
 		// init labeler
 		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
