@@ -152,8 +152,9 @@ public class TEST {
 	public static final Metric[] metrics_m1_onlyHosts = new Metric[] {
 			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU(),
 			new EdgeWeightsR(1.0),
-			new WeightedDegreeDistributionR(metricHostFilter) };
-
+	// new WeightedDegreeDistributionR(metricHostFilter)
+	};
+	
 	public static final Metric[] metrics_m1_onlyPorts = new Metric[] {
 			new DegreeDistributionR(metricPortFilter), new DirectedMotifsU(),
 			new EdgeWeightsR(1.0),
@@ -163,6 +164,7 @@ public class TEST {
 			InterruptedException, AggregationException,
 			MetricNotApplicableException, ClassNotFoundException,
 			ParseException, LabelerNotApplicableException {
+		long start = System.currentTimeMillis();
 		Config.overwrite("GNUPLOT_PATH", "C://files//gnuplot//bin//gnuplot.exe");
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_NODE_DEFAULT_SIZE", "14");
@@ -200,15 +202,15 @@ public class TEST {
 		String w2monName = "w2monday";
 		// String w2monName = "w2monday_start";
 		boolean w2mondayGen = !true;
-		boolean w2mondayPlot = !true;
+		boolean w2mondayPlot = true;
 		boolean w2mondayStepPlot = false;
 		boolean w2monPlotAndWriteLabel = false;
 
 		/** w2 tuesday **/
 		String w2tueName = "w2tuesday";
 		// String w2tueName = "w2tuesday_attack";
-		boolean w2tuesdayGen = false;
-		boolean w2tuesdayPlot = false;
+		boolean w2tuesdayGen = !true;
+		boolean w2tuesdayPlot = true;
 		boolean w2tuesdayStepPlot = false;
 		boolean w2tuesdayPlotAndWriteLabel = false;
 
@@ -229,8 +231,8 @@ public class TEST {
 		String w6fridayDir = "data/tcp_test/w6friday/";
 		String w6fridayListFile = "w6friday.list";
 		String w6friName = "w6friday";
-		boolean w6fridayGen = true;
-		boolean w6fridayPlot = true;
+		boolean w6fridayGen = !true;
+		boolean w6fridayPlot = !true;
 		boolean w6fridayStepPlot = false;
 		boolean w6fridayPlotAndWriteLabel = false;
 
@@ -403,6 +405,11 @@ public class TEST {
 			}
 		}
 
+		long diff = System.currentTimeMillis() - start;
+		Log.info("done in:");
+		Log.info("\t" + diff + " ms");
+		Log.info("\t" + (1.0 * diff / 1000) + " s");
+		Log.info("\t" + (1.0 * diff / 1000 / 60) + " m");
 	}
 
 	public static void blub2(long start, long end) throws FileNotFoundException {
@@ -601,8 +608,8 @@ public class TEST {
 		((M1Batch) bg).setDebug(debug);
 
 		// init metrics
-		Metric[] metrics = TEST.metrics_m1;
-		// Metric[] metrics = TEST.metricHostM1;
+		// Metric[] metrics = TEST.metrics_m1;
+		Metric[] metrics = TEST.metrics_m1_onlyHosts;
 
 		// init labeler
 		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
