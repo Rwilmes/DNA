@@ -412,7 +412,7 @@ public class TCPEventReader extends NetworkEventReader {
 		return this.edgeWeightMap;
 	}
 
-	LinkedList<NetworkEdge> eq = new LinkedList<NetworkEdge>();
+	public LinkedList<NetworkEdge> eq = new LinkedList<NetworkEdge>();
 
 	public void addEdgeToQueue(NetworkEdge e) {
 		eq.add(e);

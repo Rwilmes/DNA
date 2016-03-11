@@ -213,7 +213,8 @@ public class M1Batch extends NetworkBatch {
 
 		// add edges
 		for (int j = 0; j < addedEdges.size(); j++) {
-			addEdgeToBatch(b, g, addedNodes, addedEdges.get(j), nodeDegreeMap);
+			addEdgeToBatch(b, g, addedNodes, addedEdges.get(j), nodeDegreeMap,
+					edgeWeightMap);
 		}
 
 		// change edge weights, possibly delete edges
@@ -270,7 +271,8 @@ public class M1Batch extends NetworkBatch {
 	}
 
 	protected void addEdgeToBatch(Batch b, Graph g, ArrayList<Node> addedNodes,
-			NetworkEdge ne, HashMap<Integer, Integer> nodeDegreeMap) {
+			NetworkEdge ne, HashMap<Integer, Integer> nodeDegreeMap,
+			HashMap<String, Integer> edgeWeightMap) {
 		int src = ne.getSrc();
 		int dst = ne.getDst();
 
@@ -279,7 +281,15 @@ public class M1Batch extends NetworkBatch {
 
 		IWeightedEdge e = (IWeightedEdge) g.getGraphDatastructures()
 				.newEdgeInstance(sNode, dNode);
-		e.setWeight(new IntWeight(1));
+
+		String identifier = getIdentifier(src, dst);
+
+		if (edgeWeightMap.containsKey(identifier)) {
+			e.setWeight(new IntWeight(edgeWeightMap.get(identifier)));
+			edgeWeightMap.remove(identifier);
+		} else {
+			e.setWeight(new IntWeight(1));
+		}
 
 		b.add(new EdgeAddition(e));
 		incrementDegreeChanges(src, nodeDegreeMap);
