@@ -31,8 +31,10 @@ import dna.metrics.clustering.DirectedClusteringCoefficientU;
 import dna.metrics.clustering.local.DirectedLocalClusteringCoefficientR;
 import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.degree.DegreeDistributionU;
+import dna.metrics.degree.WeightedDegreeDistributionR;
 import dna.metrics.motifs.DirectedMotifsU;
 import dna.metrics.paths.IntWeightedAllPairsShortestPathsU;
+import dna.metrics.paths.UnweightedAllPairsShortestPathsR;
 import dna.metrics.paths.UnweightedAllPairsShortestPathsU;
 import dna.metrics.richClub.RichClubConnectivityByDegreeU;
 import dna.metrics.similarityMeasures.matching.MatchingU;
@@ -139,11 +141,23 @@ public class TEST {
 	public static final String[] metricHostFilter = new String[] { "HOST" };
 	public static final String[] metricPortFilter = new String[] { "PORT" };
 	public static final Metric[] metricHostM1 = new Metric[] {
-			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU() };
+			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU(),
+			new UnweightedAllPairsShortestPathsR(metricHostFilter) };
 
 	public static final Metric[] metrics_m1 = new Metric[] {
-			new DegreeDistributionU(), new DirectedMotifsU(),
-			new EdgeWeightsR(1.0) };
+			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU(),
+			new EdgeWeightsR(1.0),
+			new WeightedDegreeDistributionR(metricHostFilter) };
+
+	public static final Metric[] metrics_m1_onlyHosts = new Metric[] {
+			new DegreeDistributionR(metricHostFilter), new DirectedMotifsU(),
+			new EdgeWeightsR(1.0),
+			new WeightedDegreeDistributionR(metricHostFilter) };
+
+	public static final Metric[] metrics_m1_onlyPorts = new Metric[] {
+			new DegreeDistributionR(metricPortFilter), new DirectedMotifsU(),
+			new EdgeWeightsR(1.0),
+			new WeightedDegreeDistributionR(metricPortFilter) };
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException, AggregationException,
@@ -156,13 +170,12 @@ public class TEST {
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "hh:mm:ss");
 		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
 		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
-		 Config.overwrite("GNUPLOT_LABEL_FILTER_LIST",
-		 "DoS1:max, DoS2:product");
+		Config.overwrite("GNUPLOT_LABEL_FILTER_LIST", "DoS1:max, DoS2:product");
 		Config.overwrite("GNUPLOT_LABEL_COLOR_OFFSET", "12");
 		TCPEventReader.timestampOffset = (int) (2 * hour);
 
 		Config.zipBatches();
-		 GraphVisualization.enable();
+		// GraphVisualization.enable();
 
 		boolean plot = true;
 		boolean debug = false;
@@ -175,6 +188,8 @@ public class TEST {
 		boolean timedTest2 = false;
 		boolean nodeTypeTest = false;
 
+		String baseDir = "data/tcp_test/";
+
 		/** w1 wed **/
 		boolean w1wednesdayGen = false;
 		boolean w1wednesdayPlot = false;
@@ -182,13 +197,17 @@ public class TEST {
 		boolean w1wedPlotAndWriteLabel = false;
 
 		/** w2 monday **/
-		boolean w2mondayGen = false;
-		boolean w2mondayPlot = false;
+		String w2monName = "w2monday";
+		// String w2monName = "w2monday_start";
+		boolean w2mondayGen = !true;
+		boolean w2mondayPlot = !true;
 		boolean w2mondayStepPlot = false;
 		boolean w2monPlotAndWriteLabel = false;
 
 		/** w2 tuesday **/
-		boolean w2tuesdayGen = true;
+		String w2tueName = "w2tuesday";
+		// String w2tueName = "w2tuesday_attack";
+		boolean w2tuesdayGen = false;
 		boolean w2tuesdayPlot = false;
 		boolean w2tuesdayStepPlot = false;
 		boolean w2tuesdayPlotAndWriteLabel = false;
@@ -209,8 +228,9 @@ public class TEST {
 		/** w6 friday **/
 		String w6fridayDir = "data/tcp_test/w6friday/";
 		String w6fridayListFile = "w6friday.list";
-		boolean w6fridayGen = false;
-		boolean w6fridayPlot = false;
+		String w6friName = "w6friday";
+		boolean w6fridayGen = true;
+		boolean w6fridayPlot = true;
 		boolean w6fridayStepPlot = false;
 		boolean w6fridayPlotAndWriteLabel = false;
 
@@ -224,15 +244,11 @@ public class TEST {
 		int plotIntervalSteps = 8;
 		double plotOverlapPercent = 0.5;
 
-		long lifeTimePerEdgeSeconds = 3*hour;
+		long lifeTimePerEdgeSeconds = hour;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 
 		String dir = "data/tcp_test/10/";
 		String file = "out_10_3.list";
-
-		String baseDir = "data/tcp_test/";
-//		String w2name = "w2tuesday";
-		String w2name = "w2tuesday_attack";
 
 		String name = secondsPerBatch + "_" + lifeTimePerEdge;
 
@@ -266,13 +282,13 @@ public class TEST {
 		}
 
 		if (w2mondayGen) {
-			SeriesData sd = modell_1_test("data/tcp_test/w2monday/",
-					"w2monday.list", name, secondsPerBatch, maxBatches, true,
-					true, lifeTimePerEdge, false, debug);
+			SeriesData sd = modell_1_test(baseDir + w2monName + "/", w2monName
+					+ ".list", name, secondsPerBatch, maxBatches, true, true,
+					lifeTimePerEdge, false, debug);
 		}
 		if (w2mondayPlot || w2monPlotAndWriteLabel) {
 			Log.info("reading w2 monday data");
-			SeriesData sd = SeriesData.read("data/tcp_test/w2monday/" + name
+			SeriesData sd = SeriesData.read(baseDir + w2monName + "/" + name
 					+ "/series/", "w2-monday", false, false);
 			if (w2monPlotAndWriteLabel) {
 				Log.info("plotting w2 modnay labels");
@@ -281,7 +297,7 @@ public class TEST {
 			}
 			if (w2mondayPlot) {
 				Log.info("plotting w2 monday data");
-				plotW2Single(sd, "data/tcp_test/w2monday/" + name
+				plotW2Single(sd, baseDir + w2monName + "/" + name
 						+ "/series/plots/");
 			}
 		}
@@ -297,13 +313,13 @@ public class TEST {
 		}
 
 		if (w2tuesdayGen) {
-			modell_1_test(baseDir + w2name + "/", w2name + ".list", name,
+			modell_1_test(baseDir + w2tueName + "/", w2tueName + ".list", name,
 					secondsPerBatch, maxBatches, true, true, lifeTimePerEdge,
 					false, debug);
 		}
 		if (w2tuesdayPlot || w2tuesdayPlotAndWriteLabel) {
 			Log.info("reading w2 tuesday data");
-			SeriesData sd = SeriesData.read(baseDir + w2name + "/" + name
+			SeriesData sd = SeriesData.read(baseDir + w2tueName + "/" + name
 					+ "/series/", "w2-tuesday", false, false);
 			if (w2tuesdayPlotAndWriteLabel) {
 				Log.info("plotting w2 tues labels");
@@ -312,7 +328,7 @@ public class TEST {
 			}
 			if (w2tuesdayPlot) {
 				Log.info("plotting w2 tuesday data");
-				plotW2Single(sd, baseDir + w2name + "/" + name
+				plotW2Single(sd, baseDir + w2tueName + "/" + name
 						+ "/series/plots/");
 			}
 		}
@@ -496,6 +512,7 @@ public class TEST {
 		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
 		// Config.overwrite(gnuplot_xtics, "7200");
 		Config.overwrite(gnuplot_datetime, "%H:%M");
+		Config.overwrite(gnuplot_datetime, "%M:%S");
 		Config.overwrite(gnuplot_plotdatetime, "true");
 		GraphVisualization.setText("Generating single scalar plots");
 		Plotting.plot(sd, dir, new PlottingConfig(
@@ -584,8 +601,8 @@ public class TEST {
 		((M1Batch) bg).setDebug(debug);
 
 		// init metrics
-		// Metric[] metrics = TEST.metrics_m1;
-		Metric[] metrics = TEST.metricHostM1;
+		Metric[] metrics = TEST.metrics_m1;
+		// Metric[] metrics = TEST.metricHostM1;
 
 		// init labeler
 		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
