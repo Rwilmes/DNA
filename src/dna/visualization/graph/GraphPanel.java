@@ -114,6 +114,7 @@ public class GraphPanel extends JPanel {
 	protected SimpleDateFormat dateFormat;
 	protected boolean timestampAsDate;
 	protected boolean timestampInSeconds;
+	protected int timestampOffset;
 
 	// speed factors
 	protected double zoomSpeedFactor = Config.getDouble("GRAPH_VIS_ZOOM_SPEED");
@@ -195,6 +196,7 @@ public class GraphPanel extends JPanel {
 		this.timestampAsDate = Config.getBoolean("GRAPH_VIS_TIMESTAMP_AS_DATE");
 		this.timestampInSeconds = Config
 				.getBoolean("GRAPH_VIS_TIMESTAMP_IN_SECONDS");
+		this.timestampOffset = Config.getInt("GRAPH_VIS_TIMESTAMP_OFFSET");
 		this.rules = rules;
 		this.nextRuleIndex = 0;
 
@@ -673,10 +675,11 @@ public class GraphPanel extends JPanel {
 
 	/** Updates the timestamp. **/
 	public void setTimestamp(long timestamp) {
-		long t = timestamp;
+		long t = timestamp + this.timestampOffset;
 		if (this.timestampInSeconds)
 			t *= 1000;
 		this.timestamp = t;
+
 		if (this.timestampValue != null)
 			this.setTimestampLabel(t);
 	}
