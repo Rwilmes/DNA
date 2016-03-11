@@ -1849,7 +1849,8 @@ public class Plot {
 		String[] filteredLabelsArray = Config.keys("GNUPLOT_LABEL_FILTER_LIST");
 		List<String> filteredLabels = Arrays.asList(filteredLabelsArray);
 
-		boolean labelInGraph = Config.getBoolean("GNUPLOT_LABEL_IN_GRAPH");
+		boolean labelBeneathGraph = Config
+				.getBoolean("GNUPLOT_LABEL_BENEATH_GRAPH");
 
 		for (int i = 0; i < batchData.length; i++) {
 			BatchData batch = batchData[i];
@@ -1883,7 +1884,7 @@ public class Plot {
 					plottedLabels.add(identifier);
 					this.addPlotLabel(PlotLabel.generateFirstPlotLabel(
 							timestamp, l, plottedLabels.indexOf(identifier),
-							"0", labelInGraph));
+							"0", labelBeneathGraph));
 					intervalStart.add(plottedLabels.indexOf(identifier),
 							timestamp);
 					intervalEnd.add(plottedLabels.indexOf(identifier),
@@ -1936,7 +1937,7 @@ public class Plot {
 					if (start == end) {
 						// add point
 						this.addPlotLabel(PlotLabel.generatePlotLabel(
-								timestamp, l, index, labelInGraph));
+								timestamp, l, index, labelBeneathGraph));
 					} else {
 						if (!arrowStyleAdded) {
 							String arrowStyle = PlotArrow
@@ -1947,7 +1948,7 @@ public class Plot {
 
 						// add arrow
 						PlotArrow a = PlotArrow.getPlotArrowInterval(index,
-								arrowStyleId, start, end, labelInGraph);
+								arrowStyleId, start, end, labelBeneathGraph);
 						this.addPlotArrow(a);
 					}
 
@@ -1958,7 +1959,7 @@ public class Plot {
 		}
 
 		// if labels beneath graph -> extend bottom margin
-		if (!labelInGraph && this.plottedLabels.size() > 0)
+		if (labelBeneathGraph && this.plottedLabels.size() > 0)
 			this.marginBottom = calculateMarginBottom(this.plottedLabels.size());
 	}
 
