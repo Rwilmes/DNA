@@ -42,6 +42,7 @@ public class TCPEventReader extends NetworkEventReader {
 
 	// CLASS
 	protected static final int ipOffset = 100000;
+	protected static final int servicePortOffset = 100000;
 
 	protected TCPEvent bufferedEvent;
 	protected TCPEventField[] fields;
@@ -56,6 +57,8 @@ public class TCPEventReader extends NetworkEventReader {
 	protected HashMap<String, Integer> ipMap;
 
 	protected ArrayList<String> activeNodes;
+
+	protected HashMap<String, Integer> servicePortMap;
 
 	protected HashMap<NetworkEdge, LongWeight> edgeWeightMap;
 
@@ -87,7 +90,8 @@ public class TCPEventReader extends NetworkEventReader {
 				new ArrayList<Integer>(), new HashMap<Integer, Integer>(),
 				new ArrayList<String>(), new HashMap<String, Integer>(),
 				new ArrayList<String>(),
-				new HashMap<NetworkEdge, LongWeight>(), fields);
+				new HashMap<NetworkEdge, LongWeight>(),
+				new HashMap<String, Integer>(), fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
@@ -99,7 +103,8 @@ public class TCPEventReader extends NetworkEventReader {
 			ArrayList<String> ips, HashMap<String, Integer> ipMap,
 			ArrayList<String> activeNodes,
 			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
-			TCPEventField... fields) throws FileNotFoundException {
+			HashMap<String, Integer> servicePortMap, TCPEventField... fields)
+			throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 
 		// init
@@ -111,6 +116,8 @@ public class TCPEventReader extends NetworkEventReader {
 		this.edgeLifetimeMillis = edgeLifetimeMillis;
 		this.edgeWeightsIncrSteps = edgeWeightIncrSteps;
 		this.edgeWeightsDecrSteps = edgeWeightDecrSteps;
+
+		this.servicePortMap = servicePortMap;
 
 		this.durationFormatPattern = durationFormat;
 		this.durationFormat = DateTimeFormat.forPattern(durationFormat);
@@ -243,6 +250,17 @@ public class TCPEventReader extends NetworkEventReader {
 			}
 		}
 
+		if (srcPort == 0) {
+			srcPort = mapServiceToPort(service);
+		}
+		if (dstPort == 0) {
+			dstPort = mapServiceToPort(service);
+		}
+
+		TCPEvent e = new TCPEvent(id, time, duration, service, srcPort,
+				dstPort, srcIp, dstIp, attackScore, name);
+		System.out.println(line);
+		System.out.println("\t" + e.toString());
 		return new TCPEvent(id, time, duration, service, srcPort, dstPort,
 				srcIp, dstIp, attackScore, name);
 	}
@@ -322,7 +340,7 @@ public class TCPEventReader extends NetworkEventReader {
 				durationFormatPattern, batchIntervalInSeconds,
 				removeZeroDegreeNodes, removeInactiveEdges, edgeLifetimeMillis,
 				edgeWeightsIncrSteps, edgeWeightsDecrSteps, ports, portMap,
-				ips, ipMap, activeNodes, edgeWeightMap, fields);
+				ips, ipMap, activeNodes, edgeWeightMap, servicePortMap, fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
@@ -483,6 +501,15 @@ public class TCPEventReader extends NetworkEventReader {
 			map.put(identifier, map.get(identifier) - 1);
 		} else {
 			map.put(identifier, -1);
+		}
+	}
+
+	protected int mapServiceToPort(String service) {
+		if (this.servicePortMap.containsKey(service)) {
+			return servicePortMap.get(service);
+		} else {
+			int mapping = servicePortOffset + this.servicePortMap.size();
+			return mapping;
 		}
 	}
 }
