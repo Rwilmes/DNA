@@ -259,8 +259,8 @@ public class TCPEventReader extends NetworkEventReader {
 
 		TCPEvent e = new TCPEvent(id, time, duration, service, srcPort,
 				dstPort, srcIp, dstIp, attackScore, name);
-		System.out.println(line);
-		System.out.println("\t" + e.toString());
+//		System.out.println(line);
+//		System.out.println("\t" + e.toString());
 		return new TCPEvent(id, time, duration, service, srcPort, dstPort,
 				srcIp, dstIp, attackScore, name);
 	}
