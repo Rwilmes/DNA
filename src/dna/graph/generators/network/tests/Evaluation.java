@@ -41,14 +41,11 @@ import dna.updates.generators.BatchGenerator;
 import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.tcp.DefaultTCPEventReader;
+import dna.util.network.tcp.TCPEventReader;
 import dna.visualization.graph.GraphVisualization;
 
 public class Evaluation {
 
-	public static final String gnuplot_xtics = "GNUPLOT_XTICS";
-	public static final String gnuplot_datetime = "GNUPLOT_DATETIME";
-	public static final String gnuplot_plotdatetime = "GNUPLOT_PLOTDATETIME";
-	public static final String gnuplot_xoffset = "GNUPLOT_XOFFSET";
 	public static final long second = 1;
 	public static final long minute = 60 * second;
 	public static final long hour = 60 * minute;
@@ -64,17 +61,25 @@ public class Evaluation {
 	public static void main(String[] args) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
+		// config
+		Config.zipBatches();
+		setGraphVisSettings();
+		setGnuplotSettings();
+		TCPEventReader.timestampOffset = (int) (2 * hour);
+
+		// dirs
 		String baseDir = "data/darpa1998/";
 		String baseDirSmall = "data/darpa1998_small/";
 		String attackList = "attacks.list";
 
+		// flags
 		boolean generate = true;
 		boolean plot = true;
 
-		generate(baseDir, attackList, 1, true, metricsDefault, true, day1);
-		
-//		generate(baseDirSmall, attackList, 1, generate, metricsDefault, plot,
-//				entireWeek);
+		generate(baseDir, attackList, 1, generate, metricsDefault, plot, day1);
+
+		// generate(baseDirSmall, attackList, 1, generate, metricsDefault, plot,
+		// entireWeek);
 	}
 
 	public static void generate(String baseDir, String attackList, int weekId,
@@ -232,5 +237,28 @@ public class Evaluation {
 			new WeightedDegreeDistributionR(Evaluation.metricHostFilter),
 			new WeightedDegreeDistributionR(Evaluation.metricPortFilter),
 			new WeightedDegreeDistributionR() };
+
+	/*
+	 * CONFIGURATION
+	 */
+	public static final String gnuplot_xtics = "GNUPLOT_XTICS";
+	public static final String gnuplot_datetime = "GNUPLOT_DATETIME";
+	public static final String gnuplot_plotdatetime = "GNUPLOT_PLOTDATETIME";
+	public static final String gnuplot_xoffset = "GNUPLOT_XOFFSET";
+
+	public static void setGnuplotSettings() {
+		Config.overwrite("GNUPLOT_PATH", "C://files//gnuplot//bin//gnuplot.exe");
+		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
+		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
+		Config.overwrite("GNUPLOT_LABEL_FILTER_LIST", "DoS1:max, DoS2:product");
+		Config.overwrite("GNUPLOT_LABEL_COLOR_OFFSET", "12");
+	}
+
+	public static void setGraphVisSettings() {
+		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
+		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "HH:mm:ss");
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (2 * hour));
+	}
 
 }
