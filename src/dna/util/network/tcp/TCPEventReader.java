@@ -165,6 +165,14 @@ public class TCPEventReader extends NetworkEventReader {
 		return e;
 	}
 
+	/** Returns the timestamp of the next event or -1 if no event is buffered. **/
+	public long getNextEventTimestamp() {
+		if (bufferedEvent != null)
+			return bufferedEvent.getTime().getMillis();
+		else
+			return -1;
+	}
+
 	/** Reads and returns all events until the threshold is reached. **/
 	public ArrayList<TCPEvent> getEventsUntil(DateTime threshold) {
 		ArrayList<TCPEvent> events = new ArrayList<TCPEvent>();
@@ -259,8 +267,6 @@ public class TCPEventReader extends NetworkEventReader {
 
 		TCPEvent e = new TCPEvent(id, time, duration, service, srcPort,
 				dstPort, srcIp, dstIp, attackScore, name);
-//		System.out.println(line);
-//		System.out.println("\t" + e.toString());
 		return new TCPEvent(id, time, duration, service, srcPort, dstPort,
 				srcIp, dstIp, attackScore, name);
 	}
@@ -446,6 +452,17 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public boolean isEventQueueEmpty() {
 		return eq.isEmpty();
+	}
+
+	/**
+	 * Returns the timestamp of the next decrement-edge event or -1 if queue is
+	 * empty.
+	 **/
+	public long getNextDecrementEdgesTimestamp() {
+		if (isEventQueueEmpty())
+			return -1;
+		else
+			return getFirstEdgeFromQueue().getTime();
 	}
 
 	/** Returns all decrement events until the threshold. **/

@@ -11,6 +11,7 @@ import org.joda.time.DateTime;
 import dna.graph.Graph;
 import dna.updates.batch.Batch;
 import dna.updates.generators.BatchGenerator;
+import dna.util.Log;
 import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEvent;
 import dna.util.network.tcp.TCPEventReader;
@@ -59,6 +60,14 @@ public abstract class NetworkBatch extends BatchGenerator {
 		threshold = threshold.plusSeconds(batchLength);
 	}
 
+	/** Sets the threshold to the next step. **/
+	private void stepToThreshold(long nextThreshold) {
+		long diff = nextThreshold - threshold.getMillis();
+		double multi = diff / (1000.0 * batchLength);
+		int multiplier = (int) Math.floor(multi);
+		threshold = threshold.plusSeconds(batchLength * multiplier);
+	}
+
 	public Batch generate(Graph graph) {
 		//
 		if (!init) {
@@ -74,7 +83,27 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 		// if both empty -> increase threshold and call generate again
 		if (events.isEmpty() && decrementEdges.isEmpty()) {
-			incrementThreshold();
+			long nextEventTimestamp = reader.getNextEventTimestamp();
+			long nextDecrementTimestamp = reader
+					.getNextDecrementEdgesTimestamp();
+
+			if (nextEventTimestamp > -1 && nextDecrementTimestamp > -1) {
+				// both evens valid -> step to next timestamp
+				stepToThreshold(Math.min(nextEventTimestamp,
+						nextDecrementTimestamp));
+			} else if (nextEventTimestamp == -1) {
+				if (nextDecrementTimestamp == -1) {
+					// no next events, should not occur
+					Log.warn("no next events in queue!");
+				} else {
+					// only next decrement edge event valid
+					stepToThreshold(nextDecrementTimestamp);
+				}
+			} else if (nextDecrementTimestamp == -1) {
+				// only next event valid
+				stepToThreshold(nextEventTimestamp);
+			}
+
 			return generate(graph);
 		}
 
