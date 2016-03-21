@@ -18,14 +18,12 @@ import dna.updates.generators.BatchGenerator;
  */
 public class IntervalLabeler extends Labeler {
 
-	private static String name = "IntervalLabeler";
-
 	private String type;
 	private long from;
 	private long to;
 
 	public IntervalLabeler(String type, long from, long to) {
-		this(name, type, from, to);
+		this("IntervalLabeler", type, from, to);
 	}
 
 	public IntervalLabeler(String name, String type, long from, long to) {

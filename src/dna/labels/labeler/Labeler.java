@@ -18,7 +18,7 @@ import dna.updates.generators.BatchGenerator;
  */
 public abstract class Labeler {
 
-	private String name;
+	protected String name;
 
 	public Labeler(String name) {
 		this.name = name;
