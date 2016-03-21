@@ -8,6 +8,7 @@ import dna.labels.Label;
 import dna.labels.labeler.Labeler;
 import dna.metrics.IMetric;
 import dna.metrics.degree.DegreeDistributionR;
+import dna.metrics.degree.DegreeDistributionU;
 import dna.metrics.motifs.DirectedMotifsU;
 import dna.series.data.BatchData;
 import dna.series.data.MetricData;
@@ -23,21 +24,45 @@ import dna.util.Log;
  */
 public class IntrusionDetectionLabeler1 extends Labeler {
 
-	private static String name = "IDS";
 	private static String type = "M1";
 
 	public IntrusionDetectionLabeler1() {
+		this("IDS");
+	}
+
+	public IntrusionDetectionLabeler1(String name) {
 		super(name);
 	}
 
 	@Override
 	public boolean isApplicable(GraphGenerator gg, BatchGenerator bg,
 			IMetric[] metrics) {
+		boolean foundR;
+		boolean foundU;
 		if (Labeler.getMetric(metrics, DegreeDistributionR.class) == null) {
-			Log.warn(getName() + ": metric '" + "DegreeDistributionR"
-					+ "' not found!");
+			foundR = false;
+			// Log.warn(getName() + ": metric '" + "DegreeDistributionR"
+			// + "' not found!");
+			// return false;
+		} else {
+			foundR = true;
+		}
+
+		if (Labeler.getMetric(metrics, DegreeDistributionU.class) == null) {
+			foundU = false;
+			// Log.warn(getName() + ": metric '" + "DegreeDistributionR"
+			// + "' not found!");
+			// return false;
+		} else {
+			foundU = true;
+		}
+
+		if (!foundR && !foundU) {
+			Log.warn(getName() + ": neither metric '" + "DegreeDistributionR"
+					+ "' nor " + "DegreeDistributionU" + " found!");
 			return false;
 		}
+
 		if (Labeler.getMetric(metrics, DirectedMotifsU.class) == null) {
 			Log.warn(getName() + ": metric '" + "DirectedMotifsU"
 					+ "' not found!");
@@ -52,6 +77,9 @@ public class IntrusionDetectionLabeler1 extends Labeler {
 		ArrayList<Label> list = new ArrayList<Label>();
 
 		MetricData degree = batchData.getMetrics().get("DegreeDistributionR");
+		if (degree == null)
+			degree = batchData.getMetrics().get("DegreeDistributionU");
+
 		MetricData motifs = batchData.getMetrics().get("DirectedMotifsU");
 
 		// if graph to small -> do nothing
