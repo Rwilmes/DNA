@@ -50,6 +50,14 @@ public class Evaluation {
 	public static final long minute = 60 * second;
 	public static final long hour = 60 * minute;
 
+	public static final int week1 = 1;
+	public static final int week2 = 2;
+	public static final int week3 = 3;
+	public static final int week4 = 4;
+	public static final int week5 = 5;
+	public static final int week6 = 6;
+	public static final int week7 = 7;
+
 	public static final String day1 = "monday";
 	public static final String day2 = "tuesday";
 	public static final String day3 = "wednesday";
@@ -76,11 +84,16 @@ public class Evaluation {
 		boolean generate = true;
 		boolean plot = true;
 
-		generate(baseDir, attackList, 1, generate, metricsDefault, plot, day1);
+		// generate(baseDir, attackList, 1, generate, metricsDefault, plot,
+		// day3);
 
-		// generate(baseDirSmall, attackList, 1, generate, metricsDefault, plot,
-		// entireWeek);
+		generate(baseDirSmall, attackList, week1, generate, metricsDefault,
+				plot, day1, day2, day3, day4, day5);
 	}
+
+	/*
+	 * GENERATION
+	 */
 
 	public static void generate(String baseDir, String attackList, int weekId,
 			boolean generate, Metric[] metrics, boolean plot, String... days)
@@ -97,11 +110,11 @@ public class Evaluation {
 			for (int i = 0; i < days.length; i++) {
 				String day = days[i];
 				String list = week + day + ".list";
-				String name = week + day + "_" + secondsPerBatch + "_"
-						+ lifeTimePerEdge;
+				String name = secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
 
-				modell_1_test(baseDir + week + "/", list, name, baseDir,
-						attackList, secondsPerBatch, maxBatches, true, true,
+				modell_1_test(baseDir + week + "/", baseDir + week + "/" + day
+						+ "/", list, name, baseDir, attackList,
+						secondsPerBatch, maxBatches, true, true,
 						lifeTimePerEdge, metrics);
 			}
 		}
@@ -109,41 +122,44 @@ public class Evaluation {
 		if (plot) {
 			for (int i = 0; i < days.length; i++) {
 				String day = days[i];
-				String list = week + day + ".list";
-				String name = week + day + "_" + secondsPerBatch + "_"
-						+ lifeTimePerEdge;
+				String name = secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
 
-				Log.info("reading " + week + day + "data!");
-				SeriesData sd = SeriesData.read(baseDir + week + "/" + name
-						+ "/series/", week + day, false, false);
-				Log.info("plotting " + week + day + "data!");
-				plot(sd, baseDir + week + "/" + name + "/plots/");
+				String dir = baseDir + week + "/" + day + "/";
+
+				Log.info("reading " + week + day + " data!");
+
+				System.out.println("read at " + dir + name);
+				SeriesData sd = SeriesData.read(dir + name + "/", week + day,
+						false, false);
+				Log.info("plotting " + week + day + " data!");
+				plot(sd, dir + name + "/plots/");
 			}
 		}
 	}
 
-	public static SeriesData modell_1_test(String dir, String filename,
-			String name, String attackListDir, String attackListFilename,
-			int batchLength, int maxBatches, long edgeLifeTime, Metric[] metrics)
-			throws IOException, ParseException, AggregationException,
-			MetricNotApplicableException, InterruptedException,
-			LabelerNotApplicableException {
-		return modell_1_test(dir, filename, name, attackListDir,
-				attackListFilename, batchLength, maxBatches, true, true,
-				edgeLifeTime, metrics);
+	public static SeriesData modell_1_test(String srcDir, String dstDir,
+			String datasetFilename, String name, String attackListDir,
+			String attackListFilename, int batchLength, int maxBatches,
+			long edgeLifeTime, Metric[] metrics) throws IOException,
+			ParseException, AggregationException, MetricNotApplicableException,
+			InterruptedException, LabelerNotApplicableException {
+		return modell_1_test(srcDir, dstDir, datasetFilename, name,
+				attackListDir, attackListFilename, batchLength, maxBatches,
+				true, true, edgeLifeTime, metrics);
 	}
 
-	public static SeriesData modell_1_test(String dir, String filename,
-			String name, String attackListDir, String attackListFilename,
-			int batchLength, int maxBatches, boolean removeInactiveEdges,
-			boolean removeZeroDegreeNodes, long edgeLifeTime, Metric[] metrics)
-			throws IOException, ParseException, AggregationException,
-			MetricNotApplicableException, InterruptedException,
-			LabelerNotApplicableException {
+	public static SeriesData modell_1_test(String srcDir, String dstDir,
+			String datasetFilename, String name, String attackListDir,
+			String attackListFilename, int batchLength, int maxBatches,
+			boolean removeInactiveEdges, boolean removeZeroDegreeNodes,
+			long edgeLifeTime, Metric[] metrics) throws IOException,
+			ParseException, AggregationException, MetricNotApplicableException,
+			InterruptedException, LabelerNotApplicableException {
 		Log.info("Modell 1 test!");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
-		DefaultTCPEventReader reader = new DefaultTCPEventReader(dir, filename);
+		DefaultTCPEventReader reader = new DefaultTCPEventReader(srcDir,
+				datasetFilename);
 		reader.setBatchInterval(batchLength);
 		reader.setEdgeLifeTime(edgeLifeTime);
 		reader.setRemoveInactiveEdges(removeInactiveEdges);
@@ -165,8 +181,8 @@ public class Evaluation {
 				new DarpaAttackLabeler(attackListDir, attackListFilename) };
 
 		// init series
-		Series s = new Series(gg, bg, metrics, labeler,
-				dir + name + "/series/", "s1");
+		Series s = new Series(gg, bg, metrics, labeler, dstDir + name + "/",
+				"s1");
 
 		// generate
 		SeriesData sd = s.generate(1, maxBatches, false);
