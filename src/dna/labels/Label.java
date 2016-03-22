@@ -42,4 +42,15 @@ public class Label implements ListItem {
 		return this.name + Config.get("LABEL_NAME_TYPE_SEPARATOR") + this.type
 				+ Config.get("LABEL_VALUE_SEPARATOR") + this.value;
 	}
+
+	public String getIdentifier() {
+		return this.name + ":" + this.type;
+	}
+
+	public boolean equals(Label l) {
+		if (l.getIdentifier().equals(this.getIdentifier()))
+			return true;
+		else
+			return false;
+	}
 }

@@ -1,7 +1,8 @@
 package dna.labels.util;
 
 /**
- * An object which represents a label and contains statistical information.
+ * An object which contains statistical information about the relation between
+ * two labels.
  * 
  * @author Rwilmes
  * 
@@ -9,6 +10,7 @@ package dna.labels.util;
 public class LabelStat {
 
 	private String identifier;
+	private String identifier2;
 	private int total;
 
 	private int negatives;
@@ -22,8 +24,9 @@ public class LabelStat {
 	private int falsePositives;
 	private int condPositives;
 
-	public LabelStat(String identifier) {
+	public LabelStat(String identifier, String identifier2) {
 		this.identifier = identifier;
+		this.identifier2 = identifier2;
 		this.total = 0;
 
 		this.negatives = 0;
@@ -46,7 +49,7 @@ public class LabelStat {
 
 	public void incrFalseNegatives() {
 		this.falseNegatives++;
-		this.negatives++;
+		this.positives++;
 		this.total++;
 	}
 
@@ -64,7 +67,7 @@ public class LabelStat {
 
 	public void incrFalsePositives() {
 		this.falsePositives++;
-		this.positives++;
+		this.negatives++;
 		this.total++;
 	}
 
@@ -75,120 +78,274 @@ public class LabelStat {
 	}
 
 	public String getIdentifier() {
-		return this.identifier;
+		return identifier;
+	}
+
+	public String getIdentifier2() {
+		return identifier2;
 	}
 
 	public int getTotal() {
-		return this.total;
+		return total;
 	}
 
 	public int getNegatives() {
-		return this.negatives;
+		return negatives;
 	}
 
 	public int getPositives() {
-		return this.positives;
+		return positives;
 	}
 
 	public int getTrueNegatives() {
-		return this.trueNegatives;
+		return trueNegatives;
 	}
 
 	public int getFalseNegatives() {
-		return this.falseNegatives;
+		return falseNegatives;
 	}
 
 	public int getCondNegatives() {
-		return this.condNegatives;
+		return condNegatives;
 	}
 
 	public int getTruePositives() {
-		return this.truePositives;
+		return truePositives;
 	}
 
 	public int getFalsePositives() {
-		return this.falsePositives;
+		return falsePositives;
 	}
 
 	public int getCondPositives() {
-		return this.condPositives;
+		return condPositives;
 	}
 
-	public double getFlooredRateTotal(int value) {
-		if (this.total == 0)
-			return 0;
-		return Math.floor(100.0 * value / this.total) / 100;
+	public double getPositivesPercent() {
+		return 1.0 * positives / total;
 	}
 
-	public double getFlooredRateNegatives(int value) {
-		if (this.negatives == 0)
-			return 0;
-		return Math.floor(100.0 * value / this.negatives) / 100;
+	public double getNegativesPercent() {
+		return 1.0 * negatives / total;
 	}
 
-	public double getFlooredRatePositives(int value) {
-		if (this.positives == 0)
-			return 0;
-		return Math.floor(100.0 * value / this.positives) / 100;
+	public double getTruePositiveRate() {
+		return 1.0 * truePositives / positives;
 	}
 
-	public static void printInfoLine() {
-		System.out.println("Name" + "\t\t\t" + "total" + "\t" + "#n" + "\t"
-				+ "t-n" + "\t" + "f-n" + "\t" + "c-n" + "\t" + "#p" + "\t"
-				+ "t-p" + "\t" + "f-p" + "\t" + "c-p");
+	public double getTrueNegativeRate() {
+		return 1.0 * trueNegatives / negatives;
 	}
 
-	public void printAll(boolean info) {
-		if (info)
-			printInfoLine();
-		print();
-		printRatesTotal();
-		printRatesNegativesPositives();
+	public double getPositivePredictiveValue() {
+		return 1.0 * truePositives
+				/ (truePositives + falsePositives + condPositives);
 	}
 
-	public void print() {
-		System.out.println(getIdentifier() + "\tt=" + getTotal() + "\tn="
-				+ getNegatives() + "\t" + getTrueNegatives() + "\t"
-				+ getFalseNegatives() + "\t" + getCondNegatives() + "\tp="
-				+ getPositives() + "\t" + getTruePositives() + "\t"
-				+ getFalsePositives() + "\t" + getCondPositives());
+	public double getNegativePredictiveValue() {
+		return 1.0 * trueNegatives
+				/ (trueNegatives + falseNegatives + condNegatives);
+	}
+
+	public double getFalsePositiveRate() {
+		return 1.0 * falsePositives / negatives;
+	}
+
+	public double getFalseNegativeRate() {
+		return 1.0 * falseNegatives / positives;
+	}
+
+	public double getFalseDiscoveryRate() {
+		return 1.0 * falsePositives
+				/ (truePositives + falsePositives + condPositives);
+	}
+
+	public double getCondPositiveRate() {
+		return 1.0 * condPositives / positives;
+	}
+
+	public double getCondNegativeRate() {
+		return 1.0 * condNegatives / negatives;
+	}
+
+	public double getAccuracy() {
+		return (1.0 * truePositives + trueNegatives)
+				/ (truePositives + falsePositives + trueNegatives + falseNegatives);
+	}
+
+	/** Returns a line of data. **/
+	public String getDataLine(boolean shortVersion) {
+		if (shortVersion)
+			return getDataLineShort();
+		else
+			return getDataLine();
+	}
+
+	/**
+	 * Returns a line of data.<br>
+	 * <br>
+	 * 
+	 * Each field will be separated by a tab-character and contains the
+	 * following fields:<br>
+	 * <br>
+	 * 
+	 * identifier1, identifier2, total, negatives, true-negatives,
+	 * false-positives, cond-negatives,<br>
+	 * positives, true-positives, false-negatives, cond-positives,<br>
+	 * negatives-percent, true-negative-rate, false-positive-rate,
+	 * cond-negative-rate, negative-predictive-value,<br>
+	 * positives-percent, true-positive-rate, false-negative-rate,
+	 * cond-positive-rate, positiv-predictive-value,<br>
+	 * accuracy, false-discovery-rate.
+	 **/
+	public String getDataLine() {
+		String buff = "";
+
+		// add identifier
+		buff += getIdentifier() + "\t" + getIdentifier2();
+
+		// add total
+		buff += "\t" + getTotal();
+
+		// add negatives
+		buff += "\t" + getNegatives() + "\t" + getTrueNegatives() + "\t"
+				+ getFalsePositives() + "\t" + getCondNegatives();
+
+		// add positives
+		buff += "\t" + getPositives() + "\t" + getTruePositives() + "\t"
+				+ getFalseNegatives() + "\t" + getCondPositives();
+
+		// add negative-rates
+		buff += "\t" + getNegativesPercent() + "\t" + getTrueNegativeRate()
+				+ "\t" + getFalsePositiveRate() + "\t" + getCondNegativeRate()
+				+ "\t" + getNegativePredictiveValue();
+
+		// add positive-rates
+		buff += "\t" + getPositivesPercent() + "\t" + getTruePositiveRate()
+				+ "\t" + getFalseNegativeRate() + "\t" + getCondPositiveRate()
+				+ "\t" + getPositivePredictiveValue();
+
+		// add additional rates
+		buff += "\t" + getAccuracy() + "\t" + getFalseDiscoveryRate();
+
+		return buff;
+	}
+
+	/** Returns a short data line. **/
+	public String getDataLineShort() {
+		String buff = "";
+
+		// add identifier
+		buff += getIdentifier() + "\t" + getIdentifier2();
+
+		// add TPR
+		buff += "\t" + getTruePositiveRate();
+
+		// add FNR
+		buff += "\t" + getFalseNegativeRate();
+
+		// add CPR
+		buff += "\t" + getCondPositiveRate();
+
+		return buff;
+	}
+
+	/** Returns a header-line for the data returned by getDataLine(..). **/
+	public String getHeader(boolean shortVersion) {
+		if (shortVersion)
+			return getHeaderShort();
+		else
+			return getHeader();
+	}
+
+	/** Returns a header-line for the data returned by getDataLine(). **/
+	public String getHeader() {
+		String buff = "";
+
+		// add identifier
+		buff += "ID1" + "\t" + "ID2";
+
+		// add total
+		buff += "\t" + "TOTAL";
+
+		// add negatives
+		buff += "\t" + "N" + "\t" + "TN" + "\t" + "FP" + "\t" + "CN";
+
+		// add positives
+		buff += "\t" + "P" + "\t" + "TP" + "\t" + "FN" + "\t" + "CP";
+
+		// add negative-rates
+		buff += "\t" + "n-p" + "\t" + "TNR" + "\t" + "FPR" + "\t" + "CNR"
+				+ "\t" + "NPV";
+
+		// add positive-rates
+		buff += "\t" + "p-p" + "\t" + "TPR" + "\t" + "FNR" + "\t" + "CPR"
+				+ "\t" + "PPV";
+
+		// add additional rates
+		buff += "\t" + "ACC" + "\t" + "FDR";
+
+		return buff;
+	}
+
+	/** Returns a short header for getDataLineShort(). **/
+	public String getHeaderShort() {
+		String buff = "";
+
+		// add identifier
+		buff += "ID1" + "\t" + "ID2";
+
+		// add TPR
+		buff += "\t" + "TPR";
+
+		// add FNR
+		buff += "\t" + "FNR";
+
+		// add CPR
+		buff += "\t" + "CPR";
+
+		return buff;
+	}
+
+	public void printAll() {
+		System.out.println(getIdentifier() + " vs " + getIdentifier2());
+		System.out.println("-----------------");
+		System.out.println("--- absolutes ---");
+		printAbsolutes();
+		System.out.println("-------------");
+		System.out.println("--- rates ---");
+		printRates();
+	}
+
+	public void printAbsolutes() {
+		System.out.println("total:\t" + getTotal());
+		System.out.println("---");
+		System.out.println("N:\t" + getNegatives());
+		System.out.println("TN:\t" + getTrueNegatives());
+		System.out.println("FP:\t" + getFalsePositives());
+		System.out.println("CN:\t" + getCondNegatives());
+		System.out.println("---");
+		System.out.println("P:\t" + getPositives());
+		System.out.println("TP:\t" + getTruePositives());
+		System.out.println("FN:\t" + getFalseNegatives());
+		System.out.println("CP:\t" + getCondPositives());
 	}
 
 	public void printRates() {
-		System.out.println(getIdentifier() + "\t"
-				+ getFlooredRateNegatives(getFalseNegatives()) + "\t"
-				+ getFlooredRatePositives(getFalsePositives()) + "\t"
-				+ getFlooredRatePositives(getCondPositives()));
-	}
-
-	public void printAllRates() {
-		System.out.println(getIdentifier() + "\t"
-				+ getFlooredRateNegatives(getTrueNegatives()) + "\t"
-				+ getFlooredRateNegatives(getFalseNegatives()) + "\t"
-				+ getFlooredRateNegatives(getCondNegatives()) + "\t"
-				+ getFlooredRatePositives(getTruePositives()) + "\t"
-				+ getFlooredRatePositives(getFalsePositives()) + "\t"
-				+ getFlooredRatePositives(getCondPositives()));
-	}
-
-	protected void printRatesTotal() {
-		System.out.println("rates-total:\t" + "\t\t\t"
-				+ getFlooredRateTotal(getTrueNegatives()) + "\t"
-				+ getFlooredRateTotal(getFalseNegatives()) + "\t"
-				+ getFlooredRateTotal(getCondNegatives()) + "\t\t"
-				+ getFlooredRateTotal(getTruePositives()) + "\t"
-				+ getFlooredRateTotal(getFalsePositives()) + "\t"
-				+ getFlooredRateTotal(getCondPositives()));
-	}
-
-	protected void printRatesNegativesPositives() {
-		System.out.println("rates-pos/neg:\t" + "\t\t\t"
-				+ getFlooredRateNegatives(getTrueNegatives()) + "\t"
-				+ getFlooredRateNegatives(getFalseNegatives()) + "\t"
-				+ getFlooredRateNegatives(getCondNegatives()) + "\t\t"
-				+ getFlooredRatePositives(getTruePositives()) + "\t"
-				+ getFlooredRatePositives(getFalsePositives()) + "\t"
-				+ getFlooredRatePositives(getCondPositives()));
+		System.out.println("N:\t" + getNegativesPercent());
+		System.out.println("TNR:\t" + getTrueNegativeRate());
+		System.out.println("FPR:\t" + getFalsePositiveRate());
+		System.out.println("CNR:\t" + getCondNegativeRate());
+		System.out.println("NPV:\t" + getNegativePredictiveValue());
+		System.out.println("---");
+		System.out.println("P:\t" + getPositivesPercent());
+		System.out.println("TPR:\t" + getTruePositiveRate());
+		System.out.println("FNR:\t" + getFalseNegativeRate());
+		System.out.println("CPR:\t" + getCondPositiveRate());
+		System.out.println("PPV:\t" + getPositivePredictiveValue());
+		System.out.println("---");
+		System.out.println("ACC:\t" + getAccuracy());
+		System.out.println("FDR:\t" + getFalseDiscoveryRate());
 	}
 
 }

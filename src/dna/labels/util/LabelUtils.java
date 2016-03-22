@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import dna.io.Reader;
+import dna.io.Writer;
 import dna.io.filesystem.Dir;
 import dna.labels.Label;
 import dna.labels.LabelList;
@@ -28,74 +29,88 @@ public class LabelUtils {
 	 */
 	public static HashMap<String, LabelStat> analyzeLabelList(String dir,
 			String filename, long conditionLifeTime,
-			boolean considerConditionedNegatives,
+			boolean countTrueNegatives, boolean considerConditionedNegatives,
 			boolean considerConditionedPositives, Label keyLabel)
 			throws IOException {
 		ArrayList<BatchData> list = readBatchLabelsFromList(dir, filename);
+		String keyId = keyLabel.getIdentifier();
 
 		// mapping label-identifiers to labelstat objects
 		HashMap<String, LabelStat> map = new HashMap<String, LabelStat>();
+		// mapping label-identifiers to their last occurence timestamp
+		HashMap<String, Long> lastTimeLabelOccuredMap = new HashMap<String, Long>();
 
 		// iterate over all batches and gather labels
 		for (BatchData batch : list) {
 			for (Label l : batch.getLabels().getList()) {
-				String identifier = l.getName() + ":" + l.getType();
-				if (!map.containsKey(identifier))
-					map.put(identifier, new LabelStat(identifier));
+				if (!l.equals(keyLabel)) {
+					String identifier = l.getIdentifier();
+					if (!map.containsKey(identifier))
+						map.put(identifier, new LabelStat(keyId, identifier));
+				}
 			}
 		}
 
-		long lastTimeKeyOccured = -1;
-
-		// iterate over batches
 		for (BatchData batch : list) {
 			long timestamp = batch.getTimestamp();
 			LabelList ll = batch.getLabels();
-			boolean keyLabelPresent = false;
-			boolean timeConditionMet = false;
-			for (Label l : ll.getList()) {
-				if (l.getName().equals(keyLabel.getName())
-						&& l.getType().equals(keyLabel.getType()))
-					keyLabelPresent = true;
-			}
+			boolean keyLabelContained = false;
 
-			if (keyLabelPresent) {
-				lastTimeKeyOccured = timestamp;
-			} else {
-				if (timestamp <= (lastTimeKeyOccured + conditionLifeTime))
-					timeConditionMet = true;
+			// check if key-label present and refresh timestamps
+			for (Label l : ll.getList()) {
+				if (l.equals(keyLabel))
+					keyLabelContained = true;
+				else
+					lastTimeLabelOccuredMap.put(l.getIdentifier(), timestamp);
 			}
 
 			// iterate over labels
 			for (String identifier : map.keySet()) {
 				LabelStat ls = map.get(identifier);
+				boolean timeConditionMet = false;
 
+				// check if label is contained in batch
 				boolean labelContained = false;
 				for (Label l : ll.getList()) {
-					if (identifier.equals(l.getName() + ":" + l.getType())) {
+					if (l.getIdentifier().equals(identifier)) {
 						labelContained = true;
+						break;
 					}
 				}
 
-				if (labelContained) {
-					if (keyLabelPresent) {
-						ls.incrTruePositives();
-					} else {
-						if (considerConditionedPositives && timeConditionMet) {
-							ls.incrCondPositives();
-						} else {
-							ls.incrFalsePositives();
-						}
+				// check if time condition met
+				if (!labelContained) {
+					if (lastTimeLabelOccuredMap.containsKey(identifier)) {
+						if (timestamp <= (lastTimeLabelOccuredMap
+								.get(identifier) + conditionLifeTime))
+							timeConditionMet = true;
 					}
-				} else {
-					if (keyLabelPresent) {
+				}
+
+				// only do something when 1 of the 3 conditions is met
+				if (labelContained || keyLabelContained || timeConditionMet) {
+					// true-positive
+					if (labelContained && keyLabelContained)
+						ls.incrTruePositives();
+
+					// false-negative
+					if (labelContained && !keyLabelContained)
 						ls.incrFalseNegatives();
-					} else {
-						if (considerConditionedNegatives && timeConditionMet) {
+
+					// false-positive / cond-positive
+					if (!labelContained && keyLabelContained) {
+						if (timeConditionMet && considerConditionedPositives)
+							ls.incrCondPositives();
+						else
+							ls.incrFalsePositives();
+					}
+
+					// true-negative / cond-negative
+					if (!labelContained && !keyLabelContained) {
+						if (timeConditionMet && considerConditionedNegatives)
 							ls.incrCondNegatives();
-						} else {
+						else if (countTrueNegatives)
 							ls.incrTrueNegatives();
-						}
 					}
 				}
 
@@ -151,20 +166,40 @@ public class LabelUtils {
 	}
 
 	public static HashMap<String, LabelStat> analyzeAndPrint(String dir,
-			String filename, long conditionTime,
+			String filename, long conditionTime, boolean countTrueNegatives,
 			boolean considerConditionedNegatives,
 			boolean considerConditionedPositives, Label keyLabel)
 			throws IOException {
 		HashMap<String, LabelStat> map = LabelUtils.analyzeLabelList(dir,
-				filename, conditionTime, considerConditionedNegatives,
-				considerConditionedPositives, keyLabel);
+				filename, conditionTime, countTrueNegatives,
+				considerConditionedNegatives, considerConditionedPositives,
+				keyLabel);
 
-		System.out.println("\t\t\t" + "t-n" + "\t" + "f-n" + "\t" + "c-n"
-				+ "\t" + "t-p" + "\t" + "f-p" + "\t" + "c-p");
-		for (String label : map.keySet())
-			map.get(label).printAllRates();
+		for (String label : map.keySet()) {
+			LabelStat ls = map.get(label);
+			ls.printAll();
+			System.out.println("");
+
+		}
 
 		return map;
+	}
+
+	/** Writes all label-stats contained in the map to the specified file. **/
+	public static void writeLabelStats(HashMap<String, LabelStat> stats,
+			String dir, String filename, boolean writeShort) throws IOException {
+		Writer w = new Writer(dir, filename);
+
+		boolean headerWritten = false;
+		for (String id : stats.keySet()) {
+			LabelStat ls = stats.get(id);
+			if (!headerWritten) {
+				w.writeln(ls.getHeader(writeShort));
+				headerWritten = true;
+			}
+			w.writeln(ls.getDataLine(writeShort));
+		}
+		w.close();
 	}
 
 }
