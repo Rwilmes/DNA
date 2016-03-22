@@ -2,6 +2,7 @@ package dna.graph.generators.network.tests;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import dna.graph.datastructures.GDS;
@@ -11,10 +12,13 @@ import dna.graph.generators.network.m1.M1Batch;
 import dna.graph.weights.TypedWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.graph.weights.intW.IntWeight;
+import dna.labels.Label;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.labels.labeler.darpa.DarpaAttackLabeler;
 import dna.labels.labeler.ids.IntrusionDetectionLabeler1;
+import dna.labels.util.LabelStat;
+import dna.labels.util.LabelUtils;
 import dna.metrics.Metric;
 import dna.metrics.MetricNotApplicableException;
 import dna.metrics.assortativity.AssortativityU;
@@ -66,6 +70,8 @@ public class Evaluation {
 	public static final String[] entireWeek = new String[] { day1, day2, day3,
 			day4, day5 };
 
+	public static Label keyLabel = new Label("IDS", "M1", "1");
+
 	public static void main(String[] args) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
@@ -81,25 +87,26 @@ public class Evaluation {
 		String attackList = "attacks.list";
 
 		// flags
-		boolean generate = true;
-		boolean plot = true;
+		boolean generate = !true;
+		boolean plot = !true;
+		boolean analyze = true;
 
 		// generate(baseDir, attackList, 1, generate, metricsDefault, plot,
 		// day3);
 
-		generate(baseDirSmall, attackList, week1, generate, metricsDefault,
-				plot, day1, day2, day3, day4, day5);
+		if (generate || plot || analyze)
+			generate(baseDirSmall, attackList, week1, generate, metricsDefault,
+					plot, analyze, entireWeek);
 	}
 
 	/*
-	 * GENERATION
+	 * CONTROL
 	 */
-
 	public static void generate(String baseDir, String attackList, int weekId,
-			boolean generate, Metric[] metrics, boolean plot, String... days)
-			throws IOException, ParseException, AggregationException,
-			MetricNotApplicableException, InterruptedException,
-			LabelerNotApplicableException {
+			boolean generate, Metric[] metrics, boolean plot, boolean analyze,
+			String... days) throws IOException, ParseException,
+			AggregationException, MetricNotApplicableException,
+			InterruptedException, LabelerNotApplicableException {
 		int secondsPerBatch = 1;
 		int maxBatches = 100000;
 		long lifeTimePerEdgeSeconds = hour;
@@ -109,8 +116,8 @@ public class Evaluation {
 		if (generate) {
 			for (int i = 0; i < days.length; i++) {
 				String day = days[i];
-				String list = week + day + ".list";
-				String name = secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
+				String list = getList(week, day);
+				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds);
 
 				modell_1_test(baseDir + week + "/", baseDir + week + "/" + day
 						+ "/", list, name, baseDir, attackList,
@@ -122,21 +129,80 @@ public class Evaluation {
 		if (plot) {
 			for (int i = 0; i < days.length; i++) {
 				String day = days[i];
-				String name = secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
+				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds);
+				String dir = getDir(baseDir, week, day);
 
-				String dir = baseDir + week + "/" + day + "/";
-
-				Log.info("reading " + week + day + " data!");
-
-				System.out.println("read at " + dir + name);
+				// read
+				logRead(week, day, name);
 				SeriesData sd = SeriesData.read(dir + name + "/", week + day,
 						false, false);
-				Log.info("plotting " + week + day + " data!");
+
+				// plot
+				logPlot(week, day, name);
 				plot(sd, dir + name + "/plots/");
 			}
 		}
+
+		if (analyze) {
+			// array of daily stats
+			HashMap<String, LabelStat>[] dailyStats = new HashMap[days.length];
+
+			for (int i = 0; i < days.length; i++) {
+				String day = days[i];
+				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds);
+				String labelListDir = getLabelListDir(baseDir, week, day, name);
+
+				logAnalyze(week, day, name);
+				HashMap<String, LabelStat> stats = analyze(labelListDir,
+						"___labels.run.0.labels", keyLabel);
+
+				// write stats
+				LabelUtils.writeLabelStats(stats, labelListDir,
+						"___labels.run.0.results", true);
+				dailyStats[i] = stats;
+			}
+
+			// gather weekly stats
+			HashMap<String, LabelStat> weeklyStats = new HashMap<String, LabelStat>();
+			for (int i = 0; i < dailyStats.length; i++) {
+				HashMap<String, LabelStat> stats = dailyStats[i];
+
+				for (String id : stats.keySet()) {
+					LabelStat stat = stats.get(id);
+
+					// if not present in weekly stats -> init
+					if (!weeklyStats.containsKey(id)) {
+						weeklyStats.put(id, new LabelStat(stats.get(id)
+								.getIdentifier(), stats.get(id)
+								.getIdentifier2()));
+					}
+
+					// add to weekly-stats
+					weeklyStats.get(id).addStats(stat);
+				}
+			}
+
+			// write weekly stats
+			LabelUtils.writeLabelStats(weeklyStats, baseDir + week + "/", week
+					+ ".results", true);
+		}
 	}
 
+	public static HashMap<String, LabelStat> analyze(String dir,
+			String filename, Label keyLabel) throws IOException {
+		long conditionTime = hour;
+		boolean countTrueNegatives = false;
+		boolean considerConditionedNegatives = false;
+		boolean considerConditionedPositives = true;
+
+		return LabelUtils.analyzeLabelList(dir, filename, conditionTime, false,
+				considerConditionedNegatives, considerConditionedPositives,
+				keyLabel);
+	}
+
+	/*
+	 * GENERATION
+	 */
 	public static SeriesData modell_1_test(String srcDir, String dstDir,
 			String datasetFilename, String name, String attackListDir,
 			String attackListFilename, int batchLength, int maxBatches,
@@ -217,7 +283,6 @@ public class Evaluation {
 	/*
 	 * METRICS
 	 */
-
 	public static final String[] metricHostFilter = new String[] { "HOST" };
 	public static final String[] metricPortFilter = new String[] { "PORT" };
 
@@ -253,6 +318,39 @@ public class Evaluation {
 			new WeightedDegreeDistributionR(Evaluation.metricHostFilter),
 			new WeightedDegreeDistributionR(Evaluation.metricPortFilter),
 			new WeightedDegreeDistributionR() };
+
+	/*
+	 * UTILITY
+	 */
+	public static void logRead(String week, String day, String name) {
+		Log.info("reading " + week + day + " " + name + " data!");
+	}
+
+	public static void logPlot(String week, String day, String name) {
+		Log.info("plotting " + week + day + " " + name + " data!");
+	}
+
+	public static void logAnalyze(String week, String day, String name) {
+		Log.info("analyzing labels of " + week + day + " " + name + " data!");
+	}
+
+	public static String getList(String week, String day) {
+		return week + day + ".list";
+	}
+
+	public static String getName(int secondsPerBatch,
+			long lifeTimePerEdgeSeconds) {
+		return secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
+	}
+
+	public static String getDir(String baseDir, String week, String day) {
+		return baseDir + week + "/" + day + "/";
+	}
+
+	public static String getLabelListDir(String baseDir, String week,
+			String day, String name) {
+		return getDir(baseDir, week, day) + name + "/";
+	}
 
 	/*
 	 * CONFIGURATION
