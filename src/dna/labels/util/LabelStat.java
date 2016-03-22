@@ -173,6 +173,29 @@ public class LabelStat {
 				/ (truePositives + falsePositives + trueNegatives + falseNegatives);
 	}
 
+	/*
+	 * AGGREGATION
+	 */
+
+	/** Adds the given LabelStat values to this LabelStat-values. **/
+	public void addStats(LabelStat l) {
+		this.total += l.getTotal();
+		this.negatives += l.getNegatives();
+		this.positives += l.getPositives();
+
+		this.trueNegatives += l.getTrueNegatives();
+		this.falsePositives += l.getFalsePositives();
+		this.condNegatives += l.getCondNegatives();
+
+		this.truePositives += l.getTruePositives();
+		this.falseNegatives += l.getFalseNegatives();
+		this.condPositives += l.getCondPositives();
+	}
+
+	/*
+	 * IO
+	 */
+
 	/** Returns a line of data. **/
 	public String getDataLine(boolean shortVersion) {
 		if (shortVersion)
