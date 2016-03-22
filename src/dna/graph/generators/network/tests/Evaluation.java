@@ -195,9 +195,9 @@ public class Evaluation {
 		boolean considerConditionedNegatives = false;
 		boolean considerConditionedPositives = true;
 
-		return LabelUtils.analyzeLabelList(dir, filename, conditionTime, false,
-				considerConditionedNegatives, considerConditionedPositives,
-				keyLabel);
+		return LabelUtils.analyzeLabelList(dir, filename, conditionTime,
+				countTrueNegatives, considerConditionedNegatives,
+				considerConditionedPositives, keyLabel);
 	}
 
 	/*
