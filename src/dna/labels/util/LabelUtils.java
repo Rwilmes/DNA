@@ -21,8 +21,8 @@ import dna.util.Config;
 public class LabelUtils {
 
 	/**
-	 * Analyzes a label-list and compares all labels with the key-label. Then
-	 * returns a HashMap mapping label-identifiers -> LabelStat objects.<br>
+	 * Analyzes a label-list and compares the key-label with all other labels.
+	 * Then returns a HashMap mapping label-identifiers -> LabelStat objects.<br>
 	 * <br>
 	 * 
 	 * <b>Note:</b> KeyLabel of format: $label_name$:$label_type$
