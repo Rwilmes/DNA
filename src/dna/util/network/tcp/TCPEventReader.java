@@ -12,6 +12,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import dna.graph.generators.network.NetworkEdge;
 import dna.graph.weights.longW.LongWeight;
+import dna.labels.labeler.darpa.EntryBasedAttackLabeler;
 import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.NetworkEventReader;
@@ -73,15 +74,20 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected DateTime initTimestamp;
 
-	public TCPEventReader(String dir, String filename, TCPEventField... fields)
+	protected EntryBasedAttackLabeler labeler;
+	protected ArrayList<String> occuredAttacksInCurrentBatch;
+
+	public TCPEventReader(String dir, String filename,
+			EntryBasedAttackLabeler labeler, TCPEventField... fields)
 			throws FileNotFoundException {
 		this(dir, filename, Config.get("TCP_LIST_DEFAULT_SEPARATOR"), Config
 				.get("TCP_LIST_DEFAULT_TIME_FORMAT"), Config
-				.get("TCP_LIST_DEFAULT_DURATION_FORMAT"), fields);
+				.get("TCP_LIST_DEFAULT_DURATION_FORMAT"), labeler, fields);
 	}
 
 	public TCPEventReader(String dir, String filename, String separator,
-			String timeFormat, String durationFormat, TCPEventField... fields)
+			String timeFormat, String durationFormat,
+			EntryBasedAttackLabeler labeler, TCPEventField... fields)
 			throws FileNotFoundException {
 		this(dir, filename, separator, timeFormat, durationFormat,
 				defaultBatchLengthSeconds, defaultRemoveZeroDegreeNodes,
@@ -91,7 +97,7 @@ public class TCPEventReader extends NetworkEventReader {
 				new ArrayList<String>(), new HashMap<String, Integer>(),
 				new ArrayList<String>(),
 				new HashMap<NetworkEdge, LongWeight>(),
-				new HashMap<String, Integer>(), fields);
+				new HashMap<String, Integer>(), labeler, fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
@@ -103,7 +109,8 @@ public class TCPEventReader extends NetworkEventReader {
 			ArrayList<String> ips, HashMap<String, Integer> ipMap,
 			ArrayList<String> activeNodes,
 			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
-			HashMap<String, Integer> servicePortMap, TCPEventField... fields)
+			HashMap<String, Integer> servicePortMap,
+			EntryBasedAttackLabeler labeler, TCPEventField... fields)
 			throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 
@@ -132,6 +139,11 @@ public class TCPEventReader extends NetworkEventReader {
 		this.edgeWeightMap = edgeWeightMap;
 		this.eq = new LinkedList<NetworkEdge>();
 
+		this.occuredAttacksInCurrentBatch = new ArrayList<String>();
+		this.labeler = labeler;
+		if (this.labeler != null)
+			this.labeler.registerEventReader(this);
+
 		try {
 			this.bufferedEvent = parseLine(readString());
 			this.initTimestamp = this.bufferedEvent.getTime();
@@ -139,6 +151,20 @@ public class TCPEventReader extends NetworkEventReader {
 			this.finished = true;
 			e.printStackTrace();
 		}
+	}
+
+	public void setDarpaLabeler(EntryBasedAttackLabeler labeler) {
+		this.labeler = labeler;
+		if (this.labeler != null)
+			this.labeler.registerEventReader(this);
+	}
+
+	public void setOccuredAttacks(ArrayList<String> occuredAttacks) {
+		this.occuredAttacksInCurrentBatch = occuredAttacks;
+	}
+
+	public ArrayList<String> getOccuredAttacks() {
+		return this.occuredAttacksInCurrentBatch;
 	}
 
 	public DateTime getInitTimestamp() {
@@ -346,7 +372,8 @@ public class TCPEventReader extends NetworkEventReader {
 				durationFormatPattern, batchIntervalInSeconds,
 				removeZeroDegreeNodes, removeInactiveEdges, edgeLifetimeMillis,
 				edgeWeightsIncrSteps, edgeWeightsDecrSteps, ports, portMap,
-				ips, ipMap, activeNodes, edgeWeightMap, servicePortMap, fields);
+				ips, ipMap, activeNodes, edgeWeightMap, servicePortMap,
+				labeler, fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {

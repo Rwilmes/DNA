@@ -125,9 +125,18 @@ public class M1Batch extends NetworkBatch {
 		// map: node-mapping -> node-degree
 		HashMap<Integer, Integer> nodeDegreeMap = new HashMap<Integer, Integer>();
 
+		// keep track of occured attacks
+		ArrayList<String> occuredAttacks = new ArrayList<String>();
+
 		// iterate over events
 		for (int i = 0; i < events.size(); i++) {
 			TCPEvent e = events.get(i);
+
+			if (e.getAttackScore() == 1) {
+				if (!occuredAttacks.contains(e.getName()))
+					occuredAttacks.add(e.getName());
+			}
+
 			String srcIp = e.getSrcIp();
 			String dstIp = e.getDstIp();
 			int port = e.getDstPort();
@@ -238,6 +247,7 @@ public class M1Batch extends NetworkBatch {
 			Log.infoSep();
 		}
 
+		reader.setOccuredAttacks(occuredAttacks);
 		return b;
 	}
 
@@ -332,11 +342,6 @@ public class M1Batch extends NetworkBatch {
 
 		// init node
 		n = g.getGraphDatastructures().newNodeInstance(mapping);
-
-		// set networkweight
-		// if (g.getGraphDatastructures().getNodeWeightType()
-		// .equals(NetworkWeight.class))
-		// ((IWeightedNode) n).setWeight(new NetworkWeight(type));
 
 		// set type-weight
 		if (g.getGraphDatastructures().getNodeWeightType()
