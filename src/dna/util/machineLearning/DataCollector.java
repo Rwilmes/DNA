@@ -43,6 +43,8 @@ public class DataCollector {
 			return;
 		}
 
+		long start = System.currentTimeMillis();
+
 		String dir = args[0];
 		int runId = Integer.parseInt(args[1]);
 		String readMode = args[2];
@@ -96,6 +98,9 @@ public class DataCollector {
 			values[i] = split[1];
 		}
 
+		System.out.println("read from dir:");
+		System.out.println("\t" + dir);
+
 		// String dir = "data/darpa1998_small/w1/monday/1_3600/";
 		int run = 0;
 		SeriesData sd = SeriesData.read(dir, "1_3600", false, false);
@@ -120,6 +125,9 @@ public class DataCollector {
 		}
 		w.writeln(header);
 
+		System.out.println("gathering data from batches..");
+		int amountBatches = bdl.size();
+		int counter = 0;
 		for (BatchData b : bdl.getList()) {
 			long timestamp = b.getTimestamp();
 
@@ -168,10 +176,21 @@ public class DataCollector {
 			}
 
 			w.writeln(buff);
+
+			counter++;
+			// System.out.println(counter);
+
+			if (counter % 100 == 0 || counter == amountBatches) {
+				System.out.println((int) Math.floor(1.0 * counter
+						/ amountBatches * 100)
+						+ "%" + "\t" + counter + " of " + amountBatches);
+			}
 		}
 
 		w.close();
-		System.out.println("done!");
+		System.out.println("done in "
+				+ ((1.0 * System.currentTimeMillis() - start) / 1000)
+				+ " seconds.");
 	}
 
 	public static Label parseLabel(String line) {
