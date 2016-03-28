@@ -3,7 +3,7 @@
     <!--this file was created by Eclipse Runnable JAR Export Wizard-->
     <!--ANT 1.7 is required                                        -->
     <target name="create_run_jar">
-        <jar destfile="C:/Users/chibo/Desktop/dc.jar" filesetmanifest="mergewithoutmain">
+        <jar destfile="data-collector.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="dna.util.machineLearning.DataCollector"/>
                 <attribute name="Class-Path" value="."/>
