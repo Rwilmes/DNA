@@ -64,7 +64,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 	private void stepToThreshold(long nextThreshold) {
 		long diff = nextThreshold - threshold.getMillis();
 		double multi = diff / (1000.0 * batchLength);
-		int multiplier = (int) Math.floor(multi);
+		int multiplier = (multi < 1) ? 1 : (int) Math.floor(multi);
 		threshold = threshold.plusSeconds(batchLength * multiplier);
 	}
 
