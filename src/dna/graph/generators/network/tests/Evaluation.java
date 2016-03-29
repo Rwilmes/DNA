@@ -87,16 +87,16 @@ public class Evaluation {
 		String attackList = "attacks.list";
 
 		// flags
-		boolean generate = !true;
-		boolean plot = !true;
+		boolean generate = true;
+		boolean plot = true;
 		boolean analyze = true;
 
 		// generate(baseDir, attackList, 1, generate, metricsDefault, plot,
 		// day3);
 
 		if (generate || plot || analyze)
-			generate(baseDirSmall, attackList, week1, generate, metricsDefault,
-					plot, analyze, entireWeek);
+			generate(baseDir, attackList, week1, generate, metricsDefault,
+					plot, analyze, day3);
 	}
 
 	/*
@@ -107,7 +107,7 @@ public class Evaluation {
 			String... days) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
-		int secondsPerBatch = 1;
+		int secondsPerBatch = 60;
 		int maxBatches = 100000;
 		long lifeTimePerEdgeSeconds = hour;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
@@ -154,7 +154,8 @@ public class Evaluation {
 
 				logAnalyze(week, day, name);
 				HashMap<String, LabelStat> stats = analyze(labelListDir,
-						"___labels.run.0.labels", keyLabel);
+						"___labels.run.0.labels", keyLabel,
+						lifeTimePerEdgeSeconds);
 
 				// write stats
 				LabelUtils.writeLabelStats(stats, labelListDir,
@@ -189,8 +190,9 @@ public class Evaluation {
 	}
 
 	public static HashMap<String, LabelStat> analyze(String dir,
-			String filename, Label keyLabel) throws IOException {
-		long conditionTime = hour;
+			String filename, Label keyLabel, long lifeTimePerEdgeSeconds)
+			throws IOException {
+		long conditionTime = lifeTimePerEdgeSeconds;
 		boolean countTrueNegatives = false;
 		boolean considerConditionedNegatives = false;
 		boolean considerConditionedPositives = true;
