@@ -15,7 +15,7 @@ import dna.graph.weights.intW.IntWeight;
 import dna.labels.Label;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
-import dna.labels.labeler.darpa.DarpaAttackLabeler;
+import dna.labels.labeler.darpa.EntryBasedAttackLabeler;
 import dna.labels.labeler.ids.IntrusionDetectionLabeler1;
 import dna.labels.util.LabelStat;
 import dna.labels.util.LabelUtils;
@@ -95,8 +95,8 @@ public class Evaluation {
 		// day3);
 
 		if (generate || plot || analyze)
-			generate(baseDir, attackList, week1, generate, metricsDefault,
-					plot, analyze, day3);
+			generate(baseDirSmall, attackList, week1, generate, metricsDefault,
+					plot, analyze, day1);
 	}
 
 	/*
@@ -107,7 +107,7 @@ public class Evaluation {
 			String... days) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
-		int secondsPerBatch = 60;
+		int secondsPerBatch = 1;
 		int maxBatches = 100000;
 		long lifeTimePerEdgeSeconds = hour;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
@@ -232,6 +232,8 @@ public class Evaluation {
 		reader.setEdgeLifeTime(edgeLifeTime);
 		reader.setRemoveInactiveEdges(removeInactiveEdges);
 		reader.setRemoveZeroDegreeNodes(removeZeroDegreeNodes);
+		EntryBasedAttackLabeler ebal = new EntryBasedAttackLabeler();
+		reader.setDarpaLabeler(ebal);
 
 		// init graph generator
 		long timestampMillis = reader.getInitTimestamp().getMillis();
@@ -246,7 +248,8 @@ public class Evaluation {
 
 		// init labeler
 		Labeler[] labeler = new Labeler[] { new IntrusionDetectionLabeler1(),
-				new DarpaAttackLabeler(attackListDir, attackListFilename) };
+				// new DarpaAttackLabeler(attackListDir, attackListFilename)
+				ebal };
 
 		// init series
 		Series s = new Series(gg, bg, metrics, labeler, dstDir + name + "/",
