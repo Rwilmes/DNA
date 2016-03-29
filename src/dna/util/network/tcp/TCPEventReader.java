@@ -41,6 +41,8 @@ public class TCPEventReader extends NetworkEventReader {
 	public static final int defaultEdgeWeightIncrSteps = 1;
 	public static final int defaultEdgeWeightDecrSteps = 1;
 
+	public static final boolean defaultGenerateEmptyBatches = false;
+
 	// CLASS
 	protected static final int ipOffset = 100000;
 	protected static final int servicePortOffset = 100000;
@@ -77,6 +79,8 @@ public class TCPEventReader extends NetworkEventReader {
 	protected EntryBasedAttackLabeler labeler;
 	protected ArrayList<String> occuredAttacksInCurrentBatch;
 
+	protected boolean genEmptyBatches;
+
 	public TCPEventReader(String dir, String filename,
 			EntryBasedAttackLabeler labeler, TCPEventField... fields)
 			throws FileNotFoundException {
@@ -97,7 +101,8 @@ public class TCPEventReader extends NetworkEventReader {
 				new ArrayList<String>(), new HashMap<String, Integer>(),
 				new ArrayList<String>(),
 				new HashMap<NetworkEdge, LongWeight>(),
-				new HashMap<String, Integer>(), labeler, fields);
+				new HashMap<String, Integer>(), labeler,
+				defaultGenerateEmptyBatches, fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
@@ -110,8 +115,8 @@ public class TCPEventReader extends NetworkEventReader {
 			ArrayList<String> activeNodes,
 			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
 			HashMap<String, Integer> servicePortMap,
-			EntryBasedAttackLabeler labeler, TCPEventField... fields)
-			throws FileNotFoundException {
+			EntryBasedAttackLabeler labeler, boolean genEmptyBatches,
+			TCPEventField... fields) throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 
 		// init
@@ -144,6 +149,8 @@ public class TCPEventReader extends NetworkEventReader {
 		if (this.labeler != null)
 			this.labeler.registerEventReader(this);
 
+		this.genEmptyBatches = genEmptyBatches;
+
 		try {
 			this.bufferedEvent = parseLine(readString());
 			this.initTimestamp = this.bufferedEvent.getTime();
@@ -157,6 +164,14 @@ public class TCPEventReader extends NetworkEventReader {
 		this.labeler = labeler;
 		if (this.labeler != null)
 			this.labeler.registerEventReader(this);
+	}
+
+	public boolean isGenerateEmptyBatches() {
+		return this.genEmptyBatches;
+	}
+
+	public void setGenerateEmptyBatches(boolean genEmptyBatches) {
+		this.genEmptyBatches = genEmptyBatches;
 	}
 
 	public void setOccuredAttacks(ArrayList<String> occuredAttacks) {
@@ -373,7 +388,7 @@ public class TCPEventReader extends NetworkEventReader {
 				removeZeroDegreeNodes, removeInactiveEdges, edgeLifetimeMillis,
 				edgeWeightsIncrSteps, edgeWeightsDecrSteps, ports, portMap,
 				ips, ipMap, activeNodes, edgeWeightMap, servicePortMap,
-				labeler, fields);
+				labeler, genEmptyBatches, fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {

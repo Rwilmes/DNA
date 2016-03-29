@@ -83,28 +83,32 @@ public abstract class NetworkBatch extends BatchGenerator {
 
 		// if both empty -> increase threshold and call generate again
 		if (events.isEmpty() && decrementEdges.isEmpty()) {
-			long nextEventTimestamp = reader.getNextEventTimestamp();
-			long nextDecrementTimestamp = reader
-					.getNextDecrementEdgesTimestamp();
+			if (reader.isGenerateEmptyBatches()) {
+				incrementThreshold();
+			} else {
+				long nextEventTimestamp = reader.getNextEventTimestamp();
+				long nextDecrementTimestamp = reader
+						.getNextDecrementEdgesTimestamp();
 
-			if (nextEventTimestamp > -1 && nextDecrementTimestamp > -1) {
-				// both evens valid -> step to next timestamp
-				stepToThreshold(Math.min(nextEventTimestamp,
-						nextDecrementTimestamp));
-			} else if (nextEventTimestamp == -1) {
-				if (nextDecrementTimestamp == -1) {
-					// no next events, should not occur
-					Log.warn("no next events in queue!");
-				} else {
-					// only next decrement edge event valid
-					stepToThreshold(nextDecrementTimestamp);
+				if (nextEventTimestamp > -1 && nextDecrementTimestamp > -1) {
+					// both evens valid -> step to next timestamp
+					stepToThreshold(Math.min(nextEventTimestamp,
+							nextDecrementTimestamp));
+				} else if (nextEventTimestamp == -1) {
+					if (nextDecrementTimestamp == -1) {
+						// no next events, should not occur
+						Log.warn("no next events in queue!");
+					} else {
+						// only next decrement edge event valid
+						stepToThreshold(nextDecrementTimestamp);
+					}
+				} else if (nextDecrementTimestamp == -1) {
+					// only next event valid
+					stepToThreshold(nextEventTimestamp);
 				}
-			} else if (nextDecrementTimestamp == -1) {
-				// only next event valid
-				stepToThreshold(nextEventTimestamp);
-			}
 
-			return generate(graph);
+				return generate(graph);
+			}
 		}
 
 		// get weight changes from events in queue
