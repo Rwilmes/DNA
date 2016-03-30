@@ -44,7 +44,7 @@ public class EntryBasedAttackLabeler extends Labeler {
 
 		if (this.reader != null) {
 			for (String s : this.reader.getOccuredAttacks())
-				list.add(new Label("attack2", s, "true"));
+				list.add(new Label("attack", s, "true"));
 		}
 
 		return list;
