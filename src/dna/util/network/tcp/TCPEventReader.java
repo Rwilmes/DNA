@@ -75,6 +75,7 @@ public class TCPEventReader extends NetworkEventReader {
 	protected int batchIntervalInSeconds;
 
 	protected DateTime initTimestamp;
+	protected DateTime maximumTimestamp;
 
 	protected EntryBasedAttackLabeler labeler;
 	protected ArrayList<String> occuredAttacksInCurrentBatch;
@@ -102,7 +103,7 @@ public class TCPEventReader extends NetworkEventReader {
 				new ArrayList<String>(),
 				new HashMap<NetworkEdge, LongWeight>(),
 				new HashMap<String, Integer>(), labeler,
-				defaultGenerateEmptyBatches, fields);
+				defaultGenerateEmptyBatches, null, fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
@@ -116,7 +117,8 @@ public class TCPEventReader extends NetworkEventReader {
 			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
 			HashMap<String, Integer> servicePortMap,
 			EntryBasedAttackLabeler labeler, boolean genEmptyBatches,
-			TCPEventField... fields) throws FileNotFoundException {
+			DateTime maximumTimestamp, TCPEventField... fields)
+			throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 
 		// init
@@ -150,6 +152,7 @@ public class TCPEventReader extends NetworkEventReader {
 			this.labeler.registerEventReader(this);
 
 		this.genEmptyBatches = genEmptyBatches;
+		this.maximumTimestamp = maximumTimestamp;
 
 		try {
 			this.bufferedEvent = parseLine(readString());
@@ -174,6 +177,14 @@ public class TCPEventReader extends NetworkEventReader {
 		this.genEmptyBatches = genEmptyBatches;
 	}
 
+	public void setMaximumTimestamp(long timestampMillis) {
+		this.maximumTimestamp = new DateTime(timestampMillis);
+	}
+
+	public DateTime getMaximumTimestamp() {
+		return this.maximumTimestamp;
+	}
+
 	public void setOccuredAttacks(ArrayList<String> occuredAttacks) {
 		this.occuredAttacksInCurrentBatch = occuredAttacks;
 	}
@@ -193,9 +204,16 @@ public class TCPEventReader extends NetworkEventReader {
 		String line;
 		try {
 			line = readString();
-			if (line != null)
-				this.bufferedEvent = parseLine(line);
-			else {
+
+			if (line != null) {
+				TCPEvent temp = parseLine(line);
+				if (temp.getTime().isAfter(this.maximumTimestamp)) {
+					this.bufferedEvent = null;
+					this.finished = true;
+				} else {
+					this.bufferedEvent = temp;
+				}
+			} else {
 				this.bufferedEvent = null;
 				this.finished = true;
 			}
@@ -388,7 +406,7 @@ public class TCPEventReader extends NetworkEventReader {
 				removeZeroDegreeNodes, removeInactiveEdges, edgeLifetimeMillis,
 				edgeWeightsIncrSteps, edgeWeightsDecrSteps, ports, portMap,
 				ips, ipMap, activeNodes, edgeWeightMap, servicePortMap,
-				labeler, genEmptyBatches, fields);
+				labeler, genEmptyBatches, maximumTimestamp, fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
@@ -481,6 +499,11 @@ public class TCPEventReader extends NetworkEventReader {
 	public LinkedList<NetworkEdge> eq = new LinkedList<NetworkEdge>();
 
 	public void addEdgeToQueue(NetworkEdge e) {
+		// only add events that are before maximumTimestamp
+		if (this.maximumTimestamp != null)
+			if (e.getTime() > this.maximumTimestamp.getMillis())
+				return;
+
 		eq.add(e);
 	}
 
