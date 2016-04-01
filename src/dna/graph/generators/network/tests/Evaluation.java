@@ -70,17 +70,14 @@ public class Evaluation {
 	public static final String[] entireWeek = new String[] { day1, day2, day3,
 			day4, day5 };
 
-	public enum MType {
-		all, hosts, ports
-	};
-
 	public static Label keyLabel = new Label("IDS", "M1", "1");
 
 	public static void main(String[] args) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
 		// config
-//		GraphVisualization.enable();
+		// Config.overwrite("GRAPH_VIS_SHOW_EDGE_WEIGHTS", "false");
+		// GraphVisualization.enable();
 		Config.zipBatches();
 		setGraphVisSettings();
 		setGnuplotSettings();
@@ -94,15 +91,13 @@ public class Evaluation {
 		// flags
 		boolean generate = true;
 		boolean plot = true;
-		boolean analyze = true;
+		boolean analyze = !true;
 
 		// generate(baseDir, attackList, 1, generate, metricsDefault, plot,
 		// day3);
 
-		MType type = MType.hosts;
-
 		if (generate || plot || analyze)
-			generate(baseDir, attackList, week1, generate, plot, analyze, type,
+			generate(baseDirSmall, attackList, week1, generate, plot, analyze,
 					day3);
 	}
 
@@ -110,32 +105,22 @@ public class Evaluation {
 	 * CONTROL
 	 */
 	public static void generate(String baseDir, String attackList, int weekId,
-			boolean generate, boolean plot, boolean analyze, MType type,
-			String... days) throws IOException, ParseException,
-			AggregationException, MetricNotApplicableException,
-			InterruptedException, LabelerNotApplicableException {
-		int secondsPerBatch = 10;
+			boolean generate, boolean plot, boolean analyze, String... days)
+			throws IOException, ParseException, AggregationException,
+			MetricNotApplicableException, InterruptedException,
+			LabelerNotApplicableException {
+		int secondsPerBatch = 1;
 		int maxBatches = 100000;
-		long lifeTimePerEdgeSeconds = minute;
+		long lifeTimePerEdgeSeconds = hour + 1;
 		long lifeTimePerEdge = lifeTimePerEdgeSeconds * 1000;
 		String week = "w" + weekId;
-
-		Metric[] metrics = metricsDefault;
-		switch (type) {
-		case hosts:
-			metrics = metricsDefaultHostOnly;
-			break;
-		case ports:
-			metrics = metricsDefaultPortOnly;
-			break;
-		}
+		Metric[] metrics = metricsDefaultAll;
 
 		if (generate) {
 			for (int i = 0; i < days.length; i++) {
 				String day = days[i];
 				String list = getList(week, day);
-				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds,
-						type);
+				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds);
 
 				modell_1_test(baseDir + week + "/", baseDir + week + "/" + day
 						+ "/", list, name, baseDir, attackList,
@@ -147,8 +132,7 @@ public class Evaluation {
 		if (plot) {
 			for (int i = 0; i < days.length; i++) {
 				String day = days[i];
-				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds,
-						type);
+				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds);
 				String dir = getDir(baseDir, week, day);
 
 				// read
@@ -168,8 +152,7 @@ public class Evaluation {
 
 			for (int i = 0; i < days.length; i++) {
 				String day = days[i];
-				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds,
-						type);
+				String name = getName(secondsPerBatch, lifeTimePerEdgeSeconds);
 				String labelListDir = getLabelListDir(baseDir, week, day, name);
 
 				logAnalyze(week, day, name);
@@ -254,7 +237,8 @@ public class Evaluation {
 		reader.setRemoveZeroDegreeNodes(removeZeroDegreeNodes);
 		EntryBasedAttackLabeler ebal = new EntryBasedAttackLabeler();
 		reader.setDarpaLabeler(ebal);
-//		reader.setMaximumTimestamp(896861536000L);
+		// reader.setMaximumTimestamp(896861536000L);
+		reader.setMaximumTimestamp(897326877000L);
 
 		// init graph generator
 		long timestampMillis = reader.getInitTimestamp().getMillis();
@@ -367,25 +351,6 @@ public class Evaluation {
 	public static String getName(int secondsPerBatch,
 			long lifeTimePerEdgeSeconds) {
 		return secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
-	}
-
-	public static String getName(int secondsPerBatch,
-			long lifeTimePerEdgeSeconds, MType type) {
-		String temp = secondsPerBatch + "_" + lifeTimePerEdgeSeconds + "_";
-
-		switch (type) {
-		case all:
-			temp += "a";
-			break;
-		case hosts:
-			temp += "h";
-			break;
-		case ports:
-			temp += "p";
-			break;
-		}
-
-		return temp;
 	}
 
 	public static String getDir(String baseDir, String week, String day) {
