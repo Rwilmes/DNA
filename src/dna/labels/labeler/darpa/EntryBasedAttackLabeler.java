@@ -22,6 +22,8 @@ import dna.util.network.tcp.TCPEventReader;
  */
 public class EntryBasedAttackLabeler extends Labeler {
 
+	public static String[] filteredAttacks = new String[] { "guest" };
+
 	protected TCPEventReader reader;
 
 	public EntryBasedAttackLabeler() {
@@ -43,8 +45,10 @@ public class EntryBasedAttackLabeler extends Labeler {
 		ArrayList<Label> list = new ArrayList<Label>();
 
 		if (this.reader != null) {
-			for (String s : this.reader.getOccuredAttacks())
-				list.add(new Label("attack", s, "true"));
+			for (String s : this.reader.getOccuredAttacks()) {
+				if (!contains(this.filteredAttacks, s))
+					list.add(new Label("attack", s, "true"));
+			}
 		}
 
 		return list;
@@ -52,6 +56,14 @@ public class EntryBasedAttackLabeler extends Labeler {
 
 	public void registerEventReader(TCPEventReader reader) {
 		this.reader = reader;
+	}
+
+	public boolean contains(String[] array, String key) {
+		for (String s : array) {
+			if (s.equals(key))
+				return true;
+		}
+		return false;
 	}
 
 }
