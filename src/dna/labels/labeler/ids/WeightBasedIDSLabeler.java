@@ -40,7 +40,7 @@ public class WeightBasedIDSLabeler extends Labeler {
 	public boolean isApplicable(GraphGenerator gg, BatchGenerator bg,
 			IMetric[] metrics) {
 		if (Labeler.getMetric(metrics, WeightedDegreeDistributionR.class) == null) {
-			Log.warn(getName() + ": metric '" + "WeightedDegreeDistribuutionR"
+			Log.warn(getName() + ": metric '" + "WeightedDegreeDistributionR"
 					+ "' not found!");
 			return false;
 		}
