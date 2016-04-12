@@ -26,6 +26,13 @@ public class IntrusionDetectionLabeler1 extends Labeler {
 
 	private static String type = "M1";
 
+	private int totalThreshold = 1000;
+
+	public IntrusionDetectionLabeler1(int totalThreshold) {
+		this();
+		this.totalThreshold = totalThreshold;
+	}
+
 	public IntrusionDetectionLabeler1() {
 		this("IDS");
 	}
@@ -86,13 +93,17 @@ public class IntrusionDetectionLabeler1 extends Labeler {
 		if (degree.getValues().get("OutDegreeMax").getValue() >= 5
 				&& degree.getValues().get("InDegreeMax").getValue() >= 5) {
 			double total = motifs.getValues().get("TOTAL").getValue();
-			double dmotif2 = motifs.getValues().get("DM02").getValue();
 
-			double rel = dmotif2 / total;
-			if (rel >= 0.3) {
-				Label l = new Label(name, type, "true");
-				list.add(l);
-				Log.info(batchData.getTimestamp() + "  <-  " + l.toString());
+			if (total > totalThreshold) {
+				double dmotif2 = motifs.getValues().get("DM02").getValue();
+
+				double rel = dmotif2 / total;
+				if (rel >= 0.3) {
+					Label l = new Label(name, type, "true");
+					list.add(l);
+					Log.info(batchData.getTimestamp() + "  <-  " + l.toString());
+
+				}
 			}
 		}
 
