@@ -274,7 +274,7 @@ public class TCPEventReader extends NetworkEventReader {
 			switch (this.fields[i]) {
 			case TIME:
 				time = timeFormat.parseDateTime(x);
-				if (TCPEventReader.timestampOffset > 0)
+				if (TCPEventReader.timestampOffset != 0)
 					time = time.plusSeconds(TCPEventReader.timestampOffset);
 				break;
 			case SRC_IP:
