@@ -42,10 +42,10 @@ public class PacketTest {
 		BotnetTest.setGnuplotSettings();
 
 		String dir = "data/darpa1998_packets/w2/tuesday/";
-		String filename = "new2.txt";
+		String filename = "new_fixed.txt";
 
 		int batchLength = 1;
-		long edgeLifeTime = 60 * 60;
+		long edgeLifeTime = 5 * 60;
 
 		SeriesData sd = modelB(dir, filename, batchLength, edgeLifeTime);
 		Evaluation.plot(sd, dir + Evaluation.getName(batchLength, edgeLifeTime)
@@ -60,7 +60,7 @@ public class PacketTest {
 		int maxBatches = 100000;
 		Log.info("Modell 1 test!");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
-		TCPEventReader.timestampOffset = (int) (2 * Evaluation.hour);
+		TCPEventReader.timestampOffset = (int) (-4 * Evaluation.hour);
 
 		// DefaultTCPEventReader reader = new DefaultTCPEventReader(srcDir,
 		// datasetFilename);
