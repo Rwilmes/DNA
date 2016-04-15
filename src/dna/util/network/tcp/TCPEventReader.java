@@ -76,6 +76,7 @@ public class TCPEventReader extends NetworkEventReader {
 
 	protected DateTime initTimestamp;
 	protected DateTime maximumTimestamp;
+	protected DateTime minimumTimestamp;
 
 	protected EntryBasedAttackLabeler labeler;
 	protected ArrayList<String> occuredAttacksInCurrentBatch;
@@ -103,7 +104,7 @@ public class TCPEventReader extends NetworkEventReader {
 				new ArrayList<String>(),
 				new HashMap<NetworkEdge, LongWeight>(),
 				new HashMap<String, Integer>(), labeler,
-				defaultGenerateEmptyBatches, null, fields);
+				defaultGenerateEmptyBatches, null, null, fields);
 	}
 
 	protected TCPEventReader(String dir, String filename, String separator,
@@ -117,8 +118,8 @@ public class TCPEventReader extends NetworkEventReader {
 			HashMap<NetworkEdge, LongWeight> edgeWeightMap,
 			HashMap<String, Integer> servicePortMap,
 			EntryBasedAttackLabeler labeler, boolean genEmptyBatches,
-			DateTime maximumTimestamp, TCPEventField... fields)
-			throws FileNotFoundException {
+			DateTime minimumTimestamp, DateTime maximumTimestamp,
+			TCPEventField... fields) throws FileNotFoundException {
 		super(dir, filename, separator, timeFormat);
 
 		// init
@@ -152,11 +153,30 @@ public class TCPEventReader extends NetworkEventReader {
 			this.labeler.registerEventReader(this);
 
 		this.genEmptyBatches = genEmptyBatches;
+		this.minimumTimestamp = minimumTimestamp;
 		this.maximumTimestamp = maximumTimestamp;
 
+		skipToInitEvent();
+	}
+
+	protected void skipToInitEvent() {
 		try {
 			this.bufferedEvent = parseLine(readString());
-			this.initTimestamp = this.bufferedEvent.getTime();
+
+			if (this.minimumTimestamp != null) {
+				while (this.bufferedEvent.getTime().isBefore(
+						this.minimumTimestamp)) {
+					this.bufferedEvent = parseLine(readString());
+
+					if (this.bufferedEvent == null)
+						break;
+				}
+			}
+
+			if (this.bufferedEvent != null)
+				this.initTimestamp = this.bufferedEvent.getTime();
+			else
+				this.finished = true;
 		} catch (IOException e) {
 			this.finished = true;
 			e.printStackTrace();
@@ -177,8 +197,30 @@ public class TCPEventReader extends NetworkEventReader {
 		this.genEmptyBatches = genEmptyBatches;
 	}
 
+	public void setMinimumTimestamp(String date) {
+		this.minimumTimestamp = this.timeFormat.parseDateTime(date)
+				.plusSeconds(TCPEventReader.timestampOffset);
+		skipToInitEvent();
+	}
+
+	public void setMinimumTimestamp(long timestampMillis) {
+		this.minimumTimestamp = new DateTime(timestampMillis)
+				.plusSeconds(TCPEventReader.timestampOffset);
+		skipToInitEvent();
+	}
+
+	public DateTime getMinimumTimestamp() {
+		return this.minimumTimestamp;
+	}
+
+	public void setMaximumTimestamp(String date) {
+		this.maximumTimestamp = this.timeFormat.parseDateTime(date)
+				.plusSeconds(TCPEventReader.timestampOffset);
+	}
+
 	public void setMaximumTimestamp(long timestampMillis) {
-		this.maximumTimestamp = new DateTime(timestampMillis);
+		this.maximumTimestamp = new DateTime(timestampMillis)
+				.plusSeconds(TCPEventReader.timestampOffset);
 	}
 
 	public DateTime getMaximumTimestamp() {
@@ -406,7 +448,8 @@ public class TCPEventReader extends NetworkEventReader {
 				removeZeroDegreeNodes, removeInactiveEdges, edgeLifetimeMillis,
 				edgeWeightsIncrSteps, edgeWeightsDecrSteps, ports, portMap,
 				ips, ipMap, activeNodes, edgeWeightMap, servicePortMap,
-				labeler, genEmptyBatches, maximumTimestamp, fields);
+				labeler, genEmptyBatches, minimumTimestamp, maximumTimestamp,
+				fields);
 	}
 
 	public boolean isRemoveZeroDegreeNodes() {
