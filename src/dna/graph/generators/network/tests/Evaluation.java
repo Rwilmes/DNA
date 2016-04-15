@@ -101,6 +101,26 @@ public class Evaluation {
 					day3);
 	}
 
+	public static String getDate(int week, int day) {
+		int d = 1;
+		int m = 6;
+
+		int days = (week - 1) * 7 + (day - 1);
+
+		if (days > 31) {
+			d += (days - 30);
+			m++;
+		} else {
+			d += days;
+		}
+
+		String ds = (d > 9) ? "" + d : "0" + d;
+		String ms = (m > 9) ? "" + m : "0" + m;
+		String ys = "1998";
+
+		return ms + "/" + ds + "/" + ys;
+	}
+
 	/*
 	 * CONTROL
 	 */
