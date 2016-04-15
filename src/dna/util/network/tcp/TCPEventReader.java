@@ -34,6 +34,7 @@ public class TCPEventReader extends NetworkEventReader {
 	public static final long defaultEdgeLifeTimeMillis = 60000;
 
 	public static int timestampOffset = 0;
+	public static final int gnuplotOffset = 7200;
 
 	public static final boolean defaultRemoveInactiveEdges = true;
 	public static final boolean defaultRemoveZeroDegreeNodes = true;
@@ -199,13 +200,13 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public void setMinimumTimestamp(String date) {
 		this.minimumTimestamp = this.timeFormat.parseDateTime(date)
-				.plusSeconds(TCPEventReader.timestampOffset);
+				.plusSeconds(TCPEventReader.gnuplotOffset);
 		skipToInitEvent();
 	}
 
 	public void setMinimumTimestamp(long timestampMillis) {
 		this.minimumTimestamp = new DateTime(timestampMillis)
-				.plusSeconds(TCPEventReader.timestampOffset);
+				.plusSeconds(TCPEventReader.gnuplotOffset);
 		skipToInitEvent();
 	}
 
@@ -215,12 +216,12 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public void setMaximumTimestamp(String date) {
 		this.maximumTimestamp = this.timeFormat.parseDateTime(date)
-				.plusSeconds(TCPEventReader.timestampOffset);
+				.plusSeconds(TCPEventReader.gnuplotOffset);
 	}
 
 	public void setMaximumTimestamp(long timestampMillis) {
 		this.maximumTimestamp = new DateTime(timestampMillis)
-				.plusSeconds(TCPEventReader.timestampOffset);
+				.plusSeconds(TCPEventReader.gnuplotOffset);
 	}
 
 	public DateTime getMaximumTimestamp() {
@@ -249,6 +250,7 @@ public class TCPEventReader extends NetworkEventReader {
 
 			if (line != null) {
 				TCPEvent temp = parseLine(line);
+
 				if (temp.getTime().isAfter(this.maximumTimestamp)) {
 					this.bufferedEvent = null;
 					this.finished = true;
