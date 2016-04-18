@@ -3,13 +3,12 @@
     <!--this file was created by Eclipse Runnable JAR Export Wizard-->
     <!--ANT 1.7 is required                                        -->
     <target name="create_run_jar">
-        <jar destfile="netflow.jar" filesetmanifest="mergewithoutmain">
+        <jar destfile="netflow2.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="dna.graph.generators.network.tests.NetflowTest"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
-			<fileset dir="C:/Users/chibo/Documents/GitHub/DNA/bin"/>
-			<fileset dir="../." includes="config/**"/>
+			<fileset dir="C:/Users/chibo/Documents/GitHub/DNA/bin"/>	
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/chibo/Documents/GitHub/DNA/lib/jgrapht-core-0.9.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/chibo/Documents/GitHub/DNA/lib/guava-16.0.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="C:/Users/chibo/Documents/GitHub/DNA/lib/jpathwatch-0-95.jar"/>
