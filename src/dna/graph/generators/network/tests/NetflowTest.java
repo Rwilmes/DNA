@@ -27,33 +27,35 @@ import dna.series.data.SeriesData;
 import dna.updates.generators.BatchGenerator;
 import dna.util.Config;
 import dna.util.Log;
+import dna.util.network.NetFlowReader2;
 import dna.util.network.tcp.TCPEventReader;
-import dna.util.network.tcp.TCPPacketReader;
 import dna.visualization.graph.GraphVisualization;
 
-public class PacketTest {
+public class NetflowTest {
 
 	public static void main(String[] args) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			LabelerNotApplicableException, InterruptedException {
-		 GraphVisualization.enable();
+//		 GraphVisualization.enable();
 		Config.zipBatches();
 		BotnetTest.setGraphVisSettings();
 		BotnetTest.setGnuplotSettings();
 
-		String dir = "data/darpa1998_packets/w2/tuesday/";
-		String filename = "new_fixed.txt";
+		String dir = "data/darpa1998_netflow/w3/thursday/";
+		String filename = "data_fixed.netflow";
 
 		int batchLength = 1;
 		long edgeLifeTime = 300;
-		String descr = "3";
+		String descr = "";
 
 		String from = null;
 		String to = null;
 
-		from = getDate(2, 2) + " 13:11:05.000000";
-		to = getDate(2, 2) + " 13:16:00.000000";
+		from = getDate(3, 4) + " 13:00:00.000000";
+		to = getDate(3, 4) + " 16:00:00.000000";
 
+		from = null;
+		to = null;
 		SeriesData sd = modelB(dir, filename, batchLength, edgeLifeTime, from,
 				to, descr);
 
@@ -86,7 +88,7 @@ public class PacketTest {
 		String ms = (m > 9) ? "" + m : "0" + m;
 		String ys = "1998";
 
-		return ys + "-" + ms + "-" + ds;
+		return ms + "-" + ds + "-" + ys;
 	}
 
 	public static SeriesData modelB(String srcDir, String datasetFilename,
@@ -102,8 +104,7 @@ public class PacketTest {
 		// DefaultTCPEventReader reader = new DefaultTCPEventReader(srcDir,
 		// datasetFilename);
 
-		TCPEventReader reader = new TCPPacketReader(srcDir, datasetFilename,
-				null);
+		TCPEventReader reader = new NetFlowReader2(srcDir, datasetFilename);
 
 		reader.setBatchInterval(batchLength);
 		reader.setEdgeLifeTime(edgeLifeTimeSeconds * 1000);

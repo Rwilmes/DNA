@@ -59,8 +59,11 @@ public class BotnetTest {
 
 		// transform(dir, filename, "out.txt");
 
-		removeStuff("data/darpa1998_packets/w2/tuesday/", "packets.txt",
-				"new2.txt", "" + '"');
+		// removeStuff("data/darpa1998_packets/w2/monday/", "packets.txt",
+		// "new_all.txt", "" + '"');
+
+		removeStuff2("data/darpa1998_netflow/w3/thursday/", "data.netflow",
+				"data_fixed2.netflow");
 
 		Log.info("finished!");
 	}
@@ -135,8 +138,7 @@ public class BotnetTest {
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "HH:mm:ss");
-		// Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (2 *
-		// hour));
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (2 * hour));
 		// Config.overwrite("GRAPH_VIS_SIZE_NODES_BY_DEGREE", "false");
 	}
 
@@ -198,4 +200,35 @@ public class BotnetTest {
 		w.close();
 	}
 
+	public static void removeStuff2(String dir, String filename,
+			String dstFilename) throws IOException {
+		Reader r = new Reader(dir, filename);
+		Writer w = new Writer(dir, dstFilename);
+
+		String line = r.readString();
+		int counter = 0;
+		while (line != null) {
+			line = line.trim();
+			// line = line.replaceAll("  ", " ");
+			String[] splits = line.split(" ");
+
+			String temp = splits[0]
+//					.replaceAll("-98", "-1998")
+					+ " "
+					+ splits[1];
+			for (int i = 2; i < splits.length; i++) {
+				if (splits[i].length() > 0)
+					temp += "\t" + splits[i];
+			}
+			w.writeln(temp);
+
+			if (counter % 10000 == 0)
+				System.out.println(counter);
+			counter++;
+			line = r.readString();
+		}
+
+		r.close();
+		w.close();
+	}
 }

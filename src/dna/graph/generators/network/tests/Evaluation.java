@@ -373,6 +373,14 @@ public class Evaluation {
 		return secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
 	}
 
+	public static String getName(int secondsPerBatch,
+			long lifeTimePerEdgeSeconds, String descr) {
+		if (descr == null || descr.equals(""))
+			return getName(secondsPerBatch, lifeTimePerEdgeSeconds);
+		else
+			return secondsPerBatch + "_" + lifeTimePerEdgeSeconds + "_" + descr;
+	}
+
 	public static String getDir(String baseDir, String week, String day) {
 		return baseDir + week + "/" + day + "/";
 	}
