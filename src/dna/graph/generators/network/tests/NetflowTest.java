@@ -33,41 +33,66 @@ import dna.visualization.graph.GraphVisualization;
 
 public class NetflowTest {
 
+	public static void test(String dataPath, int edgeLifeTime)
+			throws IOException, ParseException, AggregationException,
+			MetricNotApplicableException, LabelerNotApplicableException,
+			InterruptedException {
+		NetflowTest.test(dataPath, 1, edgeLifeTime);
+	}
+
+	public static void test(String dataPath, int batchLengthInSeconds,
+			int edgeLifeTime) throws IOException, ParseException,
+			AggregationException, MetricNotApplicableException,
+			LabelerNotApplicableException, InterruptedException {
+		NetflowTest.main(new String[] { dataPath, "" + batchLengthInSeconds,
+				"" + edgeLifeTime, null });
+	}
+
 	public static void main(String[] args) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			LabelerNotApplicableException, InterruptedException {
-//		 GraphVisualization.enable();
-		Config.zipBatches();
-		BotnetTest.setGraphVisSettings();
-		BotnetTest.setGnuplotSettings();
+		if (args.length < 3) {
+			System.out.println("wrong parameters!");
+			System.out
+					.println("java -jar netflow.jar [data-path] [batch-length-in-seconds] [edgeLifeTime] [optional: descr/version]");
+		} else {
+			// GraphVisualization.enable();
+			Config.zipBatches();
+			BotnetTest.setGraphVisSettings();
+			BotnetTest.setGnuplotSettings();
 
-		String dir = "data/darpa1998_netflow/w3/thursday/";
-		String filename = "data_fixed.netflow";
+			String[] splits = args[0].split("/");
+			String dir = "";
+			for (int i = 0; i < splits.length - 1; i++) {
+				dir += splits[i] + "/";
+			}
+			String filename = splits[splits.length - 1];
 
-		int batchLength = 1;
-		long edgeLifeTime = 300;
-		String descr = "";
+			int batchLength = Integer.parseInt(args[1]);
+			long edgeLifeTime = Long.parseLong(args[2]);
+			String descr = null;
+			if (args.length >= 4)
+				descr = args[3];
 
-		String from = null;
-		String to = null;
+			String from = null;
+			String to = null;
 
-		from = getDate(3, 4) + " 13:00:00.000000";
-		to = getDate(3, 4) + " 16:00:00.000000";
+			from = getDate(3, 4) + " 13:00:00.000000";
+			to = getDate(3, 4) + " 16:00:00.000000";
 
-		from = null;
-		to = null;
-		SeriesData sd = modelB(dir, filename, batchLength, edgeLifeTime, from,
-				to, descr);
+			System.out.println("* " + dir + "\t" + filename + "\tname: "
+					+ Evaluation.getName(batchLength, edgeLifeTime, descr));
 
-		// SeriesData sd = SeriesData.read(dir + Evaluation.getName(batchLength,
-		// edgeLifeTime) + "/", "s1", false, false);
-		// Config.overwrite("GNUPLOT_XRANGE", "[" + '"' + "8.9815679E8" + '"' +
-		// ":" + '"' + "8.9821440E8" + '"' + "]");
-		//
-		Evaluation.plot(sd,
-				dir + Evaluation.getName(batchLength, edgeLifeTime, descr)
-						+ "/" + "plots/");
-		//
+			from = null;
+			to = null;
+
+			SeriesData sd = modelB(dir, filename, batchLength, edgeLifeTime,
+					from, to, descr);
+
+			Evaluation.plot(sd,
+					dir + Evaluation.getName(batchLength, edgeLifeTime, descr)
+							+ "/" + "plots/");
+		}
 
 	}
 
