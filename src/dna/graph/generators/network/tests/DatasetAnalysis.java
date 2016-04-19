@@ -257,9 +257,10 @@ public class DatasetAnalysis {
 
 		// vis
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
-		if (enableVis)
+		if (enableVis) {
+			DatasetUtils.setGraphVisSettings();
 			GraphVisualization.enable();
-		else
+		} else
 			GraphVisualization.disable();
 
 		// set offset
