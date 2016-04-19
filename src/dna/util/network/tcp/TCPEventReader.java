@@ -198,6 +198,10 @@ public class TCPEventReader extends NetworkEventReader {
 		this.genEmptyBatches = genEmptyBatches;
 	}
 
+	public void setMinimumTimestamp(DateTime date) {
+		this.minimumTimestamp = date.plusSeconds(TCPEventReader.gnuplotOffset);
+	}
+
 	public void setMinimumTimestamp(String date) {
 		this.minimumTimestamp = this.timeFormat.parseDateTime(date)
 				.plusSeconds(TCPEventReader.gnuplotOffset);
@@ -212,6 +216,10 @@ public class TCPEventReader extends NetworkEventReader {
 
 	public DateTime getMinimumTimestamp() {
 		return this.minimumTimestamp;
+	}
+
+	public void setMaximumTimestamp(DateTime date) {
+		this.maximumTimestamp = date.plusSeconds(TCPEventReader.gnuplotOffset);
 	}
 
 	public void setMaximumTimestamp(String date) {

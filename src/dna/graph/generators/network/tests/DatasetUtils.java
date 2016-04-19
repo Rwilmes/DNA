@@ -25,4 +25,19 @@ public class DatasetUtils {
 
 		return ds + "-" + ms + "-" + ys;
 	}
+
+	/** Returns a conventional series-name. **/
+	public static String getName(int secondsPerBatch,
+			long lifeTimePerEdgeSeconds) {
+		return secondsPerBatch + "_" + lifeTimePerEdgeSeconds;
+	}
+
+	/** Returns a conventional series-name. **/
+	public static String getName(int secondsPerBatch,
+			long lifeTimePerEdgeSeconds, String descr) {
+		if (descr == null || descr.equals(""))
+			return getName(secondsPerBatch, lifeTimePerEdgeSeconds);
+		else
+			return secondsPerBatch + "_" + lifeTimePerEdgeSeconds + "_" + descr;
+	}
 }
