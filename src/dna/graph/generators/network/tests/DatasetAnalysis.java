@@ -1,8 +1,11 @@
 package dna.graph.generators.network.tests;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -10,11 +13,24 @@ import org.joda.time.format.DateTimeFormatter;
 
 import argList.ArgList;
 import argList.types.array.StringArrayArg;
+import argList.types.atomic.BooleanArg;
 import argList.types.atomic.EnumArg;
 import argList.types.atomic.IntArg;
 import argList.types.atomic.LongArg;
 import argList.types.atomic.StringArg;
+import dna.graph.datastructures.GDS;
+import dna.graph.generators.GraphGenerator;
+import dna.graph.generators.network.EmptyNetwork;
+import dna.graph.generators.network.m1.M1Batch;
+import dna.graph.weights.TypedWeight;
+import dna.graph.weights.Weight.WeightSelection;
+import dna.graph.weights.intW.IntWeight;
+import dna.labels.labeler.Labeler;
+import dna.labels.labeler.LabelerNotApplicableException;
+import dna.labels.labeler.darpa.DarpaAttackLabeler;
+import dna.labels.labeler.darpa.EntryBasedAttackLabeler;
 import dna.metrics.Metric;
+import dna.metrics.MetricNotApplicableException;
 import dna.metrics.assortativity.AssortativityU;
 import dna.metrics.centrality.BetweennessCentralityU;
 import dna.metrics.clustering.DirectedClusteringCoefficientU;
@@ -29,7 +45,17 @@ import dna.metrics.richClub.RichClubConnectivityByDegreeU;
 import dna.metrics.similarityMeasures.matching.MatchingU;
 import dna.metrics.similarityMeasures.overlap.OverlapU;
 import dna.metrics.weights.EdgeWeightsR;
+import dna.series.AggregationException;
+import dna.series.Series;
+import dna.series.data.SeriesData;
+import dna.updates.generators.BatchGenerator;
+import dna.util.Config;
 import dna.util.Log;
+import dna.util.network.NetFlowReader2;
+import dna.util.network.tcp.DefaultTCPEventReader;
+import dna.util.network.tcp.TCPEventReader;
+import dna.util.network.tcp.TCPPacketReader;
+import dna.visualization.graph.GraphVisualization;
 
 public class DatasetAnalysis {
 
@@ -37,11 +63,11 @@ public class DatasetAnalysis {
 	 * ENUMERATIONS
 	 */
 	public enum DatasetType {
-		packet, netflow, sessions
+		packet, netflow, session
 	}
 
 	public enum ModelType {
-		modelA, modelA_noWeights
+		modelA
 	}
 
 	public enum TimestampFormat {
@@ -51,7 +77,9 @@ public class DatasetAnalysis {
 	/*
 	 * MAIN
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException, ParseException,
+			AggregationException, MetricNotApplicableException,
+			LabelerNotApplicableException {
 		ArgList<DatasetAnalysis> argList = new ArgList<DatasetAnalysis>(
 				DatasetAnalysis.class,
 				new StringArg("srcDir", "dir of the source data"),
@@ -71,10 +99,12 @@ public class DatasetAnalysis {
 						TimestampFormat.values()),
 				new StringArg("from", "starting timestamp"),
 				new StringArg("to", "maximum timestamp"),
-				new LongArg("dataOffset",
+				new IntArg("dataOffset",
 						"offset to be added to the data timestamps in seconds"),
 				new StringArg("attackList",
 						"path to the attack-list file to be used"),
+				new BooleanArg("enableVis",
+						"true to enable graph-visualization"),
 				new StringArrayArg(
 						"metrics",
 						"list of metrics to be computed with format: [class-path]+[_host/_port/_all (optional)]. Instead of metrics one may also add the following flags : metricsAll, metricsDefaultAll, metricsDefaultHosts, metricsDefaultPorts to add predefined metrics.",
@@ -98,12 +128,14 @@ public class DatasetAnalysis {
 	protected DateTime from;
 	protected DateTime to;
 
-	protected long dataOffset;
+	protected int dataOffset;
 
 	protected String attackListPath;
 
 	protected DateTimeFormatter fmt = DateTimeFormat
 			.forPattern("dd-MM-yyyy-HH:mm:ss");
+
+	protected boolean enableVis;
 
 	protected Metric[] metrics;
 
@@ -111,8 +143,8 @@ public class DatasetAnalysis {
 	public DatasetAnalysis(String srcDir, String srcFilename,
 			String datasetType, String modelType, Integer batchWindow,
 			Long edgeLifeTime, String descr, String timestampFormat,
-			String from, String to, Long dataOffset, String attackListPath,
-			String[] metrics) {
+			String from, String to, Integer dataOffset, String attackListPath,
+			Boolean enableVis, String[] metrics) {
 		this.srcDir = srcDir;
 		this.srcFilename = srcFilename;
 		this.datasetType = DatasetType.valueOf(datasetType);
@@ -122,6 +154,7 @@ public class DatasetAnalysis {
 		this.descr = descr;
 		this.dataOffset = dataOffset;
 		this.attackListPath = attackListPath;
+		this.enableVis = enableVis;
 
 		// timestamps
 		if (timestampFormat.equals("timestamp")) {
@@ -180,8 +213,13 @@ public class DatasetAnalysis {
 		this.metrics = metricList.toArray(new Metric[metricList.size()]);
 	}
 
+	/*
+	 * GENERATION
+	 */
 	/** Generation method. **/
-	public void generate() {
+	public void generate() throws IOException, ParseException,
+			AggregationException, MetricNotApplicableException,
+			LabelerNotApplicableException {
 		Log.info("generating " + datasetType.toString() + " data from '"
 				+ srcDir + srcFilename + "'");
 		Log.info("model:\t" + modelType.toString());
@@ -193,17 +231,107 @@ public class DatasetAnalysis {
 		if (to != null)
 			Log.info("to:\t\t" + to.toString());
 		Log.info("offset:\t" + dataOffset);
-		Log.info("attack-list:\t" + this.attackListPath);
+		Log.info("attack-list:\t" + attackListPath);
+		Log.info("enable-vis:\t" + enableVis);
 
 		Log.infoSep();
 		Log.info("metrics:");
 		for (Metric m : this.metrics)
 			Log.info("\t" + m.getName());
 		Log.infoSep();
+
+		generate(srcDir, srcFilename, datasetType, modelType, attackListPath,
+				batchWindow, edgeLifeTime, from, to, descr, dataOffset,
+				enableVis, metrics);
+	}
+
+	/** Model A generation method. **/
+	public static SeriesData generate(String srcDir, String srcFilename,
+			DatasetType datasetType, ModelType modelType,
+			String attackListPath, int batchLengthSeconds,
+			long edgeLifeTimeSeconds, DateTime from, DateTime to, String descr,
+			int dataOffset, boolean enableVis, Metric[] metrics)
+			throws IOException, ParseException, AggregationException,
+			MetricNotApplicableException, LabelerNotApplicableException {
+		int maxBatches = 1000000;
+
+		// vis
+		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
+		if (enableVis)
+			GraphVisualization.enable();
+		else
+			GraphVisualization.disable();
+
+		// set offset
+		TCPEventReader.timestampOffset = dataOffset;
+		TCPEventReader reader = null;
+
+		// init labeler
+		Labeler[] labeler = new Labeler[0];
+
+		switch (datasetType) {
+		case netflow:
+			if (attackListPath != null && !attackListPath.equals("null"))
+				labeler = new Labeler[] { new DarpaAttackLabeler(
+						attackListPath, "") };
+			reader = new NetFlowReader2(srcDir, srcFilename);
+			break;
+		case packet:
+			if (attackListPath != null && !attackListPath.equals("null"))
+				labeler = new Labeler[] { new DarpaAttackLabeler(
+						attackListPath, "") };
+			reader = new TCPPacketReader(srcDir, srcFilename, null);
+			break;
+		case session:
+			reader = new DefaultTCPEventReader(srcDir, srcFilename);
+			EntryBasedAttackLabeler ebal = new EntryBasedAttackLabeler();
+			labeler = new Labeler[] { ebal };
+			reader.setDarpaLabeler(ebal);
+			break;
+		}
+
+		// additional reader settings
+		reader.setBatchInterval(batchLengthSeconds);
+		reader.setEdgeLifeTime(edgeLifeTimeSeconds * 1000);
+		reader.setRemoveInactiveEdges(true);
+		reader.setRemoveZeroDegreeNodes(true);
+
+		if (from != null)
+			reader.setMinimumTimestamp(from);
+		if (to != null)
+			reader.setMaximumTimestamp(to);
+
+		// init graph generator
+		long timestampMillis = reader.getInitTimestamp().getMillis();
+		long timestampSeconds = TimeUnit.MILLISECONDS
+				.toSeconds(timestampMillis);
+		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(TypedWeight.class,
+				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
+				timestampSeconds);
+
+		// init batch generator
+		BatchGenerator bg = null;
+
+		switch (modelType) {
+		case modelA:
+			bg = new M1Batch(reader);
+			break;
+		}
+
+		// init series
+		Series s = new Series(gg, bg, metrics, labeler, srcDir
+				+ DatasetUtils.getName(batchLengthSeconds, edgeLifeTimeSeconds,
+						descr) + "/", "s1");
+
+		// generate
+		SeriesData sd = s.generate(1, maxBatches, false);
+		GraphVisualization.setText("Finished generation");
+		Log.infoSep();
+		return sd;
 	}
 
 	/*
-	 * STATICS
+	 * UTLITY & STATICS
 	 */
 	/**
 	 * Instantiates a metric by the given classPath and nodeType. nodeType may
@@ -292,5 +420,4 @@ public class DatasetAnalysis {
 			new WeightedDegreeDistributionR(Evaluation.metricHostFilter),
 			new WeightedDegreeDistributionR(Evaluation.metricPortFilter),
 			new WeightedDegreeDistributionR() };
-
 }

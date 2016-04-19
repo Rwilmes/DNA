@@ -35,7 +35,8 @@ public class DatasetUtils {
 	/** Returns a conventional series-name. **/
 	public static String getName(int secondsPerBatch,
 			long lifeTimePerEdgeSeconds, String descr) {
-		if (descr == null || descr.equals(""))
+		System.out.println("GETNAME: " + descr);
+		if (descr == null || descr.equals("") || descr.equals("null"))
 			return getName(secondsPerBatch, lifeTimePerEdgeSeconds);
 		else
 			return secondsPerBatch + "_" + lifeTimePerEdgeSeconds + "_" + descr;
