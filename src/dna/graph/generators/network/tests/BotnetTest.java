@@ -62,8 +62,8 @@ public class BotnetTest {
 		// removeStuff("data/darpa1998_packets/w2/monday/", "packets.txt",
 		// "new_all.txt", "" + '"');
 
-		removeStuff2("data/darpa1998_netflow/w3/thursday/", "data.netflow",
-				"data_fixed2.netflow");
+		removeStuff2("data/darpa1998_netflow/w2/2/", "outside_small.netflow",
+				"outside_small_fixed.netflow");
 
 		Log.info("finished!");
 	}
@@ -212,9 +212,7 @@ public class BotnetTest {
 			// line = line.replaceAll("  ", " ");
 			String[] splits = line.split(" ");
 
-			String temp = splits[0]
-//					.replaceAll("-98", "-1998")
-					+ " "
+			String temp = splits[0].replaceAll("-98", "-1998") + " "
 					+ splits[1];
 			for (int i = 2; i < splits.length; i++) {
 				if (splits[i].length() > 0)
