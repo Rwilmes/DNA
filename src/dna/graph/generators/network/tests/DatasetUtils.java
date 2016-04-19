@@ -1,5 +1,14 @@
 package dna.graph.generators.network.tests;
 
+import java.io.IOException;
+
+import dna.plot.Plotting;
+import dna.plot.PlottingConfig;
+import dna.plot.PlottingConfig.PlotFlag;
+import dna.series.data.SeriesData;
+import dna.util.Config;
+import dna.visualization.graph.GraphVisualization;
+
 public class DatasetUtils {
 
 	/**
@@ -41,4 +50,59 @@ public class DatasetUtils {
 		else
 			return secondsPerBatch + "_" + lifeTimePerEdgeSeconds + "_" + descr;
 	}
+
+	/*
+	 * PLOTTING
+	 */
+
+	/** Plotting method for datasets. **/
+	public static void plot(SeriesData sd, String dir) throws IOException,
+			InterruptedException {
+		String defXTics = Config.get(gnuplot_xtics);
+		String defDateTime = Config.get(gnuplot_datetime);
+		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
+		Config.overwrite(gnuplot_datetime, "%H:%M");
+		Config.overwrite(gnuplot_plotdatetime, "true");
+		GraphVisualization.setText("Generating single scalar plots for "
+				+ sd.getName());
+		Plotting.plot(sd, dir, new PlottingConfig(
+				PlotFlag.plotSingleScalarValues));
+		Config.overwrite(gnuplot_xtics, defXTics);
+		Config.overwrite(gnuplot_datetime, defDateTime);
+		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
+		GraphVisualization
+				.setText("Plotting of " + sd.getName() + " finished!");
+	}
+
+	/*
+	 * CONFIGURATION
+	 */
+	public static final long second = 1;
+	public static final long minute = 60 * second;
+	public static final long hour = 60 * minute;
+
+	public static final String gnuplot_xtics = "GNUPLOT_XTICS";
+	public static final String gnuplot_datetime = "GNUPLOT_DATETIME";
+	public static final String gnuplot_plotdatetime = "GNUPLOT_PLOTDATETIME";
+	public static final String gnuplot_xoffset = "GNUPLOT_XOFFSET";
+
+	public static void setGnuplotPath(String path) {
+		Config.overwrite("GNUPLOT_PATH", path);
+	}
+
+	public static void setGnuplotSettings() {
+		Config.overwrite("GNUPLOT_DEFAULT_PLOT_LABELS", "true");
+		Config.overwrite("GNUPLOT_LABEL_BIG_TIMESTAMPS", "true");
+		// Config.overwrite("GNUPLOT_LABEL_FILTER_LIST",
+		// "DoS1:max, DoS2:product");
+		Config.overwrite("GNUPLOT_LABEL_COLOR_OFFSET", "12");
+	}
+
+	public static void setGraphVisSettings() {
+		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
+		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "HH:mm:ss");
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (2 * hour));
+	}
+
 }
