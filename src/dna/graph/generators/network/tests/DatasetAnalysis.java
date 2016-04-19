@@ -2,6 +2,7 @@ package dna.graph.generators.network.tests;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -14,10 +15,27 @@ import argList.types.atomic.IntArg;
 import argList.types.atomic.LongArg;
 import argList.types.atomic.StringArg;
 import dna.metrics.Metric;
+import dna.metrics.assortativity.AssortativityU;
+import dna.metrics.centrality.BetweennessCentralityU;
+import dna.metrics.clustering.DirectedClusteringCoefficientU;
+import dna.metrics.clustering.local.DirectedLocalClusteringCoefficientR;
+import dna.metrics.degree.DegreeDistributionR;
+import dna.metrics.degree.DegreeDistributionU;
+import dna.metrics.degree.WeightedDegreeDistributionR;
+import dna.metrics.motifs.DirectedMotifsU;
+import dna.metrics.paths.IntWeightedAllPairsShortestPathsU;
+import dna.metrics.paths.UnweightedAllPairsShortestPathsU;
+import dna.metrics.richClub.RichClubConnectivityByDegreeU;
+import dna.metrics.similarityMeasures.matching.MatchingU;
+import dna.metrics.similarityMeasures.overlap.OverlapU;
+import dna.metrics.weights.EdgeWeightsR;
 import dna.util.Log;
 
 public class DatasetAnalysis {
 
+	/*
+	 * ENUMERATIONS
+	 */
 	public enum DatasetType {
 		packet, netflow, sessions
 	}
@@ -30,6 +48,9 @@ public class DatasetAnalysis {
 		timestamp, week_day
 	}
 
+	/*
+	 * MAIN
+	 */
 	public static void main(String[] args) {
 		ArgList<DatasetAnalysis> argList = new ArgList<DatasetAnalysis>(
 				DatasetAnalysis.class,
@@ -54,12 +75,15 @@ public class DatasetAnalysis {
 						"offset to be added to the data in seconds"),
 				new StringArrayArg(
 						"metrics",
-						"list of metrics to be computed. Format: [class-path]+[_host/_port (optional)]",
+						"list of metrics to be computed with format: [class-path]+[_host/_port/_all (optional)]. Instead of metrics one may also add the following flags : metricsAll, metricsDefaultAll, metricsDefaultHosts, metricsDefaultPorts to add predefined metrics.",
 						";"));
 		DatasetAnalysis d = argList.getInstance(args);
 		d.generate();
 	}
 
+	/*
+	 * GENERATION CLASS
+	 */
 	protected String srcDir;
 	protected String srcFilename;
 	protected DatasetType datasetType;
@@ -79,6 +103,7 @@ public class DatasetAnalysis {
 
 	protected Metric[] metrics;
 
+	/** Constructor **/
 	public DatasetAnalysis(String srcDir, String srcFilename,
 			String datasetType, String modelType, Integer batchWindow,
 			Long edgeLifeTime, String descr, String timestampFormat,
@@ -92,6 +117,7 @@ public class DatasetAnalysis {
 		this.descr = descr;
 		this.dataOffset = dataOffset;
 
+		// timestamps
 		if (timestampFormat.equals("timestamp")) {
 			this.from = this.fmt.parseDateTime(from);
 			this.to = this.fmt.parseDateTime(to);
@@ -108,21 +134,47 @@ public class DatasetAnalysis {
 			this.to = this.fmt.parseDateTime(dateTo + "-" + to.substring(4));
 		}
 
-		this.metrics = new Metric[metrics.length];
+		// metrics
+		ArrayList<Metric> metricsList = new ArrayList<Metric>();
+
 		for (int i = 0; i < metrics.length; i++) {
 			String classPath = metrics[i];
-			if (classPath.endsWith("_host")) {
-				this.metrics[i] = instantiateMetric(
-						classPath.replaceAll("_host", ""), "HOST");
+
+			// metric-flag cases
+			if (classPath.equals("metricsAll")) {
+				addMetricsToList(metricsList, DatasetAnalysis.metricsAll);
+			} else if (classPath.equals("metricsDefaultAll")) {
+				addMetricsToList(metricsList, DatasetAnalysis.metricsDefaultAll);
+			} else if (classPath.equals("metricsDefaultHosts")) {
+				addMetricsToList(metricsList,
+						DatasetAnalysis.metricsDefaultHostOnly);
+			} else if (classPath.equals("metricsDefaultPorts")) {
+				addMetricsToList(metricsList,
+						DatasetAnalysis.metricsDefaultPortOnly);
+
+				// normal metric-cases
+			} else if (classPath.endsWith("_host")) {
+				metricsList.add(instantiateMetric(
+						classPath.replaceAll("_host", ""), "HOST"));
 			} else if (classPath.endsWith("_port")) {
-				this.metrics[i] = instantiateMetric(
-						classPath.replaceAll("_port", ""), "PORT");
+				metricsList.add(instantiateMetric(
+						classPath.replaceAll("_port", ""), "PORT"));
+			} else if (classPath.endsWith("_all")) {
+				metricsList.add(instantiateMetric(
+						classPath.replaceAll("_all", ""), null));
+				metricsList.add(instantiateMetric(
+						classPath.replaceAll("_all", ""), "HOST"));
+				metricsList.add(instantiateMetric(
+						classPath.replaceAll("_all", ""), "PORT"));
 			} else {
-				this.metrics[i] = instantiateMetric(classPath, null);
+				metricsList.add(instantiateMetric(classPath, null));
 			}
 		}
+
+		this.metrics = metricsList.toArray(new Metric[metricsList.size()]);
 	}
 
+	/** Generation method. **/
 	public void generate() {
 		Log.info("generating " + datasetType.toString() + " data from '"
 				+ srcDir + srcFilename + "'");
@@ -143,7 +195,14 @@ public class DatasetAnalysis {
 		Log.infoSep();
 	}
 
-	protected Metric instantiateMetric(String classPath, String nodeType) {
+	/*
+	 * STATICS
+	 */
+	/**
+	 * Instantiates a metric by the given classPath and nodeType. nodeType may
+	 * be null to instantiate without.
+	 **/
+	public static Metric instantiateMetric(String classPath, String nodeType) {
 		Metric m = null;
 
 		try {
@@ -168,5 +227,63 @@ public class DatasetAnalysis {
 
 		return m;
 	}
+
+	/** Adds metrics from array to list. Checks and prevents duplicates. **/
+	public static ArrayList<Metric> addMetricsToList(
+			ArrayList<Metric> metricList, Metric[] metrics) {
+		for (Metric m : metrics) {
+			boolean contained = false;
+			for (Metric m2 : metricList) {
+				if (m.getName().equals(m2.getName()))
+					contained = true;
+			}
+			if (!contained)
+				metricList.add(m);
+		}
+		return metricList;
+	}
+
+	/*
+	 * STATIC METRICS
+	 */
+	public static final String[] metricHostFilter = new String[] { "HOST" };
+	public static final String[] metricPortFilter = new String[] { "PORT" };
+
+	public static final Metric[] metricsAll = new Metric[] {
+			new AssortativityU(), new BetweennessCentralityU(),
+			new DirectedClusteringCoefficientU(),
+			new DirectedLocalClusteringCoefficientR(),
+			new UnweightedAllPairsShortestPathsU(),
+			new IntWeightedAllPairsShortestPathsU(),
+			new RichClubConnectivityByDegreeU(), new MatchingU(),
+			new OverlapU(), new DegreeDistributionU(),
+			new DegreeDistributionR(metricHostFilter),
+			new DegreeDistributionR(metricPortFilter), new EdgeWeightsR(1.0),
+			new DirectedMotifsU(), new WeightedDegreeDistributionR(),
+			new WeightedDegreeDistributionR(metricHostFilter),
+			new WeightedDegreeDistributionR(metricPortFilter) };
+
+	public static final Metric[] metricsDefault = new Metric[] {
+			new DegreeDistributionU(), new DirectedMotifsU(),
+			new EdgeWeightsR(1.0), new WeightedDegreeDistributionR() };
+
+	public static final Metric[] metricsDefaultHostOnly = new Metric[] {
+			new DegreeDistributionR(Evaluation.metricHostFilter),
+			new DirectedMotifsU(), new EdgeWeightsR(1.0),
+			new WeightedDegreeDistributionR(Evaluation.metricHostFilter) };
+
+	public static final Metric[] metricsDefaultPortOnly = new Metric[] {
+			new DegreeDistributionR(Evaluation.metricPortFilter),
+			new DirectedMotifsU(), new EdgeWeightsR(1.0),
+			new WeightedDegreeDistributionR(Evaluation.metricPortFilter) };
+
+	public static final Metric[] metricsDefaultAll = new Metric[] {
+			new DegreeDistributionR(Evaluation.metricHostFilter),
+			new DegreeDistributionR(Evaluation.metricPortFilter),
+			new DegreeDistributionR(), new DirectedMotifsU(),
+			new EdgeWeightsR(1.0),
+			new WeightedDegreeDistributionR(Evaluation.metricHostFilter),
+			new WeightedDegreeDistributionR(Evaluation.metricPortFilter),
+			new WeightedDegreeDistributionR() };
 
 }
