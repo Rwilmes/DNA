@@ -72,7 +72,9 @@ public class DatasetAnalysis {
 				new StringArg("from", "starting timestamp"),
 				new StringArg("to", "maximum timestamp"),
 				new LongArg("dataOffset",
-						"offset to be added to the data in seconds"),
+						"offset to be added to the data timestamps in seconds"),
+				new StringArg("attackList",
+						"path to the attack-list file to be used"),
 				new StringArrayArg(
 						"metrics",
 						"list of metrics to be computed with format: [class-path]+[_host/_port/_all (optional)]. Instead of metrics one may also add the following flags : metricsAll, metricsDefaultAll, metricsDefaultHosts, metricsDefaultPorts to add predefined metrics.",
@@ -98,6 +100,8 @@ public class DatasetAnalysis {
 
 	protected long dataOffset;
 
+	protected String attackListPath;
+
 	protected DateTimeFormatter fmt = DateTimeFormat
 			.forPattern("dd-MM-yyyy-HH:mm:ss");
 
@@ -107,7 +111,8 @@ public class DatasetAnalysis {
 	public DatasetAnalysis(String srcDir, String srcFilename,
 			String datasetType, String modelType, Integer batchWindow,
 			Long edgeLifeTime, String descr, String timestampFormat,
-			String from, String to, Long dataOffset, String[] metrics) {
+			String from, String to, Long dataOffset, String attackListPath,
+			String[] metrics) {
 		this.srcDir = srcDir;
 		this.srcFilename = srcFilename;
 		this.datasetType = DatasetType.valueOf(datasetType);
@@ -116,6 +121,7 @@ public class DatasetAnalysis {
 		this.edgeLifeTime = edgeLifeTime;
 		this.descr = descr;
 		this.dataOffset = dataOffset;
+		this.attackListPath = attackListPath;
 
 		// timestamps
 		if (timestampFormat.equals("timestamp")) {
@@ -135,43 +141,43 @@ public class DatasetAnalysis {
 		}
 
 		// metrics
-		ArrayList<Metric> metricsList = new ArrayList<Metric>();
+		ArrayList<Metric> metricList = new ArrayList<Metric>();
 
 		for (int i = 0; i < metrics.length; i++) {
 			String classPath = metrics[i];
 
 			// metric-flag cases
 			if (classPath.equals("metricsAll")) {
-				addMetricsToList(metricsList, DatasetAnalysis.metricsAll);
+				addMetricsToList(metricList, DatasetAnalysis.metricsAll);
 			} else if (classPath.equals("metricsDefaultAll")) {
-				addMetricsToList(metricsList, DatasetAnalysis.metricsDefaultAll);
+				addMetricsToList(metricList, DatasetAnalysis.metricsDefaultAll);
 			} else if (classPath.equals("metricsDefaultHosts")) {
-				addMetricsToList(metricsList,
+				addMetricsToList(metricList,
 						DatasetAnalysis.metricsDefaultHostOnly);
 			} else if (classPath.equals("metricsDefaultPorts")) {
-				addMetricsToList(metricsList,
+				addMetricsToList(metricList,
 						DatasetAnalysis.metricsDefaultPortOnly);
 
 				// normal metric-cases
 			} else if (classPath.endsWith("_host")) {
-				metricsList.add(instantiateMetric(
+				metricList.add(instantiateMetric(
 						classPath.replaceAll("_host", ""), "HOST"));
 			} else if (classPath.endsWith("_port")) {
-				metricsList.add(instantiateMetric(
+				metricList.add(instantiateMetric(
 						classPath.replaceAll("_port", ""), "PORT"));
 			} else if (classPath.endsWith("_all")) {
-				metricsList.add(instantiateMetric(
+				metricList.add(instantiateMetric(
 						classPath.replaceAll("_all", ""), null));
-				metricsList.add(instantiateMetric(
+				metricList.add(instantiateMetric(
 						classPath.replaceAll("_all", ""), "HOST"));
-				metricsList.add(instantiateMetric(
+				metricList.add(instantiateMetric(
 						classPath.replaceAll("_all", ""), "PORT"));
 			} else {
-				metricsList.add(instantiateMetric(classPath, null));
+				metricList.add(instantiateMetric(classPath, null));
 			}
 		}
 
-		this.metrics = metricsList.toArray(new Metric[metricsList.size()]);
+		this.metrics = metricList.toArray(new Metric[metricList.size()]);
 	}
 
 	/** Generation method. **/
@@ -179,14 +185,15 @@ public class DatasetAnalysis {
 		Log.info("generating " + datasetType.toString() + " data from '"
 				+ srcDir + srcFilename + "'");
 		Log.info("model:\t" + modelType.toString());
-		Log.info("batch window:\t" + batchWindow + " s");
-		Log.info("edgeLifeTime:\t" + edgeLifeTime + " s");
+		Log.info("batch window:\t" + batchWindow + "s");
+		Log.info("edgeLifeTime:\t" + edgeLifeTime + "s");
 		Log.info("descr:\t" + descr);
 		if (from != null)
 			Log.info("from:\t\t" + from.toString());
 		if (to != null)
 			Log.info("to:\t\t" + to.toString());
 		Log.info("offset:\t" + dataOffset);
+		Log.info("attack-list:\t" + this.attackListPath);
 
 		Log.infoSep();
 		Log.info("metrics:");
