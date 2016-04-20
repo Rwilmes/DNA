@@ -2,6 +2,8 @@ package dna.graph.generators.network.tests;
 
 import java.io.IOException;
 
+import org.joda.time.DateTime;
+
 import dna.plot.Plotting;
 import dna.plot.PlottingConfig;
 import dna.plot.PlottingConfig.PlotFlag;
@@ -10,6 +12,25 @@ import dna.util.Config;
 import dna.visualization.graph.GraphVisualization;
 
 public class DatasetUtils {
+
+	/*
+	 * ENUMERATIONS
+	 */
+	public enum DatasetType {
+		packet, netflow, session
+	}
+
+	public enum ModelType {
+		modelA
+	}
+
+	public enum TimestampFormat {
+		timestamp, week_day
+	}
+
+	public enum ZipMode {
+		none, runs, batches
+	}
 
 	/**
 	 * Returns the absolute date of a DARPA 1998 week and day pair in
@@ -54,10 +75,22 @@ public class DatasetUtils {
 	/*
 	 * PLOTTING
 	 */
-
 	/** Plotting method for datasets. **/
 	public static void plot(SeriesData sd, String dir) throws IOException,
 			InterruptedException {
+		DatasetUtils.plot(sd, dir, -1, -1);
+	}
+
+	/** Plotting method for datasets. **/
+	public static void plot(SeriesData sd, String dir, DateTime from,
+			DateTime to) throws IOException, InterruptedException {
+		DatasetUtils.plot(sd, dir, from.getMillis() / 1000,
+				to.getMillis() / 1000);
+	}
+
+	/** Plotting method for datasets. **/
+	public static void plot(SeriesData sd, String dir, long from, long to)
+			throws IOException, InterruptedException {
 		String defXTics = Config.get(gnuplot_xtics);
 		String defDateTime = Config.get(gnuplot_datetime);
 		String defPlotDateTime = Config.get(gnuplot_plotdatetime);
@@ -65,8 +98,11 @@ public class DatasetUtils {
 		Config.overwrite(gnuplot_plotdatetime, "true");
 		GraphVisualization.setText("Generating single scalar plots for "
 				+ sd.getName());
-		Plotting.plot(sd, dir, new PlottingConfig(
-				PlotFlag.plotSingleScalarValues));
+		PlottingConfig pcfg = new PlottingConfig(
+				PlotFlag.plotSingleScalarValues);
+		if (from != to)
+			pcfg.setPlotInterval(from, to, 1);
+		Plotting.plot(sd, dir, pcfg);
 		Config.overwrite(gnuplot_xtics, defXTics);
 		Config.overwrite(gnuplot_datetime, defDateTime);
 		Config.overwrite(gnuplot_plotdatetime, defPlotDateTime);
@@ -80,6 +116,8 @@ public class DatasetUtils {
 	public static final long second = 1;
 	public static final long minute = 60 * second;
 	public static final long hour = 60 * minute;
+
+	public static final int gnuplotOffsetSeconds = 7200;
 
 	public static final String gnuplot_xtics = "GNUPLOT_XTICS";
 	public static final String gnuplot_datetime = "GNUPLOT_DATETIME";
