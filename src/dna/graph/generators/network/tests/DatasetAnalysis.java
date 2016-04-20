@@ -22,6 +22,10 @@ import dna.graph.datastructures.GDS;
 import dna.graph.generators.GraphGenerator;
 import dna.graph.generators.network.EmptyNetwork;
 import dna.graph.generators.network.m1.M1Batch;
+import dna.graph.generators.network.tests.DatasetUtils.DatasetType;
+import dna.graph.generators.network.tests.DatasetUtils.ModelType;
+import dna.graph.generators.network.tests.DatasetUtils.TimestampFormat;
+import dna.graph.generators.network.tests.DatasetUtils.ZipMode;
 import dna.graph.weights.TypedWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.graph.weights.intW.IntWeight;
@@ -60,21 +64,6 @@ import dna.visualization.graph.GraphVisualization;
 public class DatasetAnalysis {
 
 	/*
-	 * ENUMERATIONS
-	 */
-	public enum DatasetType {
-		packet, netflow, session
-	}
-
-	public enum ModelType {
-		modelA
-	}
-
-	public enum TimestampFormat {
-		timestamp, week_day
-	}
-
-	/*
 	 * MAIN
 	 */
 	public static void main(String[] args) throws IOException, ParseException,
@@ -105,6 +94,8 @@ public class DatasetAnalysis {
 						"path to the attack-list file to be used"),
 				new BooleanArg("enableVis",
 						"true to enable graph-visualization"),
+				new EnumArg("zip-mode", "zip mode of the data to be plotted",
+						ZipMode.values()),
 				new StringArrayArg(
 						"metrics",
 						"list of metrics to be computed with format: [class-path]+[_host/_port/_all (optional)]. Instead of metrics one may also add the following flags : metricsAll, metricsDefaultAll, metricsDefaultHosts, metricsDefaultPorts to add predefined metrics.",
@@ -144,7 +135,7 @@ public class DatasetAnalysis {
 			String datasetType, String modelType, Integer batchWindow,
 			Long edgeLifeTime, String descr, String timestampFormat,
 			String from, String to, Integer dataOffset, String attackListPath,
-			Boolean enableVis, String[] metrics) {
+			Boolean enableVis, String zipMode, String[] metrics) {
 		this.srcDir = srcDir;
 		this.srcFilename = srcFilename;
 		this.datasetType = DatasetType.valueOf(datasetType);
@@ -155,6 +146,19 @@ public class DatasetAnalysis {
 		this.dataOffset = dataOffset;
 		this.attackListPath = attackListPath;
 		this.enableVis = enableVis;
+
+		ZipMode zipM = ZipMode.valueOf(zipMode);
+		switch (zipM) {
+		case batches:
+			Config.zipBatches();
+			break;
+		case runs:
+			Config.zipRuns();
+			break;
+		case none:
+			Config.zipNone();
+			break;
+		}
 
 		// timestamps
 		if (timestampFormat.equals("timestamp")) {
