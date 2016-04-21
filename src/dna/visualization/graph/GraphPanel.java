@@ -207,11 +207,6 @@ public class GraphPanel extends JPanel {
 			this.tooltips = true;
 		}
 
-		boolean addStatPanel = Config
-				.getBoolean("GRAPH_VIS_STAT_PANEL_ENABLED");
-		boolean addTextPanel = Config
-				.getBoolean("GRAPH_VIS_TEXT_PANEL_ENABLED");
-
 		// create viewer and show graph
 		Viewer v = new Viewer(graph,
 				Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
@@ -248,8 +243,9 @@ public class GraphPanel extends JPanel {
 		bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
 
 		// add panels to bottom pannel
-		addStatPanel(bottomPanel, addStatPanel);
-		addTextPanel(bottomPanel, (addStatPanel) ? false : true, addTextPanel);
+		addStatPanel(bottomPanel, config.isStatPanelEnabled());
+		addTextPanel(bottomPanel, (config.isStatPanelEnabled()) ? false : true,
+				config.isTextPanelEnabled());
 
 		// add bottom panel to frame
 		this.add(bottomPanel, BorderLayout.PAGE_END);
