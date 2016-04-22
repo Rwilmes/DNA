@@ -55,6 +55,7 @@ import dna.series.data.SeriesData;
 import dna.updates.generators.BatchGenerator;
 import dna.util.Config;
 import dna.util.Log;
+import dna.util.network.NetFlowReader;
 import dna.util.network.NetFlowReader2;
 import dna.util.network.tcp.DefaultTCPEventReader;
 import dna.util.network.tcp.TCPEventReader;
@@ -292,6 +293,12 @@ public class DatasetAnalysis {
 			EntryBasedAttackLabeler ebal = new EntryBasedAttackLabeler();
 			labeler = new Labeler[] { ebal };
 			reader.setDarpaLabeler(ebal);
+			break;
+		case botnet:
+			reader = new NetFlowReader(srcDir, srcFilename, null);
+			EntryBasedAttackLabeler ebal2 = new EntryBasedAttackLabeler();
+			labeler = new Labeler[] { ebal2 };
+			reader.setDarpaLabeler(ebal2);
 			break;
 		}
 

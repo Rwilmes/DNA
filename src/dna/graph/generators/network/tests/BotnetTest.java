@@ -2,6 +2,7 @@ package dna.graph.generators.network.tests;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import dna.graph.datastructures.GDS;
@@ -48,7 +49,7 @@ public class BotnetTest {
 
 		String dir = "data/botnet/";
 		String filename = "botnet10.netflow";
-		filename = "botnet10_transformed.netflow";
+		// filename = "botnet10_transformed.netflow";
 		int batchLength = 1;
 		long edgeLifeTime = second * 15 * 1000;
 
@@ -57,13 +58,14 @@ public class BotnetTest {
 		// SeriesData sd = SeriesData.read(dir + "s1/", "s1", false, false);
 		// Evaluation.plot(sd, dir + "s1/" + "plots/");
 
-		// transform(dir, filename, "out.txt");
+		transform(dir, filename, "out4.netflow");
+		 parsInfo(dir, "out4.netflow", "out4.stats");
 
 		// removeStuff("data/darpa1998_packets/w2/monday/", "packets.txt",
 		// "new_all.txt", "" + '"');
 
-		removeStuff2("data/darpa1998_netflow/w2/2/", "outside_small.netflow",
-				"outside_small_fixed.netflow");
+		// removeStuff2("data/darpa1998_netflow/w2/2/", "outside_small.netflow",
+		// "outside_small_fixed.netflow");
 
 		Log.info("finished!");
 	}
@@ -142,8 +144,101 @@ public class BotnetTest {
 		// Config.overwrite("GRAPH_VIS_SIZE_NODES_BY_DEGREE", "false");
 	}
 
+	public static void parsInfo(String dir, String filename, String dstFilename)
+			throws IOException {
+		System.out.println("BLUB");
+		Reader r = new Reader(dir, filename);
+		Writer w = new Writer(dir, dstFilename);
+
+		String line = r.readString();
+
+		int counter = 0;
+
+		HashMap<String, Integer> srcIps = new HashMap<String, Integer>();
+		HashMap<String, Integer> srcPorts = new HashMap<String, Integer>();
+		HashMap<String, Integer> dstIps = new HashMap<String, Integer>();
+		HashMap<String, Integer> dstPorts = new HashMap<String, Integer>();
+
+		HashMap<String, Integer> prots = new HashMap<String, Integer>();
+
+		while (line != null) {
+
+			String[] splits = line.split("\t");
+			// System.out.println(line);
+
+			// for (int i = 0; i < splits.length; i++) {
+			// System.out.println("\t" + i + "\t" + splits[i]);
+			// }
+
+			String prot = splits[2];
+			String srcIp = splits[3];
+			String srcPort = splits[4];
+			String dstIp = splits[6];
+			String dstPort = splits[7];
+
+			if (prot.equals("0.000"))
+				System.out.println(counter);
+
+			if (prots.containsKey(prot))
+				prots.put(prot, prots.get(prot) + 1);
+			else
+				prots.put(prot, 1);
+			if (srcIps.containsKey(srcIp))
+				srcIps.put(srcIp, srcIps.get(srcIp) + 1);
+			else
+				srcIps.put(srcIp, 1);
+			if (srcPorts.containsKey(srcPort)) {
+				// System.out.println(srcPort);
+				srcPorts.put(srcPort, srcPorts.get(srcPort) + 1);
+			} else
+				srcPorts.put(srcPort, 1);
+			if (dstIps.containsKey(dstIp))
+				dstIps.put(dstIp, dstIps.get(dstIp) + 1);
+			else
+				dstIps.put(dstIp, 1);
+			if (dstPorts.containsKey(dstPort))
+				dstPorts.put(dstPort, dstPorts.get(dstPort) + 1);
+			else
+				dstPorts.put(dstPort, 1);
+
+			// if (counter >= 10)
+			// break;
+			counter++;
+			if (counter % 10000 == 0)
+				System.out.println("lines: " + counter);
+
+			// w.writeln(temp);
+			line = r.readString();
+		}
+
+		w.writeln("prots");
+		for (String s : prots.keySet()) {
+			w.writeln("\t" + s + "\t\t" + prots.get(s));
+		}
+		w.writeln("srcIps");
+		for (String s : srcIps.keySet()) {
+			w.writeln("\t" + s + "\t\t" + srcIps.get(s));
+		}
+		w.writeln("srcPorts");
+		for (String s : srcPorts.keySet()) {
+			w.writeln("\t" + s + "\t\t" + srcPorts.get(s));
+		}
+		w.writeln("dstIps");
+		for (String s : dstIps.keySet()) {
+			w.writeln("\t" + s + "\t\t" + dstIps.get(s));
+		}
+		w.writeln("dstPorts");
+		for (String s : dstPorts.keySet()) {
+			w.writeln("\t" + s + "\t\t" + dstPorts.get(s));
+		}
+
+		w.close();
+		r.close();
+	}
+
 	public static void transform(String dir, String filename, String dstFilename)
 			throws IOException {
+		System.out.println("BLUB");
 		Reader r = new Reader(dir, filename);
 		Writer w = new Writer(dir, dstFilename);
 
@@ -151,25 +246,98 @@ public class BotnetTest {
 
 		int counter = 0;
 		while (line != null) {
-			// System.out.println(line);
+
 			String[] splits = line.split(":");
-			// for (String s : splits)
-			// System.out.println("\t" + s);
-			//
 
 			String temp;
-
 			if (splits.length != 5) {
-				System.out.println(counter);
-				temp = line;
+				if (splits.length != 3) {
+					counter++;
+					line = r.readString();
+					continue;
+				}
+
+				splits = line.split("\t");
+				temp = "";
+
+				if (splits.length == 1) {
+					splits = line.split(" ");
+
+					temp += splits[0] + " ";
+					for (int i = 1; i < 5; i++)
+						temp += splits[i] + "\t";
+
+					temp += "0" + "\t";
+
+					for (int i = 5; i < 7; i++)
+						temp += splits[i] + "\t";
+
+					temp += "0" + "\t";
+
+					for (int i = 7; i < 12; i++) {
+						temp += splits[i] + "\t";
+					}
+
+					temp += splits[12];
+				} else if (splits.length == 14) {
+					for (int i = 0; i < 4; i++)
+						temp += splits[i] + "\t";
+
+					temp += "0" + "\t";
+
+					for (int i = 5; i < 7; i++)
+						temp += splits[i] + "\t";
+
+					temp += "0" + "\t";
+
+					for (int i = 8; i < 13; i++) {
+						temp += splits[i] + "\t";
+					}
+
+					temp += splits[13];
+				} else if (splits.length == 15) {
+					for (int i = 0; i < 5; i++)
+						temp += splits[i] + "\t";
+
+					for (int i = 6; i < 14; i++)
+						temp += splits[i] + "\t";
+
+					temp += splits[14];
+				} else if (splits.length == 16) {
+					for (int i = 0; i < 5; i++)
+						temp += splits[i] + "\t";
+
+					for (int i = 6; i < 9; i++)
+						temp += splits[i] + "\t";
+
+					for (int i = 10; i < 15; i++)
+						temp += splits[i] + "\t";
+
+					temp += splits[15];
+
+				} else {
+					System.out.println(counter + "\t" + splits.length + "\t"
+							+ line);
+					counter++;
+					line = r.readString();
+					continue;
+				}
 			} else {
 				temp = splits[0] + ":" + splits[1] + ":" + splits[2] + "\t"
 						+ splits[3] + "\t" + splits[4];
 			}
 
+			if (temp.endsWith("Botnet"))
+				temp += "\t" + 1;
+			else
+				temp += "\t" + 0;
+
+			temp = temp.replaceAll("\t\t", "\t");
+
 			counter++;
 			if (counter % 10000 == 0)
 				System.out.println("lines: " + counter);
+
 			w.writeln(temp);
 			line = r.readString();
 		}

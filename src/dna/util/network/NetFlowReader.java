@@ -24,7 +24,7 @@ public class NetFlowReader extends TCPEventReader {
 						TCPEventField.DST_PORT, TCPEventField.NONE,
 						TCPEventField.NONE, TCPEventField.NONE,
 						TCPEventField.NONE, TCPEventField.NONE,
-						TCPEventField.NAME });
+						TCPEventField.NAME, TCPEventField.ATTACK_SCORE });
 	}
 
 }

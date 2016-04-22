@@ -17,7 +17,7 @@ public class DatasetUtils {
 	 * ENUMERATIONS
 	 */
 	public enum DatasetType {
-		packet, netflow, session
+		packet, netflow, session, botnet
 	}
 
 	public enum ModelType {
