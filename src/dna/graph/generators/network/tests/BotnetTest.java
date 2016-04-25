@@ -47,8 +47,8 @@ public class BotnetTest {
 		setGraphVisSettings();
 		setGnuplotSettings();
 
-		String dir = "data/botnet/";
-		String filename = "botnet10.netflow";
+		String dir = "data/botnet4/";
+		String filename = "botnet4_raw.netflow";
 		// filename = "botnet10_transformed.netflow";
 		int batchLength = 1;
 		long edgeLifeTime = second * 15 * 1000;
@@ -58,8 +58,11 @@ public class BotnetTest {
 		// SeriesData sd = SeriesData.read(dir + "s1/", "s1", false, false);
 		// Evaluation.plot(sd, dir + "s1/" + "plots/");
 
-		transform(dir, filename, "out4.netflow");
-		 parsInfo(dir, "out4.netflow", "out4.stats");
+		// transform(dir, filename, "botnet4_formatted.netflow");
+		transform2("data/darpa1998_netflows/w2/2/", "outside.netflow",
+				"outside_formatted.netflow");
+
+		// parsInfo(dir, "out4.netflow", "out4.stats");
 
 		// removeStuff("data/darpa1998_packets/w2/monday/", "packets.txt",
 		// "new_all.txt", "" + '"');
@@ -230,6 +233,39 @@ public class BotnetTest {
 		w.writeln("dstPorts");
 		for (String s : dstPorts.keySet()) {
 			w.writeln("\t" + s + "\t\t" + dstPorts.get(s));
+		}
+
+		w.close();
+		r.close();
+	}
+
+	public static void transform2(String dir, String filename,
+			String dstFilename) throws IOException {
+		System.out.println("BLUB");
+		Reader r = new Reader(dir, filename);
+		Writer w = new Writer(dir, dstFilename);
+
+		String line = r.readString();
+		int counter = 0;
+		while (line != null) {
+			String[] splits = line.split("\t");
+			// System.out.println(line);
+			// System.out.println("splits: " + splits.length);
+			//
+
+			String temp = splits[0].replace("-98", "-1998") + " ";
+			for (int i = 1; i < splits.length - 1; i++) {
+				// System.out.println("\t" + i + "\t" + splits[i]);
+				temp += splits[i] + "\t";
+			}
+
+			temp += splits[splits.length - 1];
+			w.writeln(temp);
+			line = r.readString();
+			counter++;
+
+			if (counter % 1000 == 0)
+				System.out.println(counter);
 		}
 
 		w.close();
