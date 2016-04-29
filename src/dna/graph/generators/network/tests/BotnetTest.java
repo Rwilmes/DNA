@@ -53,14 +53,16 @@ public class BotnetTest {
 		int batchLength = 1;
 		long edgeLifeTime = second * 15 * 1000;
 
+		int skipFirst = 2;
+
 		// SeriesData sd = modelB(dir, filename, batchLength, edgeLifeTime);
 
 		// SeriesData sd = SeriesData.read(dir + "s1/", "s1", false, false);
 		// Evaluation.plot(sd, dir + "s1/" + "plots/");
 
 		// transform(dir, filename, "botnet4_formatted.netflow");
-		transform2("data/darpa1998_netflows/w2/2/", "outside.netflow",
-				"outside_formatted.netflow");
+		transform2("data/transform/", "outside.netflow",
+				"outside_formatted.netflow", skipFirst);
 
 		// parsInfo(dir, "out4.netflow", "out4.stats");
 
@@ -240,7 +242,7 @@ public class BotnetTest {
 	}
 
 	public static void transform2(String dir, String filename,
-			String dstFilename) throws IOException {
+			String dstFilename, int skipFirst) throws IOException {
 		System.out.println("BLUB");
 		Reader r = new Reader(dir, filename);
 		Writer w = new Writer(dir, dstFilename);
@@ -249,6 +251,13 @@ public class BotnetTest {
 		int counter = 0;
 		while (line != null) {
 			String[] splits = line.split("\t");
+
+			if (counter < skipFirst || splits[0].endsWith("-16")) {
+				line = r.readString();
+				counter++;
+				continue;
+			}
+
 			// System.out.println(line);
 			// System.out.println("splits: " + splits.length);
 			//
