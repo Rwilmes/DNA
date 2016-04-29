@@ -176,14 +176,10 @@ public class DataCollector {
 		String header = "Labels";
 
 		for (int i = 0; i < metricsList.length; i++) {
-			System.out.println("s" + i);
 			for (String s : metricsList[i]) {
-				System.out.println("\t" + s);
 				header += "\t" + "s" + i + ":" + s;
 			}
 		}
-
-		System.out.println(header);
 
 		Writer w = new Writer("", outputPath);
 		w.writeln(header);
@@ -197,7 +193,6 @@ public class DataCollector {
 			// iterate over series
 			for (int j = 0; j < seriesDirs.length; j++) {
 				BatchData batchData = null;
-				System.out.println(i + "\t" + j);
 
 				try {
 					batchData = BatchData.readIntelligent(Dir.getBatchDataDir(
@@ -214,9 +209,6 @@ public class DataCollector {
 					String[] splits = metric.split("~");
 					String domain = splits[0];
 					String value = splits[1];
-
-					System.out.println("dom:\t" + domain);
-					System.out.println("val:\t" + value);
 
 					if (batchData == null || !batchData.contains(domain, value)) {
 						v = this.notAvailableChar;
