@@ -20,6 +20,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -47,6 +48,8 @@ import dna.graph.weights.Weight;
 import dna.util.Log;
 import dna.visualization.VisualizationUtils;
 import dna.visualization.VisualizationUtils.VideoRecorder;
+import dna.visualization.VisualizationUtils.VideoRecorder.RecordMode;
+import dna.visualization.config.graph.CaptureConfig;
 import dna.visualization.config.graph.GraphPanelConfig;
 import dna.visualization.config.graph.rules.GraphStyleRuleConfig;
 import dna.visualization.graph.rules.GraphStyleRule;
@@ -202,6 +205,9 @@ public class GraphPanel extends JPanel {
 		// bottom panel contains the stats and text panels
 		JPanel bottomPanel = new JPanel();
 		bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+
+		// set record area
+		this.setRecordArea(config.getCaptureConfig().getRecordArea());
 
 		// add panels to bottom pannel
 		addStatPanel(bottomPanel, config.isStatPanelEnabled());
@@ -413,7 +419,7 @@ public class GraphPanel extends JPanel {
 		textPanel.add(recordAreasBox);
 
 		// get record area mode
-		switch (config.getCaptureConfig().getCaptureArea()) {
+		switch (config.getCaptureConfig().getRecordArea()) {
 		case content:
 			this.setRecordArea(RecordArea.content);
 			recordAreasBox.setSelectedIndex(1);
@@ -808,6 +814,9 @@ public class GraphPanel extends JPanel {
 
 		// update node count
 		this.incrementNodesCount();
+
+		// wait some time
+		waitTime(config.getWaitConfig().getNodeAddition());
 	}
 
 	/** Removes node n from graph g. **/
@@ -823,6 +832,9 @@ public class GraphPanel extends JPanel {
 
 		// update node count
 		this.decrementNodesCount();
+
+		// wait some time
+		waitTime(config.getWaitConfig().getNodeRemoval());
 	}
 
 	/** Changes node weight on node n IN CURRENT GRAPH!!. **/
@@ -868,6 +880,9 @@ public class GraphPanel extends JPanel {
 
 		// update style
 		GraphStyleUtils.updateStyle(node);
+
+		// wait some time
+		waitTime(config.getWaitConfig().getNodeWeightChange());
 	}
 
 	/*
@@ -918,6 +933,20 @@ public class GraphPanel extends JPanel {
 
 		// update edge count
 		this.incrementEdgesCount();
+
+		// wait some time
+		waitTime(config.getWaitConfig().getEdgeAddition());
+	}
+
+	/** Wait for specified time in milliseconds. **/
+	protected void waitTime(long milliseconds) {
+		if (config.getWaitConfig().isEnabled()) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(milliseconds);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public boolean isRuleEnabled(GraphStyleRule r) {
@@ -947,6 +976,9 @@ public class GraphPanel extends JPanel {
 
 		// update edge count
 		this.decrementEdgesCount();
+
+		// wait some time
+		waitTime(config.getWaitConfig().getEdgeRemoval());
 	}
 
 	/** Changes edge weight on edge e IN CURRENT GRAPH!!. **/
@@ -970,6 +1002,9 @@ public class GraphPanel extends JPanel {
 
 		// update styles
 		GraphStyleUtils.updateStyle(edge);
+
+		// wait some time
+		waitTime(config.getWaitConfig().getEdgeWeightChange());
 	}
 
 	/** Makes a screenshot of the current graph. **/
@@ -1053,11 +1088,15 @@ public class GraphPanel extends JPanel {
 
 	/** Makes a video of the JFrame the panel is embedded in. **/
 	public void captureVideo() throws InterruptedException, IOException {
+		CaptureConfig ccfg = config.getCaptureConfig();
+
 		if (this.videoRecorder == null) {
-			this.videoRecorder = new VideoRecorder(this.getRecordComponent());
+			this.videoRecorder = new VideoRecorder(this.getRecordComponent(),
+					ccfg, RecordMode.normal);
 			this.videoRecorder.registerComponent(this);
 		} else {
-			this.videoRecorder.updateDestinationPath();
+			this.videoRecorder.updateConfiguration(ccfg);
+			this.videoRecorder.updateDestinationPath(this);
 			this.videoRecorder.updateSourceComponent(this.getRecordComponent());
 		}
 		this.videoRecorder.start();
@@ -1066,6 +1105,8 @@ public class GraphPanel extends JPanel {
 	/** Returns the component that should be recorded. **/
 	protected Component getRecordComponent() {
 		Component c;
+		System.out.println("getRecordComponent!");
+		System.out.println(this.recordArea);
 		switch (this.recordArea) {
 		case full:
 			c = this.parentFrame;
