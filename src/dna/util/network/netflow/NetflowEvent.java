@@ -2,16 +2,18 @@ package dna.util.network.netflow;
 
 import org.joda.time.DateTime;
 
+import dna.util.network.NetworkEvent;
+
 /**
  * Reprenents one netflow event.
  * 
  * @author Rwilmes
  * 
  */
-public class NetflowEvent {
+public class NetflowEvent extends NetworkEvent {
 
 	public enum NetflowEventField {
-		Date, Time, SrcAddress, DstAddress, Duration, Protocol, SrcPort, DstPort, Direction, None, Packets, PacketToSrc, PacketsToDestination, Bytes, BytesToSrc, BytesToDestination, Label, Flags, ConnectionState
+		Date, Time, SrcAddress, DstAddress, Duration, Protocol, SrcPort, DstPort, Direction, None, Packets, PacketToSrc, PacketsToDestination, Bytes, BytesToSrc, BytesToDestination, Label, Flags, ConnectionState, numberOfNetflows
 	}
 
 	public enum NetflowDirection {
@@ -20,7 +22,6 @@ public class NetflowEvent {
 
 	// CLASS
 	protected long id;
-	protected DateTime time;
 
 	protected String srcAddress;
 	protected String dstAddress;
@@ -51,8 +52,7 @@ public class NetflowEvent {
 			String srcPort, String dstPort, int packets, int packetsToSrc,
 			int packetsToDestination, int bytes, int bytesToSrc,
 			int bytesToDestination, String label) {
-		super();
-
+		super(time);
 		this.srcAddress = srcAddress;
 		this.dstAddress = dstAddress;
 		this.duration = duration;
@@ -73,5 +73,114 @@ public class NetflowEvent {
 		this.bytesToDestination = bytesToDestination;
 
 		this.label = label;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public String getSrcAddress() {
+		return srcAddress;
+	}
+
+	public String getDstAddress() {
+		return dstAddress;
+	}
+
+	public double getDuration() {
+		return duration;
+	}
+
+	public NetflowDirection getDirection() {
+		return direction;
+	}
+
+	public String getFlags() {
+		return flags;
+	}
+
+	public String getConnectionState() {
+		return connectionState;
+	}
+
+	public String getProtocol() {
+		return protocol;
+	}
+
+	public String getSrcPort() {
+		return srcPort;
+	}
+
+	public String getDstPort() {
+		return dstPort;
+	}
+
+	public int getPackets() {
+		return packets;
+	}
+
+	public int getPacketsToSrc() {
+		return packetsToSrc;
+	}
+
+	public int getPacketsToDestination() {
+		return packetsToDestination;
+	}
+
+	public int getBytes() {
+		return bytes;
+	}
+
+	public int getBytesToSrc() {
+		return bytesToSrc;
+	}
+
+	public int getBytesToDestination() {
+		return bytesToDestination;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	public String get(NetflowEventField field) {
+		switch (field) {
+		case Bytes:
+			return "" + this.bytes;
+		case BytesToDestination:
+			return "" + this.bytesToDestination;
+		case BytesToSrc:
+			return "" + this.bytesToSrc;
+		case ConnectionState:
+			return this.connectionState;
+		case Direction:
+			return this.direction.toString();
+		case DstAddress:
+			return this.dstAddress;
+		case DstPort:
+			return this.dstPort;
+		case Duration:
+			return "" + this.duration;
+		case Flags:
+			return this.flags;
+		case Label:
+			return this.label;
+		case numberOfNetflows:
+			return "" + 1;
+		case Packets:
+			return "" + this.packets;
+		case PacketsToDestination:
+			return "" + this.packetsToDestination;
+		case PacketToSrc:
+			return "" + this.packetsToSrc;
+		case Protocol:
+			return this.protocol;
+		case SrcAddress:
+			return this.srcAddress;
+		case SrcPort:
+			return this.srcPort;
+		}
+
+		return null;
 	}
 }

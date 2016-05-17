@@ -28,13 +28,22 @@ public class TCPEvent extends NetworkEvent {
 	private double attackScore;
 	private String name;
 
-	public TCPEvent(long id, DateTime time, DateTime duration,
-			String service, int srcPort, int dstPort, String srcIp,
-			String dstIp, double attackScore, String name) {
-		super(time, srcIp, srcPort, dstIp, dstPort);
+	private String srcIp;
+	private String dstIp;
+	private int srcPort;
+	private int dstPort;
+
+	public TCPEvent(long id, DateTime time, DateTime duration, String service,
+			int srcPort, int dstPort, String srcIp, String dstIp,
+			double attackScore, String name) {
+		super(time);
 		this.id = id;
 		this.duration = duration;
 		this.service = service;
+		this.srcPort = srcPort;
+		this.dstPort = dstPort;
+		this.srcIp = srcIp;
+		this.dstIp = dstIp;
 		this.attackScore = attackScore;
 		this.name = name;
 	}

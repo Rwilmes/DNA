@@ -15,7 +15,7 @@ import dna.graph.weights.longW.LongWeight;
 import dna.labels.labeler.darpa.EntryBasedAttackLabeler;
 import dna.util.Config;
 import dna.util.Log;
-import dna.util.network.NetworkEventReader;
+import dna.util.network.NetworkReader;
 import dna.util.network.tcp.TCPEvent.TCPEventField;
 
 /**
@@ -27,7 +27,7 @@ import dna.util.network.tcp.TCPEvent.TCPEventField;
  * @author Rwilmes
  * 
  */
-public class TCPEventReader extends NetworkEventReader {
+public class TCPEventReader extends NetworkReader {
 
 	// STATICS
 	public static final int defaultBatchLengthSeconds = 1;
@@ -638,5 +638,10 @@ public class TCPEventReader extends NetworkEventReader {
 			int mapping = servicePortOffset + this.servicePortMap.size();
 			return mapping;
 		}
+	}
+
+	@Override
+	public boolean isNextEventPossible() {
+		return !finished || bufferedEvent != null;
 	}
 }

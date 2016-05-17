@@ -39,7 +39,7 @@ public class DefaultNetflowReader extends NetflowEventReader {
 	// constructor
 	public DefaultNetflowReader(String dir, String filename)
 			throws FileNotFoundException {
-		super(dir, filename, "\t", "MM-dd-yyyy HH:mm:ss", "", fields);
+		super(dir, filename, "\t", "MM-dd-yyyy HH:mm:ss", "HH:mm:ss", fields);
 	}
 
 }

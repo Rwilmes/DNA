@@ -16,13 +16,17 @@ public class NetworkEdge {
 	protected int src;
 	protected int dst;
 	protected long time;
+	protected double weight;
 
 	public NetworkEdge(int src, int dst, long time) {
-		// System.out.println("init network edge: src: " + src + "\tdst: " + dst
-		// + "\ttime: " + time);
+		this(src, dst, time, 0);
+	}
+
+	public NetworkEdge(int src, int dst, long time, double weight) {
 		this.src = src;
 		this.dst = dst;
 		this.time = time;
+		this.weight = weight;
 	}
 
 	public int getSrc() {
@@ -37,6 +41,14 @@ public class NetworkEdge {
 		return time;
 	}
 
+	public double getWeight() {
+		return weight;
+	}
+
+	public void setWeight(double weight) {
+		this.weight = weight;
+	}
+
 	public void setTime(long t) {
 		this.time = t;
 	}
@@ -46,7 +58,8 @@ public class NetworkEdge {
 	}
 
 	public String toString() {
-		return "NetworkEdge: " + src + "\t=>\t" + dst + "\t@\t" + time;
+		return "NetworkEdge: " + src + "\t=>\t" + dst + "\tw=" + weight
+				+ "\t@\t" + time;
 	}
 
 	/** Returns if the same edge is contained in the given list. **/

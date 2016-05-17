@@ -2,14 +2,16 @@ package dna.util.network;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import dna.io.Reader;
+import dna.graph.generators.network.NetworkEdge;
 import dna.util.Config;
-import dna.util.network.NetworkEvent.NetworkEventField;
+import dna.util.network.NetworkEventOld.NetworkEventField;
 
 /**
  * Reader that reads NetworkEvents from a list-file.
@@ -17,7 +19,7 @@ import dna.util.network.NetworkEvent.NetworkEventField;
  * @author Rwilmes
  * 
  */
-public class NetworkEventReader extends Reader {
+public class NetworkEventReader extends NetworkReader {
 
 	protected String separator;
 	protected NetworkEventField[] fields;
@@ -76,7 +78,7 @@ public class NetworkEventReader extends Reader {
 		return !finished || bufferedEvent != null;
 	}
 
-	protected NetworkEvent parseLine(String line) {
+	protected NetworkEventOld parseLine(String line) {
 		String[] splits = line.split(this.separator);
 
 		DateTime time = null;
@@ -114,7 +116,7 @@ public class NetworkEventReader extends Reader {
 			}
 		}
 
-		return new NetworkEvent(time, srcIp, srcPort, dstIp, dstPort);
+		return new NetworkEventOld(time, srcIp, srcPort, dstIp, dstPort);
 	}
 
 	public String getDir() {
@@ -131,5 +133,48 @@ public class NetworkEventReader extends Reader {
 
 	public DateTimeFormatter getTimeFormat() {
 		return timeFormat;
+	}
+
+	@Override
+	public ArrayList<NetworkEvent> getEventsUntil(DateTime threshold) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ArrayList<NetworkEdge> getDecrementEdges(long threshold) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public long getNextEventTimestamp() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public long getNextDecrementEdgesTimestamp() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public HashMap<String, Integer> getWeightDecrementals(
+			ArrayList<NetworkEdge> decrementEdges) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isEventQueueEmpty() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isGenerateEmptyBatches() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
