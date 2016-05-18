@@ -23,6 +23,7 @@ public class DefaultToolTipManager extends ToolTipManager {
 		// add additional tooltips here
 		addToolTip("Node", ToolTipType.INFO_NODE_ID);
 		addToolTip("Degree", ToolTipType.INFO_NODE_DEGREE);
+		addToolTip("Type", ToolTipType.INFO_NODE_TYPE_WEIGHT);
 		addToolTip("Freeze", ToolTipType.BUTTON_FREEZE);
 		addToolTip("Highlight", ToolTipType.BUTTON_HIGHLIGHT);
 	}

@@ -17,6 +17,7 @@ import dna.visualization.graph.toolTips.button.FreezeButton;
 import dna.visualization.graph.toolTips.button.HighlightButton;
 import dna.visualization.graph.toolTips.infoLabel.NodeDegreeLabel;
 import dna.visualization.graph.toolTips.infoLabel.NodeIdLabel;
+import dna.visualization.graph.toolTips.infoLabel.NodeTypeWeightLabel;
 
 /**
  * The ToolTipManager handles the ToolTips used in the GraphVisualization.
@@ -157,6 +158,9 @@ public class ToolTipManager extends GraphStyleRule {
 			break;
 		case INFO_NODE_ID:
 			tt = new NodeIdLabel(sprite, name, nodeId);
+			break;
+		case INFO_NODE_TYPE_WEIGHT:
+			tt = new NodeTypeWeightLabel(sprite, name, node);
 			break;
 		case NONE:
 			sm.removeSprite(ttId);
