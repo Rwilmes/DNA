@@ -57,12 +57,12 @@ public class NetflowBatch extends NetworkBatch2 {
 		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
 				TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()), 0, 0,
 				0, 0, 0, 0);
-		if(debug) {
+		if (debug) {
 			Log.infoSep();
 			Log.info(g.getTimestamp() + "\t->\t"
-		+ TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()));
+					+ TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()));
 		}
-			
+
 		HashMap<Integer, Node> addedNodes = new HashMap<Integer, Node>();
 
 		ArrayList<NetworkEdge> addedEdges = new ArrayList<NetworkEdge>();
