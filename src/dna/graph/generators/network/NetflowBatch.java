@@ -89,33 +89,36 @@ public class NetflowBatch extends NetworkBatch2 {
 			}
 			System.out.println(destinationId + "  <--  " + destinationString);
 
-			Node srcNode = addNode(addedNodes, b, g, sourceId, ElementType.HOST);
-			// b.add(new NodeAddition(srcNode));
-			// Node[] intermediateNodes = new Node[intermediateIds.length];
-			Node dstNode = addNode(addedNodes, b, g, destinationId,
-					ElementType.HOST);
-			// b.add(new NodeAddition(dstNode));
+			// add source & destination node
+			addNode(addedNodes, b, g, sourceId, ElementType.HOST);
+			addNode(addedNodes, b, g, destinationId, ElementType.HOST);
 
+			// add nodes
 			if (intermediateIds.length >= 1) {
-				addNode(addedNodes, b, g, intermediateIds[0], ElementType.PORT);
+				// source --> intermediate 1
+				addNode(addedNodes, b, g, intermediateIds[0],
+						intermediateNodes[0]);
 				addEdge(addedEdges, sourceId, intermediateIds[0], event
 						.getTime().getMillis(), 1.0);
 
+				// last intermediate --> destination
 				addNode(addedNodes, b, g,
 						intermediateIds[intermediateIds.length - 1],
-						ElementType.PORT);
+						intermediateNodes[intermediateIds.length - 1]);
 				addEdge(addedEdges,
 						intermediateIds[intermediateIds.length - 1],
 						destinationId, event.getTime().getMillis(), 1.0);
 
+				// intermediate nodes
 				for (int i = 0; i < intermediateIds.length - 1; i++) {
 					addNode(addedNodes, b, g, intermediateIds[i],
-							ElementType.PORT);
+							intermediateNodes[i]);
 					addEdge(addedEdges, intermediateIds[i],
 							intermediateIds[i + 1],
 							event.getTime().getMillis(), 1.0);
 				}
 			} else {
+				// add source --> destination
 				addEdge(addedEdges, sourceId, destinationId, event.getTime()
 						.getMillis(), 1.0);
 			}
@@ -177,6 +180,31 @@ public class NetflowBatch extends NetworkBatch2 {
 	}
 
 	protected Node addNode(HashMap<Integer, Node> addedNodes, Batch b, Graph g,
+			int nodeToAdd, NetflowEventField type) {
+		ElementType eType = ElementType.UNKNOWN;
+
+		switch (type) {
+		case DstAddress:
+			eType = ElementType.HOST;
+			break;
+		case SrcAddress:
+			eType = ElementType.HOST;
+			break;
+		case DstPort:
+			eType = ElementType.PORT;
+			break;
+		case SrcPort:
+			eType = ElementType.PORT;
+			break;
+		case Protocol:
+			eType = ElementType.PROT;
+			break;
+		}
+
+		return addNode(addedNodes, b, g, nodeToAdd, eType);
+	}
+
+	protected Node addNode(HashMap<Integer, Node> addedNodes, Batch b, Graph g,
 			int nodeToAdd, ElementType type) {
 		System.out.println("attempt to add: " + nodeToAdd + "   contained? : "
 				+ addedNodes.containsKey(nodeToAdd));
@@ -207,23 +235,6 @@ public class NetflowBatch extends NetworkBatch2 {
 				return n;
 			}
 		}
-	}
-
-	public Node addNode(Graph g, int mapping, ElementType type) {
-		Node n = g.getNode(mapping);
-		if (n != null)
-			return n;
-
-		// init node
-		n = g.getGraphDatastructures().newNodeInstance(mapping);
-
-		// set type-weight
-		if (g.getGraphDatastructures().getNodeWeightType()
-				.equals(TypedWeight.class)) {
-			((IWeightedNode) n).setWeight(new TypedWeight(type.toString()));
-		}
-
-		return n;
 	}
 
 	protected int map(String key) {

@@ -10,7 +10,7 @@ import dna.graph.generators.network.EmptyNetwork;
 import dna.graph.generators.network.NetflowBatch;
 import dna.graph.weights.TypedWeight;
 import dna.graph.weights.Weight.WeightSelection;
-import dna.graph.weights.intW.IntWeight;
+import dna.graph.weights.doubleW.DoubleWeight;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.metrics.Metric;
@@ -19,6 +19,8 @@ import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.degree.WeightedDegreeDistributionR;
 import dna.metrics.motifs.DirectedMotifsU;
 import dna.metrics.weights.EdgeWeightsR;
+import dna.plot.Plotting;
+import dna.plot.PlottingConfig.PlotFlag;
 import dna.series.AggregationException;
 import dna.series.Series;
 import dna.series.data.SeriesData;
@@ -39,18 +41,23 @@ public class NetflowTest2 {
 				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
 
 		String dir = "data/models/";
-		String srcDir = "data_small.netflow";
+		String srcFile = "data_small.netflow";
+
+		// srcFile = "data.netflow";
 
 		String name = "mB";
 		String dstDir = dir + name + "/";
+
+		String plotDir = dir + name + "_plots" + "/";
 
 		int edgeLifeTime = 60 * 10;
 
 		GraphVisualization.enable();
 		setGraphVisSettings();
-		
-		
-		test(dir, srcDir, name, dstDir, edgeLifeTime);
+
+		SeriesData sd = test(dir, srcFile, name, dstDir, edgeLifeTime);
+
+		Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
 
 	}
 
@@ -58,7 +65,6 @@ public class NetflowTest2 {
 			String dstDir, int edgeLifeTimeSeconds) throws IOException,
 			ParseException, AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
-		Log.info("Modell 1 test!");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
 		NetflowEventReader reader = new DefaultNetflowReader(dir, filename);
@@ -69,8 +75,9 @@ public class NetflowTest2 {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(TypedWeight.class,
-				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
+		GraphGenerator gg = new EmptyNetwork(
+				GDS.directedVE(TypedWeight.class, WeightSelection.None,
+						DoubleWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
 		NetflowEventField source = NetflowEventField.SrcAddress;
@@ -88,8 +95,7 @@ public class NetflowTest2 {
 		Metric[] metrics = metricsTesting;
 
 		// init series
-		Series s = new Series(gg, bg, metrics, new Labeler[0], dir + name
-				+ "/series/", "s1");
+		Series s = new Series(gg, bg, metrics, new Labeler[0], dstDir, name);
 
 		// generate
 		SeriesData sd = s.generate(1, 100000, false);
@@ -112,17 +118,14 @@ public class NetflowTest2 {
 			new WeightedDegreeDistributionR(Evaluation.metricPortFilter),
 			new WeightedDegreeDistributionR() };
 
-
 	public static void setGraphVisSettings() {
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "HH:mm:ss");
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (6 * hour));
 	}
-	
 
 	public static final long second = 1;
 	public static final long minute = 60 * second;
 	public static final long hour = 60 * minute;
 }
-
