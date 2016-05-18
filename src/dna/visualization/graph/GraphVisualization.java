@@ -125,9 +125,7 @@ public class GraphVisualization {
 		if (Config.getBoolean("GRAPH_VIS_NETWORK_NODE_SHAPE"))
 			panel.addGraphStyleRule(new NetworkNodeShape("NETWORK_NODE_SHAPE"));
 		if (Config.getBoolean("GRAPH_VIS_TOOLTIPS_ENABLED")) {
-			
-			System.out.println("+++++++   " + Config.getBoolean("GRAPH_VIS_NETFLOW_TOOLTIPS"));
-			if(Config.getBoolean("GRAPH_VIS_NETFLOW_TOOLTIPS")) 
+			if (Config.getBoolean("GRAPH_VIS_NETFLOW_TOOLTIPS"))
 				panel.addToolTipManager(new NetflowToolTipManager(panel));
 			else
 				panel.addToolTipManager(new DefaultToolTipManager(panel));
