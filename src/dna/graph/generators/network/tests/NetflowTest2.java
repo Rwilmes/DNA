@@ -19,8 +19,6 @@ import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.degree.WeightedDegreeDistributionR;
 import dna.metrics.motifs.DirectedMotifsU;
 import dna.metrics.weights.EdgeWeightsR;
-import dna.plot.Plotting;
-import dna.plot.PlottingConfig.PlotFlag;
 import dna.series.AggregationException;
 import dna.series.Series;
 import dna.series.data.SeriesData;
@@ -56,19 +54,22 @@ public class NetflowTest2 {
 
 		int edgeLifeTime = 60 * 10;
 
-		// GraphVisualization.enable();
-		// setGraphVisSettings();
+		boolean debug = false;
 
-		SeriesData sd = test(dir, srcFile, name, dstDir, edgeLifeTime);
+		GraphVisualization.enable();
+		setGraphVisSettings();
 
-		Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
+		SeriesData sd = test(dir, srcFile, name, dstDir, edgeLifeTime, debug);
+
+		// Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
 
 	}
 
 	public static SeriesData test(String dir, String filename, String name,
-			String dstDir, int edgeLifeTimeSeconds) throws IOException,
-			ParseException, AggregationException, MetricNotApplicableException,
-			InterruptedException, LabelerNotApplicableException {
+			String dstDir, int edgeLifeTimeSeconds, boolean debug)
+			throws IOException, ParseException, AggregationException,
+			MetricNotApplicableException, InterruptedException,
+			LabelerNotApplicableException {
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
 		NetflowEventReader reader = new DefaultNetflowReader(dir, filename);
@@ -83,18 +84,23 @@ public class NetflowTest2 {
 				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		NetflowEventField source = NetflowEventField.SrcAddress;
-		NetflowEventField destination = NetflowEventField.DstAddress;
-		NetflowEventField intermediateNodes[] = new NetflowEventField[] { NetflowEventField.DstPort };
 		NetflowEventField edgeWeights[] = new NetflowEventField[0];
 		NetflowEventField nodeWeights[] = new NetflowEventField[0];
 
+		NetflowEventField[] forward = new NetflowEventField[] {
+				NetflowEventField.SrcAddress, NetflowEventField.DstPort,
+				NetflowEventField.DstAddress };
+		NetflowEventField[] backward = new NetflowEventField[] {
+				NetflowEventField.DstAddress, NetflowEventField.SrcPort,
+				NetflowEventField.SrcAddress };
+
 		// init batch generator
-		BatchGenerator bg = new NetflowBatch(name, reader, source,
-				intermediateNodes, destination, edgeWeights, nodeWeights);
+		BatchGenerator bg = new NetflowBatch(name, reader, forward, backward,
+				edgeWeights, nodeWeights);
 
 		NetworkNodeKeyLabel.netflowBatchGenerator = (NetflowBatch) bg;
-		// ((NetflowBatch) bg).setDebug(true);
+		((NetflowBatch) bg).setDebug(debug);
+		reader.setDebug(debug);
 
 		// init metrics
 		// Metric[] metrics = TEST.metrics_m1;

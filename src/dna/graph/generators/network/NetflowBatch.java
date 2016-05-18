@@ -22,6 +22,7 @@ import dna.updates.update.NodeAddition;
 import dna.util.Log;
 import dna.util.network.NetworkEvent;
 import dna.util.network.netflow.NetflowEvent;
+import dna.util.network.netflow.NetflowEvent.NetflowDirection;
 import dna.util.network.netflow.NetflowEvent.NetflowEventField;
 import dna.util.network.netflow.NetflowEventReader;
 
@@ -33,14 +34,16 @@ public class NetflowBatch extends NetworkBatch2 {
 	protected NetflowEventField[] nodeWeights;
 	protected NetflowEventField[] edgeWeights;
 
+	protected NetflowEventField[] forward;
+	protected NetflowEventField[] backward;
+
 	public NetflowBatch(String name, NetflowEventReader reader,
-			NetflowEventField source, NetflowEventField[] intermediateNodes,
-			NetflowEventField destination, NetflowEventField[] edgeWeights,
-			NetflowEventField[] nodeWeights) throws FileNotFoundException {
+			NetflowEventField[] forward, NetflowEventField[] backward,
+			NetflowEventField[] edgeWeights, NetflowEventField[] nodeWeights)
+			throws FileNotFoundException {
 		super(name, reader, reader.getBatchIntervalSeconds());
-		this.source = source;
-		this.intermediateNodes = intermediateNodes;
-		this.destination = destination;
+		this.forward = forward;
+		this.backward = backward;
 		this.edgeWeights = edgeWeights;
 		this.nodeWeights = nodeWeights;
 		this.map = new HashMap<String, Integer>();
@@ -70,70 +73,91 @@ public class NetflowBatch extends NetworkBatch2 {
 		for (NetworkEvent networkEvent : events) {
 			NetflowEvent event = (NetflowEvent) networkEvent;
 
-			String sourceString = event.get(this.source);
-			String destinationString = event.get(this.destination);
-
-			if (sourceString.equals(destinationString)) {
+			if (event.getSrcAddress().equals(event.getDstAddress())
+					|| event.getDirection() == null)
 				continue;
+
+			NetflowDirection direction = event.getDirection();
+
+			switch (direction) {
+			case backward:
+				Log.warn("BACKWARD FLOW??");
+				break;
+			case bidirectional:
+				processEvents(event, this.forward, addedNodes, addedEdges, b, g);
+				processEvents(event, this.backward, addedNodes, addedEdges, b,
+						g);
+				break;
+			case forward:
+				processEvents(event, this.forward, addedNodes, addedEdges, b, g);
+				break;
 			}
-
-			int sourceId = map(sourceString);
-			int destinationId = map(destinationString);
-			if (debug)
-				System.out.println(sourceId + "  <--  " + sourceString);
-			String[] intermediateStrings = new String[this.intermediateNodes.length];
-			int[] intermediateIds = new int[this.intermediateNodes.length];
-			for (int i = 0; i < intermediateStrings.length; i++) {
-				String intermediateString = event.get(intermediateNodes[i]);
-
-				if (intermediateString == null
-						|| intermediateString.equals("null"))
-					intermediateString = event.getProtocol();
-
-				intermediateStrings[i] = intermediateString;
-				intermediateIds[i] = map(intermediateString);
-				if (debug)
-					System.out.println(intermediateIds[i] + "  <-i-  "
-							+ intermediateString);
-			}
-
-			if (debug)
-				System.out.println(destinationId + "  <--  "
-						+ destinationString);
-
-			// add source & destination node
-			addNode(addedNodes, b, g, sourceId, ElementType.HOST);
-			addNode(addedNodes, b, g, destinationId, ElementType.HOST);
-
-			// add nodes
-			if (intermediateIds.length >= 1) {
-				// source --> intermediate 1
-				addNode(addedNodes, b, g, intermediateIds[0],
-						intermediateNodes[0]);
-				addEdge(addedEdges, sourceId, intermediateIds[0], event
-						.getTime().getMillis(), 1.0);
-
-				// last intermediate --> destination
-				addNode(addedNodes, b, g,
-						intermediateIds[intermediateIds.length - 1],
-						intermediateNodes[intermediateIds.length - 1]);
-				addEdge(addedEdges,
-						intermediateIds[intermediateIds.length - 1],
-						destinationId, event.getTime().getMillis(), 1.0);
-
-				// intermediate nodes
-				for (int i = 0; i < intermediateIds.length - 1; i++) {
-					addNode(addedNodes, b, g, intermediateIds[i],
-							intermediateNodes[i]);
-					addEdge(addedEdges, intermediateIds[i],
-							intermediateIds[i + 1],
-							event.getTime().getMillis(), 1.0);
-				}
-			} else {
-				// add source --> destination
-				addEdge(addedEdges, sourceId, destinationId, event.getTime()
-						.getMillis(), 1.0);
-			}
+			//
+			// String sourceString = event.get(this.source);
+			// String destinationString = event.get(this.destination);
+			//
+			// if (sourceString.equals(destinationString)) {
+			// continue;
+			// }
+			//
+			// int sourceId = map(sourceString);
+			// int destinationId = map(destinationString);
+			// if (debug)
+			// System.out.println(sourceId + "  <--  " + sourceString);
+			// String[] intermediateStrings = new
+			// String[this.intermediateNodes.length];
+			// int[] intermediateIds = new int[this.intermediateNodes.length];
+			// for (int i = 0; i < intermediateStrings.length; i++) {
+			// String intermediateString = event.get(intermediateNodes[i]);
+			//
+			// if (intermediateString == null
+			// || intermediateString.equals("null"))
+			// intermediateString = event.getProtocol();
+			//
+			// intermediateStrings[i] = intermediateString;
+			// intermediateIds[i] = map(intermediateString);
+			// if (debug)
+			// System.out.println(intermediateIds[i] + "  <-i-  "
+			// + intermediateString);
+			// }
+			//
+			// if (debug)
+			// System.out.println(destinationId + "  <--  "
+			// + destinationString);
+			//
+			// // add source & destination node
+			// addNode(addedNodes, b, g, sourceId, ElementType.HOST);
+			// addNode(addedNodes, b, g, destinationId, ElementType.HOST);
+			//
+			// // add nodes
+			// if (intermediateIds.length >= 1) {
+			// // source --> intermediate 1
+			// addNode(addedNodes, b, g, intermediateIds[0],
+			// intermediateNodes[0]);
+			// addEdge(addedEdges, sourceId, intermediateIds[0], event
+			// .getTime().getMillis(), 1.0);
+			//
+			// // last intermediate --> destination
+			// addNode(addedNodes, b, g,
+			// intermediateIds[intermediateIds.length - 1],
+			// intermediateNodes[intermediateIds.length - 1]);
+			// addEdge(addedEdges,
+			// intermediateIds[intermediateIds.length - 1],
+			// destinationId, event.getTime().getMillis(), 1.0);
+			//
+			// // intermediate nodes
+			// for (int i = 0; i < intermediateIds.length - 1; i++) {
+			// addNode(addedNodes, b, g, intermediateIds[i],
+			// intermediateNodes[i]);
+			// addEdge(addedEdges, intermediateIds[i],
+			// intermediateIds[i + 1],
+			// event.getTime().getMillis(), 1.0);
+			// }
+			// } else {
+			// // add source --> destination
+			// addEdge(addedEdges, sourceId, destinationId, event.getTime()
+			// .getMillis(), 1.0);
+			// }
 		}
 
 		for (NetworkEdge ne : addedEdges) {
@@ -143,10 +167,44 @@ public class NetflowBatch extends NetworkBatch2 {
 		return b;
 	}
 
+	protected void processEvents(NetflowEvent event,
+			NetflowEventField[] eventFields, HashMap<Integer, Node> addedNodes,
+			ArrayList<NetworkEdge> addedEdges, Batch b, Graph g) {
+		if (eventFields == null || eventFields.length < 2)
+			return;
+
+		for (int i = 0; i < eventFields.length - 1; i++) {
+			String string0 = event.get(eventFields[i]);
+			String string1 = event.get(eventFields[i + 1]);
+
+			if (string0 == null || string0.equals("null")) {
+				if (eventFields[i].equals(NetflowEventField.DstPort)
+						|| eventFields[i].equals(NetflowEventField.SrcPort)) {
+					string0 = event.get(NetflowEventField.Protocol);
+				}
+			}
+			if (string1 == null || string1.equals("null")) {
+				if (eventFields[i + 1].equals(NetflowEventField.DstPort)
+						|| eventFields[i + 1].equals(NetflowEventField.SrcPort)) {
+					string1 = event.get(NetflowEventField.Protocol);
+				}
+			}
+
+			int mapping0 = map(string0);
+			int mapping1 = map(string1);
+
+			// add node i and i+1
+			addNode(addedNodes, b, g, mapping0, eventFields[i]);
+			addNode(addedNodes, b, g, mapping1, eventFields[i + 1]);
+
+			// add edge node i --> node i+1
+			addEdge(addedEdges, mapping0, mapping1,
+					event.getTime().getMillis(), 1.0);
+		}
+	}
+
 	protected void addEdgeToBatch(Batch b, Graph g, NetworkEdge ne,
 			HashMap<Integer, Node> addedNodes) {
-		if (debug)
-			System.out.println("adding edge: " + ne.toString());
 		Node srcNode = g.getNode(ne.getSrc());
 		if (srcNode == null)
 			srcNode = addedNodes.get(ne.getSrc());
@@ -173,6 +231,9 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			b.add(new EdgeWeight(e, new DoubleWeight(w.getWeight()
 					+ ne.getWeight())));
+
+			System.out.println("old weight: " + w.toString() + "\tnewweight: "
+					+ (w.getWeight() + ne.getWeight()));
 
 			if (debug)
 				System.out.println("INCREMENTING WEIGHT ON EDGE:    "
