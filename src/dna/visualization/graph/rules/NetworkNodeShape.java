@@ -24,21 +24,34 @@ public class NetworkNodeShape extends GraphStyleRule {
 	protected ElementShape defaultShape;
 	protected ElementShape hostShape;
 	protected ElementShape portShape;
+	protected ElementShape protShape;
 
 	protected int portBlue;
+	protected int protRed;
+	protected int protGreen;
+	protected int protBlue;
 
 	public NetworkNodeShape(String name) {
 		this(name, ElementShape.circle, ElementShape.circle, ElementShape.box,
-				Config.getInt("GRAPH_VIS_NETWORK_PORT_NODE_BLUE"));
+				Config.getInt("GRAPH_VIS_NETWORK_PORT_NODE_BLUE"),
+				ElementShape.triangle, Config
+						.getInt("GRAPH_VIS_NETWORK_PROT_NODE_RED"), Config
+						.getInt("GRAPH_VIS_NETWORK_PROT_NODE_GREEN"), Config
+						.getInt("GRAPH_VIS_NETWORK_PROT_NODE_BLUE"));
 	}
 
 	public NetworkNodeShape(String name, ElementShape defaultShape,
-			ElementShape hostShape, ElementShape portShape, int portBlue) {
+			ElementShape hostShape, ElementShape portShape, int portBlue,
+			ElementShape protShape, int protRed, int protGreen, int protBlue) {
 		this.name = name;
 		this.defaultShape = defaultShape;
 		this.hostShape = hostShape;
 		this.portShape = portShape;
 		this.portBlue = portBlue;
+		this.protShape = protShape;
+		this.protRed = protRed;
+		this.protGreen = protGreen;
+		this.protBlue = protBlue;
 	}
 
 	@Override
@@ -51,6 +64,9 @@ public class NetworkNodeShape extends GraphStyleRule {
 			} else if (w.getType().equals("PORT")) {
 				GraphStyleUtils.setShape(n, portShape);
 				colorPortNode(n);
+			} else if (w.getType().equals("PROT")) {
+				GraphStyleUtils.setShape(n, protShape);
+				colorProtNode(n);
 			} else {
 				GraphStyleUtils.setShape(n, defaultShape);
 			}
@@ -66,6 +82,9 @@ public class NetworkNodeShape extends GraphStyleRule {
 			} else if (w.getType().equals("PORT")) {
 				GraphStyleUtils.setShape(n, portShape);
 				colorPortNode(n);
+			} else if (w.getType().equals("PROT")) {
+				GraphStyleUtils.setShape(n, protShape);
+				colorProtNode(n);
 			} else {
 				GraphStyleUtils.setShape(n, defaultShape);
 			}
@@ -78,6 +97,14 @@ public class NetworkNodeShape extends GraphStyleRule {
 		if (c != null)
 			GraphStyleUtils.setColor(n, new Color(c.getRed(), c.getGreen(),
 					portBlue));
+	}
+
+	/** Sets the blue-part of the node color. **/
+	protected void colorProtNode(Node n) {
+		Color c = GraphStyleUtils.getColor(n);
+		if (c != null)
+			GraphStyleUtils
+					.setColor(n, new Color(protRed, protGreen, protBlue));
 	}
 
 	@Override
