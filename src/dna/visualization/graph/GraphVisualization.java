@@ -30,6 +30,7 @@ import dna.visualization.graph.rules.NodeColorByDegree;
 import dna.visualization.graph.rules.NodeSizeBy3dCoordinates;
 import dna.visualization.graph.rules.NodeSizeByDegree;
 import dna.visualization.graph.toolTipManager.DefaultToolTipManager;
+import dna.visualization.graph.toolTipManager.NetflowToolTipManager;
 
 /** The GraphVisualization class offers methods to visualize graphs used in DNA. **/
 public class GraphVisualization {
@@ -123,8 +124,14 @@ public class GraphVisualization {
 					"NODE_COLOR_BY_DEGREE"));
 		if (Config.getBoolean("GRAPH_VIS_NETWORK_NODE_SHAPE"))
 			panel.addGraphStyleRule(new NetworkNodeShape("NETWORK_NODE_SHAPE"));
-		if (Config.getBoolean("GRAPH_VIS_TOOLTIPS_ENABLED"))
-			panel.addToolTipManager(new DefaultToolTipManager(panel));
+		if (Config.getBoolean("GRAPH_VIS_TOOLTIPS_ENABLED")) {
+			
+			System.out.println("+++++++   " + Config.getBoolean("GRAPH_VIS_NETFLOW_TOOLTIPS"));
+			if(Config.getBoolean("GRAPH_VIS_NETFLOW_TOOLTIPS")) 
+				panel.addToolTipManager(new NetflowToolTipManager(panel));
+			else
+				panel.addToolTipManager(new DefaultToolTipManager(panel));
+		}
 		// panel.addGraphStyleRule(new
 		// ToolTipUpdater(panel.getSpriteManager()));
 

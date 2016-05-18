@@ -19,8 +19,6 @@ import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.degree.WeightedDegreeDistributionR;
 import dna.metrics.motifs.DirectedMotifsU;
 import dna.metrics.weights.EdgeWeightsR;
-import dna.plot.Plotting;
-import dna.plot.PlottingConfig.PlotFlag;
 import dna.series.AggregationException;
 import dna.series.Series;
 import dna.series.data.SeriesData;
@@ -31,6 +29,7 @@ import dna.util.network.netflow.DefaultNetflowReader;
 import dna.util.network.netflow.NetflowEvent.NetflowEventField;
 import dna.util.network.netflow.NetflowEventReader;
 import dna.visualization.graph.GraphVisualization;
+import dna.visualization.graph.toolTips.infoLabel.NetworkNodeKeyLabel;
 
 public class NetflowTest2 {
 
@@ -57,7 +56,7 @@ public class NetflowTest2 {
 
 		SeriesData sd = test(dir, srcFile, name, dstDir, edgeLifeTime);
 
-		Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
+		// Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
 
 	}
 
@@ -82,13 +81,15 @@ public class NetflowTest2 {
 
 		NetflowEventField source = NetflowEventField.SrcAddress;
 		NetflowEventField destination = NetflowEventField.DstAddress;
-		NetflowEventField intermediateNodes[] = new NetflowEventField[] { NetflowEventField.Protocol };
+		NetflowEventField intermediateNodes[] = new NetflowEventField[] { NetflowEventField.DstPort };
 		NetflowEventField edgeWeights[] = new NetflowEventField[0];
 		NetflowEventField nodeWeights[] = new NetflowEventField[0];
 
 		// init batch generator
 		BatchGenerator bg = new NetflowBatch(name, reader, source,
 				intermediateNodes, destination, edgeWeights, nodeWeights);
+
+		NetworkNodeKeyLabel.netflowBatchGenerator = (NetflowBatch) bg;
 
 		// init metrics
 		// Metric[] metrics = TEST.metrics_m1;

@@ -3,6 +3,7 @@ package dna.graph.generators.network;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
@@ -84,7 +85,7 @@ public class NetflowBatch extends NetworkBatch2 {
 				String intermediateString = event.get(intermediateNodes[i]);
 				intermediateStrings[i] = intermediateString;
 				intermediateIds[i] = map(intermediateString);
-				System.out.println(intermediateIds[i] + "  <--  "
+				System.out.println(intermediateIds[i] + "  <-i-  "
 						+ intermediateString);
 			}
 			System.out.println(destinationId + "  <--  " + destinationString);
@@ -206,17 +207,12 @@ public class NetflowBatch extends NetworkBatch2 {
 
 	protected Node addNode(HashMap<Integer, Node> addedNodes, Batch b, Graph g,
 			int nodeToAdd, ElementType type) {
-		System.out.println("attempt to add: " + nodeToAdd + "   contained? : "
-				+ addedNodes.containsKey(nodeToAdd));
-
 		if (addedNodes.containsKey(nodeToAdd)) {
 			return addedNodes.get(nodeToAdd);
 		} else {
 			Node n = g.getNode(nodeToAdd);
 			if (n != null) {
-				System.out.println("!= NULL");
 				return n;
-
 			} else {
 				// init node
 				n = g.getGraphDatastructures().newNodeInstance(nodeToAdd);
@@ -228,7 +224,6 @@ public class NetflowBatch extends NetworkBatch2 {
 							.toString()));
 				}
 
-				System.out.println("putting " + nodeToAdd);
 				addedNodes.put(nodeToAdd, n);
 				b.add(new NodeAddition(n));
 
@@ -262,5 +257,23 @@ public class NetflowBatch extends NetworkBatch2 {
 	protected HashMap<String, Integer> map;
 
 	protected HashMap<String, Integer> intermediateMap;
+
+	public String getKey(Integer mapping) {
+		Set<String> keys = map.keySet();
+
+		for (String key : keys) {
+			if (map.get(key) == mapping)
+				return key;
+		}
+
+		keys = intermediateMap.keySet();
+
+		for (String key : keys) {
+			if (map.get(key) == mapping)
+				return key;
+		}
+
+		return "unknown";
+	}
 
 }
