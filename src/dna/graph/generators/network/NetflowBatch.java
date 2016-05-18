@@ -91,19 +91,34 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			Node srcNode = addNode(addedNodes, b, g, sourceId, ElementType.HOST);
 			// b.add(new NodeAddition(srcNode));
-			Node[] intermediateNodes = new Node[intermediateIds.length];
+			// Node[] intermediateNodes = new Node[intermediateIds.length];
 			Node dstNode = addNode(addedNodes, b, g, destinationId,
 					ElementType.HOST);
 			// b.add(new NodeAddition(dstNode));
-			for (int i = 0; i < intermediateIds.length; i++) {
-				// intermediateNodes[i] = addNode(g, intermediateIds[i],
-				// ElementType.PORT);
-				// b.add(new NodeAddition(intermediateNodes[i]));
+
+			if (intermediateIds.length >= 1) {
+				addNode(addedNodes, b, g, intermediateIds[0], ElementType.PORT);
+				addEdge(addedEdges, sourceId, intermediateIds[0], event
+						.getTime().getMillis(), 1.0);
+
+				addNode(addedNodes, b, g,
+						intermediateIds[intermediateIds.length - 1],
+						ElementType.PORT);
+				addEdge(addedEdges,
+						intermediateIds[intermediateIds.length - 1],
+						destinationId, event.getTime().getMillis(), 1.0);
+
+				for (int i = 0; i < intermediateIds.length - 1; i++) {
+					addNode(addedNodes, b, g, intermediateIds[i],
+							ElementType.PORT);
+					addEdge(addedEdges, intermediateIds[i],
+							intermediateIds[i + 1],
+							event.getTime().getMillis(), 1.0);
+				}
+			} else {
+				addEdge(addedEdges, sourceId, destinationId, event.getTime()
+						.getMillis(), 1.0);
 			}
-
-			addEdge(addedEdges, sourceId, destinationId, event.getTime()
-					.getMillis(), 1.0);
-
 		}
 
 		for (NetworkEdge ne : addedEdges) {
@@ -133,11 +148,17 @@ public class NetflowBatch extends NetworkBatch2 {
 					srcNode, dstNode);
 			e.setWeight(w);
 			b.add(new EdgeAddition(e));
+
+			System.out.println("ADDING EDGE:   " + ne.toString());
+
 		} else {
 			w = (DoubleWeight) e.getWeight();
 
 			b.add(new EdgeWeight(e, new DoubleWeight(w.getWeight()
 					+ ne.getWeight())));
+
+			System.out.println("INCREMENTING WEIGHT ON EDGE:    "
+					+ ne.toString());
 		}
 	}
 

@@ -73,6 +73,12 @@ public class NetflowEventReader extends NetworkReader {
 		this.fields = fields;
 		this.timeFormat = DateTimeFormat.forPattern(timeFormat);
 		this.dateFormat = DateTimeFormat.forPattern(dateFormat);
+
+		this.removeZeroDegreeNodes = Config
+				.getBoolean("NETFLOW_READER_DEFAULT_REMOVE_ZERO_DEGREE_NODES");
+		this.removeZeroWeightEdges = Config
+				.getBoolean("NETFLOW_READER_DEFAULT_REMOVE_ZERO_WEIGHT_EDGES");
+
 		this.finished = false;
 
 		this.edgeQueue = new LinkedList<NetworkEdge>();

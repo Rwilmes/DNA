@@ -11,7 +11,7 @@ import dna.graph.weights.Weight;
 public class NetworkWeight extends Weight {
 
 	public enum ElementType {
-		HOST, PORT, CONNECTION, UNKNOWN
+		HOST, PORT, PROT, CONNECTION, UNKNOWN
 	};
 
 	private ElementType weight;
@@ -26,6 +26,8 @@ public class NetworkWeight extends Weight {
 			this.weight = ElementType.HOST;
 		if (str.equals("PORT"))
 			this.weight = ElementType.PORT;
+		if (str.equals("PROT"))
+			this.weight = ElementType.PROT;
 		if (str.equals("CONNECTION"))
 			this.weight = ElementType.CONNECTION;
 	}
