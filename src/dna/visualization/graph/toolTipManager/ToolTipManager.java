@@ -15,6 +15,7 @@ import dna.visualization.graph.toolTips.ToolTip;
 import dna.visualization.graph.toolTips.ToolTip.ToolTipType;
 import dna.visualization.graph.toolTips.button.FreezeButton;
 import dna.visualization.graph.toolTips.button.HighlightButton;
+import dna.visualization.graph.toolTips.infoLabel.NetworkNodeKeyLabel;
 import dna.visualization.graph.toolTips.infoLabel.NodeDegreeLabel;
 import dna.visualization.graph.toolTips.infoLabel.NodeIdLabel;
 import dna.visualization.graph.toolTips.infoLabel.NodeTypeWeightLabel;
@@ -161,6 +162,9 @@ public class ToolTipManager extends GraphStyleRule {
 			break;
 		case INFO_NODE_TYPE_WEIGHT:
 			tt = new NodeTypeWeightLabel(sprite, name, node);
+			break;
+		case INFO_NETWORK_NODE_KEY:
+			tt = new NetworkNodeKeyLabel(sprite, name, node);
 			break;
 		case NONE:
 			sm.removeSprite(ttId);
