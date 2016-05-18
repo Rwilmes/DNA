@@ -90,6 +90,7 @@ public class NetflowTest2 {
 				intermediateNodes, destination, edgeWeights, nodeWeights);
 
 		NetworkNodeKeyLabel.netflowBatchGenerator = (NetflowBatch) bg;
+//		((NetflowBatch) bg).setDebug(true);
 
 		// init metrics
 		// Metric[] metrics = TEST.metrics_m1;

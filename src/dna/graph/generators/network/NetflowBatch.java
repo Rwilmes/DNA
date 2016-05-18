@@ -46,6 +46,7 @@ public class NetflowBatch extends NetworkBatch2 {
 		this.map = new HashMap<String, Integer>();
 		this.intermediateMap = new HashMap<String, Integer>();
 		this.counter = 0;
+		this.debug = false;
 	}
 
 	@Override
@@ -70,25 +71,33 @@ public class NetflowBatch extends NetworkBatch2 {
 			String sourceString = event.get(this.source);
 			String destinationString = event.get(this.destination);
 
-			String protString = event.getProtocol();
-
 			if (sourceString.equals(destinationString)) {
 				continue;
 			}
 
 			int sourceId = map(sourceString);
 			int destinationId = map(destinationString);
-			System.out.println(sourceId + "  <--  " + sourceString);
+			if (debug)
+				System.out.println(sourceId + "  <--  " + sourceString);
 			String[] intermediateStrings = new String[this.intermediateNodes.length];
 			int[] intermediateIds = new int[this.intermediateNodes.length];
 			for (int i = 0; i < intermediateStrings.length; i++) {
 				String intermediateString = event.get(intermediateNodes[i]);
+
+				if (intermediateString == null
+						|| intermediateString.equals("null"))
+					intermediateString = event.getProtocol();
+
 				intermediateStrings[i] = intermediateString;
 				intermediateIds[i] = map(intermediateString);
-				System.out.println(intermediateIds[i] + "  <-i-  "
-						+ intermediateString);
+				if (debug)
+					System.out.println(intermediateIds[i] + "  <-i-  "
+							+ intermediateString);
 			}
-			System.out.println(destinationId + "  <--  " + destinationString);
+
+			if (debug)
+				System.out.println(destinationId + "  <--  "
+						+ destinationString);
 
 			// add source & destination node
 			addNode(addedNodes, b, g, sourceId, ElementType.HOST);
@@ -134,7 +143,8 @@ public class NetflowBatch extends NetworkBatch2 {
 
 	protected void addEdgeToBatch(Batch b, Graph g, NetworkEdge ne,
 			HashMap<Integer, Node> addedNodes) {
-		System.out.println("adding edge: " + ne.toString());
+		if (debug)
+			System.out.println("adding edge: " + ne.toString());
 		Node srcNode = g.getNode(ne.getSrc());
 		if (srcNode == null)
 			srcNode = addedNodes.get(ne.getSrc());
@@ -153,7 +163,8 @@ public class NetflowBatch extends NetworkBatch2 {
 			e.setWeight(w);
 			b.add(new EdgeAddition(e));
 
-			System.out.println("ADDING EDGE:   " + ne.toString());
+			if (debug)
+				System.out.println("ADDING EDGE:   " + ne.toString());
 
 		} else {
 			w = (DoubleWeight) e.getWeight();
@@ -161,8 +172,9 @@ public class NetflowBatch extends NetworkBatch2 {
 			b.add(new EdgeWeight(e, new DoubleWeight(w.getWeight()
 					+ ne.getWeight())));
 
-			System.out.println("INCREMENTING WEIGHT ON EDGE:    "
-					+ ne.toString());
+			if (debug)
+				System.out.println("INCREMENTING WEIGHT ON EDGE:    "
+						+ ne.toString());
 		}
 	}
 
@@ -276,4 +288,9 @@ public class NetflowBatch extends NetworkBatch2 {
 		return "unknown";
 	}
 
+	protected boolean debug;
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
 }

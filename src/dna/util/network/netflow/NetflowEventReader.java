@@ -45,7 +45,7 @@ public class NetflowEventReader extends NetworkReader {
 	// edge queue
 	public LinkedList<NetworkEdge> edgeQueue = new LinkedList<NetworkEdge>();
 
-	protected boolean debug = false;
+	protected boolean debug;;
 
 	// reader
 	protected boolean finished;
@@ -84,6 +84,8 @@ public class NetflowEventReader extends NetworkReader {
 		this.edgeQueue = new LinkedList<NetworkEdge>();
 
 		skipToInitEvent();
+
+		this.debug = false;
 	}
 
 	protected void skipToInitEvent() {
@@ -247,7 +249,8 @@ public class NetflowEventReader extends NetworkReader {
 	}
 
 	protected NetflowEvent parseLine(String line) {
-		System.out.println(line);
+		if (debug)
+			System.out.println(line);
 
 		String[] splits = line.split(this.separator);
 
