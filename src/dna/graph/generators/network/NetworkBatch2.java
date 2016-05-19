@@ -74,6 +74,8 @@ public abstract class NetworkBatch2 extends BatchGenerator {
 		ArrayList<NetworkEdge> decrementEdges = reader
 				.getDecrementEdges(threshold.getMillis());
 
+		
+
 		// if both empty -> increase threshold and call generate again
 		if (events.isEmpty() && decrementEdges.isEmpty()) {
 			if (reader.isGenerateEmptyBatches()) {

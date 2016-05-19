@@ -17,6 +17,7 @@ import dna.util.network.NetworkEvent;
 import dna.util.network.NetworkReader;
 import dna.util.network.netflow.NetflowEvent.NetflowDirection;
 import dna.util.network.netflow.NetflowEvent.NetflowEventField;
+import dna.util.network.tcp.TCPEventReader;
 
 public class NetflowEventReader extends NetworkReader {
 
@@ -56,16 +57,18 @@ public class NetflowEventReader extends NetworkReader {
 	protected String dir;
 	protected String filename;
 
+	protected int dataOffsetSeconds;
+
 	public NetflowEventReader(String dir, String filename,
 			NetflowEventField... fields) throws FileNotFoundException {
 		this(dir, filename, Config.get("NETFLOW_READER_DEFAULT_SEPARATOR"),
 				Config.get("NETFLOW_READER_DEFAULT_DATE_FORMAT"), Config
-						.get("NETFLOW_READER_DEFAULT_TIME_FORMAT"), fields);
+						.get("NETFLOW_READER_DEFAULT_TIME_FORMAT"), 0, fields);
 	}
 
 	public NetflowEventReader(String dir, String filename, String separator,
-			String dateFormat, String timeFormat, NetflowEventField... fields)
-			throws FileNotFoundException {
+			String dateFormat, String timeFormat, int dataOffsetSeconds,
+			NetflowEventField... fields) throws FileNotFoundException {
 		super(dir, filename);
 		this.dir = dir;
 		this.filename = filename;
@@ -73,6 +76,8 @@ public class NetflowEventReader extends NetworkReader {
 		this.fields = fields;
 		this.timeFormat = DateTimeFormat.forPattern(timeFormat);
 		this.dateFormat = DateTimeFormat.forPattern(dateFormat);
+
+		this.dataOffsetSeconds = dataOffsetSeconds;
 
 		this.removeZeroDegreeNodes = Config
 				.getBoolean("NETFLOW_READER_DEFAULT_REMOVE_ZERO_DEGREE_NODES");
@@ -144,10 +149,11 @@ public class NetflowEventReader extends NetworkReader {
 	 * empty.
 	 **/
 	public long getNextDecrementEdgesTimestamp() {
-//		System.out.println("getting next decr edge timestamp");
-//		System.out.println("\tdecredges: " + this.edgeQueue.size());
-//		if(this.edgeQueue.size() > 0)
-//		System.out.println("\tfirstedgetime: " + getFirstEdgeFromQueue().getTime());
+		// System.out.println("getting next decr edge timestamp");
+		// System.out.println("\tdecredges: " + this.edgeQueue.size());
+		// if(this.edgeQueue.size() > 0)
+		// System.out.println("\tfirstedgetime: " +
+		// getFirstEdgeFromQueue().getTime());
 		if (isEventQueueEmpty())
 			return -1;
 		else
@@ -224,18 +230,24 @@ public class NetflowEventReader extends NetworkReader {
 	}
 
 	public NetflowEvent getNextEvent() {
-		if (finished)
-			return null;
-
 		NetflowEvent e = this.bufferedEvent;
+
 		String line;
 		try {
 			line = readString();
-			if (line != null)
-				this.bufferedEvent = parseLine(line);
-			else {
-				this.finished = true;
+
+			if (line != null) {
+				NetflowEvent temp = parseLine(line);
+
+				if (temp.getTime().isAfter(this.maximumTimestamp)) {
+					this.bufferedEvent = null;
+					this.finished = true;
+				} else {
+					this.bufferedEvent = temp;
+				}
+			} else {
 				this.bufferedEvent = null;
+				this.finished = true;
 			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -354,6 +366,8 @@ public class NetflowEventReader extends NetworkReader {
 		DateTime dateTime = (time != null) ? date.plusSeconds(time
 				.getSecondOfDay()) : date;
 
+		dateTime = dateTime.plusSeconds(this.dataOffsetSeconds);
+
 		return new NetflowEvent(id, dateTime, srcAddress, dstAddress, duration,
 				direction, connectionState, flags, protocol, srcPort, dstPort,
 				packets, packetsToSrc, packetsToDestination, bytes, bytesToSrc,
@@ -426,6 +440,37 @@ public class NetflowEventReader extends NetworkReader {
 
 	public DateTime getInitTimestamp() {
 		return this.initTimestamp;
+	}
+
+	public void setMinimumTimestamp(String date) {
+		this.minimumTimestamp = this.timeFormat.parseDateTime(date)
+				.plusSeconds(TCPEventReader.gnuplotOffset);
+		skipToInitEvent();
+	}
+
+	public void setMinimumTimestamp(long timestampMillis) {
+		this.minimumTimestamp = new DateTime(timestampMillis)
+				.plusSeconds(TCPEventReader.gnuplotOffset);
+		skipToInitEvent();
+	}
+
+	public void setMinimumTimestamp(DateTime date) {
+		this.minimumTimestamp = date;
+		this.skipToInitEvent();
+	}
+
+	public void setMaximumTimestamp(String date) {
+		this.maximumTimestamp = this.timeFormat.parseDateTime(date)
+				.plusSeconds(TCPEventReader.gnuplotOffset);
+	}
+
+	public void setMaximumTimestamp(long timestampMillis) {
+		this.maximumTimestamp = new DateTime(timestampMillis)
+				.plusSeconds(TCPEventReader.gnuplotOffset);
+	}
+
+	public void setMaximumTimestamp(DateTime date) {
+		this.maximumTimestamp = date;
 	}
 
 }

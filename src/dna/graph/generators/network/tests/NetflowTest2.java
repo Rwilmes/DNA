@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.concurrent.TimeUnit;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import dna.graph.datastructures.GDS;
 import dna.graph.generators.GraphGenerator;
 import dna.graph.generators.network.EmptyNetwork;
@@ -27,13 +31,16 @@ import dna.series.data.SeriesData;
 import dna.updates.generators.BatchGenerator;
 import dna.util.Config;
 import dna.util.Log;
-import dna.util.network.netflow.DefaultNetflowReader;
+import dna.util.network.netflow.DarpaNetflowReader;
 import dna.util.network.netflow.NetflowEvent.NetflowEventField;
 import dna.util.network.netflow.NetflowEventReader;
 import dna.visualization.graph.GraphVisualization;
 import dna.visualization.graph.toolTips.infoLabel.NetworkNodeKeyLabel;
 
 public class NetflowTest2 {
+
+	protected static DateTimeFormatter fmt = DateTimeFormat
+			.forPattern("dd-MM-yyyy-HH:mm:ss");
 
 	public static void main(String[] args) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
@@ -61,21 +68,44 @@ public class NetflowTest2 {
 
 		// enableGvis();
 
-		SeriesData sd = test(dir, srcFile, name, dstDir, edgeLifeTime, debug);
+		DateTime from = null;
+		DateTime to = null;
 
+		String dateFrom = getDarpaDate(2, 2);
+		String dateTo = getDarpaDate(2, 2);
+
+		from = fmt.parseDateTime(dateFrom + "-" + "08:00:00");
+		from = from.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
+		to = fmt.parseDateTime(dateTo + "-" + "08:10:00");
+		to = to.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
+
+		System.out.println(from.toString());
+		System.out.println(to.toString());
+
+		SeriesData sd = test(dir, srcFile, name, dstDir, edgeLifeTime, from,
+				to, debug);
+
+		// SeriesData sd = SeriesData.read(dstDir, "mB", false, false);
 		plot(sd, plotDir);
 	}
 
 	public static SeriesData test(String dir, String filename, String name,
-			String dstDir, int edgeLifeTimeSeconds, boolean debug)
-			throws IOException, ParseException, AggregationException,
-			MetricNotApplicableException, InterruptedException,
-			LabelerNotApplicableException {
+			String dstDir, int edgeLifeTimeSeconds, DateTime from, DateTime to,
+			boolean debug) throws IOException, ParseException,
+			AggregationException, MetricNotApplicableException,
+			InterruptedException, LabelerNotApplicableException {
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
-		NetflowEventReader reader = new DefaultNetflowReader(dir, filename);
+		// NetflowEventReader reader = new DefaultNetflowReader(dir, filename);
+		NetflowEventReader reader = new DarpaNetflowReader(dir, filename);
+
 		reader.setBatchIntervalSeconds(1);
 		reader.setEdgeLifeTimeSeconds(edgeLifeTimeSeconds);
+
+		if (from != null)
+			reader.setMinimumTimestamp(from);
+		if (to != null)
+			reader.setMaximumTimestamp(to);
 
 		// init graph generator
 		long timestampMillis = reader.getInitTimestamp().getMillis();
@@ -111,7 +141,7 @@ public class NetflowTest2 {
 		Series s = new Series(gg, bg, metrics, new Labeler[0], dstDir, name);
 
 		// generate
-		SeriesData sd = s.generate(1, 10000, false, false, true, 0);
+		SeriesData sd = s.generate(1, 100000, false, false, true, 0);
 
 		GraphVisualization.setText("Finished");
 		Log.infoSep();
@@ -157,7 +187,31 @@ public class NetflowTest2 {
 
 	public static void plot(SeriesData sd, String plotDir) throws IOException,
 			InterruptedException {
-		Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
 		setGnuplotSettings();
+		Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
+	}
+
+	/**
+	 * Returns the absolute date of a DARPA 1998 week and day pair in
+	 * dd-MM-yyyy.
+	 **/
+	public static String getDarpaDate(int week, int day) {
+		int d = 1;
+		int m = 6;
+
+		int days = (week - 1) * 7 + (day - 1);
+
+		if (days > 31) {
+			d += (days - 30);
+			m++;
+		} else {
+			d += days;
+		}
+
+		String ds = (d > 9) ? "" + d : "0" + d;
+		String ms = (m > 9) ? "" + m : "0" + m;
+		String ys = "1998";
+
+		return ds + "-" + ms + "-" + ys;
 	}
 }

@@ -2,6 +2,7 @@ package dna.util.network.netflow;
 
 import java.io.FileNotFoundException;
 
+import dna.util.Config;
 import dna.util.network.netflow.NetflowEvent.NetflowEventField;
 
 public class DefaultNetflowReader extends NetflowEventReader {
@@ -39,7 +40,13 @@ public class DefaultNetflowReader extends NetflowEventReader {
 	// constructor
 	public DefaultNetflowReader(String dir, String filename)
 			throws FileNotFoundException {
-		super(dir, filename, "\t", "MM-dd-yyyy HH:mm:ss", "HH:mm:ss", fields);
+		this(dir, filename, 0);
+	}
+
+	public DefaultNetflowReader(String dir, String filename,
+			int dataOffsetSeconds) throws FileNotFoundException {
+		super(dir, filename, "\t", "MM-dd-yyyy HH:mm:ss", "HH:mm:ss", Config
+				.getInt("GNUPLOT_TIMESTAMP_OFFSET") + dataOffsetSeconds, fields);
 	}
 
 }
