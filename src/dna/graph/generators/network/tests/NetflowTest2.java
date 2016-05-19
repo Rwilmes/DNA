@@ -19,6 +19,8 @@ import dna.metrics.degree.DegreeDistributionR;
 import dna.metrics.degree.WeightedDegreeDistributionR;
 import dna.metrics.motifs.DirectedMotifsU;
 import dna.metrics.weights.EdgeWeightsR;
+import dna.plot.Plotting;
+import dna.plot.PlottingConfig.PlotFlag;
 import dna.series.AggregationException;
 import dna.series.Series;
 import dna.series.data.SeriesData;
@@ -40,7 +42,6 @@ public class NetflowTest2 {
 				"C://Program Files (x86)//gnuplot//bin//gnuplot.exe");
 
 		Config.zipBatches();
-		setGnuplotSettings();
 
 		String dir = "data/models/";
 		String srcFile = "data_small.netflow";
@@ -52,17 +53,17 @@ public class NetflowTest2 {
 
 		String plotDir = dir + name + "_plots" + "/";
 
-		int edgeLifeTime = 60 * 10;
+		int edgeLifeTime = 300;
 
 		boolean debug = false;
 
-		GraphVisualization.enable();
-		setGraphVisSettings();
+		// Config.overwrite("GRAPH_VIS_WAIT_ENABLED", "false");
+
+		// enableGvis();
 
 		SeriesData sd = test(dir, srcFile, name, dstDir, edgeLifeTime, debug);
 
-		// Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
-
+		plot(sd, plotDir);
 	}
 
 	public static SeriesData test(String dir, String filename, String name,
@@ -99,18 +100,18 @@ public class NetflowTest2 {
 				edgeWeights, nodeWeights);
 
 		NetworkNodeKeyLabel.netflowBatchGenerator = (NetflowBatch) bg;
-		((NetflowBatch) bg).setDebug(debug);
 		reader.setDebug(debug);
 
 		// init metrics
 		// Metric[] metrics = TEST.metrics_m1;
 		Metric[] metrics = metricsDefaultAll;
+		metrics = metricsTesting;
 
 		// init series
 		Series s = new Series(gg, bg, metrics, new Labeler[0], dstDir, name);
 
 		// generate
-		SeriesData sd = s.generate(1, 1000, false);
+		SeriesData sd = s.generate(1, 10000, false, false, true, 0);
 
 		GraphVisualization.setText("Finished");
 		Log.infoSep();
@@ -148,4 +149,15 @@ public class NetflowTest2 {
 	public static final long second = 1;
 	public static final long minute = 60 * second;
 	public static final long hour = 60 * minute;
+
+	public static void enableGvis() {
+		GraphVisualization.enable();
+		setGraphVisSettings();
+	}
+
+	public static void plot(SeriesData sd, String plotDir) throws IOException,
+			InterruptedException {
+		Plotting.plot(sd, plotDir, PlotFlag.plotSingleScalarValues);
+		setGnuplotSettings();
+	}
 }

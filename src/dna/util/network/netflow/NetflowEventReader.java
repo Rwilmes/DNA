@@ -144,6 +144,10 @@ public class NetflowEventReader extends NetworkReader {
 	 * empty.
 	 **/
 	public long getNextDecrementEdgesTimestamp() {
+//		System.out.println("getting next decr edge timestamp");
+//		System.out.println("\tdecredges: " + this.edgeQueue.size());
+//		if(this.edgeQueue.size() > 0)
+//		System.out.println("\tfirstedgetime: " + getFirstEdgeFromQueue().getTime());
 		if (isEventQueueEmpty())
 			return -1;
 		else

@@ -3,12 +3,14 @@ package dna.graph.generators.network;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
 
 import dna.graph.Graph;
+import dna.graph.IElement;
 import dna.graph.generators.network.weights.NetworkWeight.ElementType;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedEdge;
@@ -17,8 +19,10 @@ import dna.graph.weights.TypedWeight;
 import dna.graph.weights.doubleW.DoubleWeight;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
+import dna.updates.update.EdgeRemoval;
 import dna.updates.update.EdgeWeight;
 import dna.updates.update.NodeAddition;
+import dna.updates.update.NodeRemoval;
 import dna.util.Log;
 import dna.util.network.NetworkEvent;
 import dna.util.network.netflow.NetflowEvent;
@@ -49,22 +53,19 @@ public class NetflowBatch extends NetworkBatch2 {
 		this.map = new HashMap<String, Integer>();
 		this.intermediateMap = new HashMap<String, Integer>();
 		this.counter = 0;
-		this.debug = false;
 	}
 
 	@Override
 	public Batch craftBatch(Graph g, DateTime timestamp,
 			ArrayList<NetworkEvent> events,
+			ArrayList<NetworkEdge> decrementEdges,
 			HashMap<String, Integer> edgeWeightChanges) {
 		// init batch
 		Batch b = new Batch(g.getGraphDatastructures(), g.getTimestamp(),
 				TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()), 0, 0,
 				0, 0, 0, 0);
-		if (debug) {
-			Log.infoSep();
-			Log.info(g.getTimestamp() + "\t->\t"
-					+ TimeUnit.MILLISECONDS.toSeconds(timestamp.getMillis()));
-		}
+
+		HashMap<Integer, Integer> nodesDegreeMap = new HashMap<Integer, Integer>();
 
 		HashMap<Integer, Node> addedNodes = new HashMap<Integer, Node>();
 
@@ -92,79 +93,102 @@ public class NetflowBatch extends NetworkBatch2 {
 				processEvents(event, this.forward, addedNodes, addedEdges, b, g);
 				break;
 			}
-			//
-			// String sourceString = event.get(this.source);
-			// String destinationString = event.get(this.destination);
-			//
-			// if (sourceString.equals(destinationString)) {
-			// continue;
-			// }
-			//
-			// int sourceId = map(sourceString);
-			// int destinationId = map(destinationString);
-			// if (debug)
-			// System.out.println(sourceId + "  <--  " + sourceString);
-			// String[] intermediateStrings = new
-			// String[this.intermediateNodes.length];
-			// int[] intermediateIds = new int[this.intermediateNodes.length];
-			// for (int i = 0; i < intermediateStrings.length; i++) {
-			// String intermediateString = event.get(intermediateNodes[i]);
-			//
-			// if (intermediateString == null
-			// || intermediateString.equals("null"))
-			// intermediateString = event.getProtocol();
-			//
-			// intermediateStrings[i] = intermediateString;
-			// intermediateIds[i] = map(intermediateString);
-			// if (debug)
-			// System.out.println(intermediateIds[i] + "  <-i-  "
-			// + intermediateString);
-			// }
-			//
-			// if (debug)
-			// System.out.println(destinationId + "  <--  "
-			// + destinationString);
-			//
-			// // add source & destination node
-			// addNode(addedNodes, b, g, sourceId, ElementType.HOST);
-			// addNode(addedNodes, b, g, destinationId, ElementType.HOST);
-			//
-			// // add nodes
-			// if (intermediateIds.length >= 1) {
-			// // source --> intermediate 1
-			// addNode(addedNodes, b, g, intermediateIds[0],
-			// intermediateNodes[0]);
-			// addEdge(addedEdges, sourceId, intermediateIds[0], event
-			// .getTime().getMillis(), 1.0);
-			//
-			// // last intermediate --> destination
-			// addNode(addedNodes, b, g,
-			// intermediateIds[intermediateIds.length - 1],
-			// intermediateNodes[intermediateIds.length - 1]);
-			// addEdge(addedEdges,
-			// intermediateIds[intermediateIds.length - 1],
-			// destinationId, event.getTime().getMillis(), 1.0);
-			//
-			// // intermediate nodes
-			// for (int i = 0; i < intermediateIds.length - 1; i++) {
-			// addNode(addedNodes, b, g, intermediateIds[i],
-			// intermediateNodes[i]);
-			// addEdge(addedEdges, intermediateIds[i],
-			// intermediateIds[i + 1],
-			// event.getTime().getMillis(), 1.0);
-			// }
-			// } else {
-			// // add source --> destination
-			// addEdge(addedEdges, sourceId, destinationId, event.getTime()
-			// .getMillis(), 1.0);
-			// }
+		}
+
+		for (Integer nodeId : addedNodes.keySet()) {
+			nodesDegreeMap.put(nodeId, 0);
+		}
+
+		for (NetworkEdge dne : decrementEdges) {
+			boolean present = false;
+			for (NetworkEdge ne : addedEdges) {
+				if (ne.getSrc() == dne.getSrc() && ne.getDst() == dne.getDst()) {
+					present = true;
+					break;
+				}
+			}
+
+			if (!present)
+				addedEdges.add(new NetworkEdge(dne.getSrc(), dne.getDst(), 0,
+						0.0));
 		}
 
 		for (NetworkEdge ne : addedEdges) {
-			addEdgeToBatch(b, g, ne, addedNodes);
+			NetworkEdge decrementNe = new NetworkEdge(ne.getSrc(), ne.getDst(),
+					0, 0.0);
+			for (NetworkEdge dne : decrementEdges) {
+				if (ne.getSrc() == dne.getSrc() && ne.getDst() == dne.getDst()) {
+					decrementNe = dne;
+					break;
+				}
+			}
+
+			addEdgeToBatch(b, g, ne, decrementNe, addedNodes, nodesDegreeMap);
 		}
 
+		// compute node degrees and delete zero degree nodes
+		computeNodeDegrees(nodesDegreeMap, g, b);
+
 		return b;
+	}
+
+	protected void computeNodeDegrees(HashMap<Integer, Integer> nodeDegreeMap,
+			Graph g, Batch b) {
+		Iterator<IElement> ite = g.getNodes().iterator();
+		while (ite.hasNext()) {
+			Node n = (Node) ite.next();
+			int index = n.getIndex();
+
+			incrementNodeDegree(nodeDegreeMap, index, n.getDegree());
+
+			int degree = nodeDegreeMap.get(index);
+
+			if (degree == 0) {
+				if (reader instanceof NetflowEventReader
+						&& ((NetflowEventReader) reader)
+								.isRemoveZeroDegreeNodes())
+					b.add(new NodeRemoval(n));
+			}
+		}
+	}
+
+	protected void addNodeRemovals(Batch b, Graph g) {
+		ArrayList<Integer> degreeList = new ArrayList<Integer>();
+		Iterator<EdgeAddition> itea = b.getEdgeAdditions().iterator();
+		while (itea.hasNext()) {
+			EdgeAddition ea = itea.next();
+			int src = ea.getEdge().getN1().getIndex();
+			if (degreeList.contains(src))
+				degreeList.set(src, degreeList.get(src) + 1);
+			else
+				degreeList.set(src, 1);
+
+			int dst = ea.getEdge().getN2().getIndex();
+			if (degreeList.contains(src))
+				degreeList.set(src, degreeList.get(src) + 1);
+			else
+				degreeList.set(src, 1);
+		}
+
+		Iterator<EdgeRemoval> iter = b.getEdgeRemovals().iterator();
+		while (itea.hasNext()) {
+			EdgeRemoval er = iter.next();
+			int src = er.getEdge().getN1().getIndex();
+			if (degreeList.contains(src))
+				degreeList.set(src, degreeList.get(src) - 1);
+			else
+				degreeList.set(src, -1);
+
+			int dst = er.getEdge().getN2().getIndex();
+			if (degreeList.contains(src))
+				degreeList.set(src, degreeList.get(src) - 1);
+			else
+				degreeList.set(src, -1);
+		}
+
+		for (Integer nodeId : degreeList) {
+
+		}
 	}
 
 	protected void processEvents(NetflowEvent event,
@@ -204,7 +228,8 @@ public class NetflowBatch extends NetworkBatch2 {
 	}
 
 	protected void addEdgeToBatch(Batch b, Graph g, NetworkEdge ne,
-			HashMap<Integer, Node> addedNodes) {
+			NetworkEdge dne, HashMap<Integer, Node> addedNodes,
+			HashMap<Integer, Integer> nodeDegreeMap) {
 		Node srcNode = g.getNode(ne.getSrc());
 		if (srcNode == null)
 			srcNode = addedNodes.get(ne.getSrc());
@@ -214,31 +239,65 @@ public class NetflowBatch extends NetworkBatch2 {
 			dstNode = addedNodes.get(ne.getDst());
 
 		IWeightedEdge e = (IWeightedEdge) g.getEdge(srcNode, dstNode);
-
-		DoubleWeight w = new DoubleWeight(ne.getWeight());
+		DoubleWeight w = new DoubleWeight(ne.getWeight() + dne.getWeight());
 
 		if (e == null) {
 			e = (IWeightedEdge) g.getGraphDatastructures().newEdgeInstance(
 					srcNode, dstNode);
 			e.setWeight(w);
 			b.add(new EdgeAddition(e));
+			incrementNodeDegree(nodeDegreeMap, ne.getSrc());
+			incrementNodeDegree(nodeDegreeMap, ne.getDst());
 
-			if (debug)
-				System.out.println("ADDING EDGE:   " + ne.toString());
-
+			if (reader instanceof NetflowEventReader)
+				addEdgeWeightDecrementalToQueue((NetflowEventReader) reader, ne);
 		} else {
 			w = (DoubleWeight) e.getWeight();
 
-			b.add(new EdgeWeight(e, new DoubleWeight(w.getWeight()
-					+ ne.getWeight())));
+			DoubleWeight wNew = new DoubleWeight(w.getWeight() + ne.getWeight()
+					+ dne.getWeight());
 
-			System.out.println("old weight: " + w.toString() + "\tnewweight: "
-					+ (w.getWeight() + ne.getWeight()));
+			if (wNew.getWeight() == 0) {
+				b.add(new EdgeRemoval(e));
+				decrementNodeDegree(nodeDegreeMap, ne.getSrc());
+				decrementNodeDegree(nodeDegreeMap, ne.getDst());
+			} else {
+				b.add(new EdgeWeight(e, wNew));
+			}
 
-			if (debug)
-				System.out.println("INCREMENTING WEIGHT ON EDGE:    "
-						+ ne.toString());
+			if (ne.getWeight() > 0)
+				addEdgeWeightDecrementalToQueue((NetflowEventReader) reader, ne);
 		}
+	}
+
+	protected void decrementNodeDegree(HashMap<Integer, Integer> nodeDegreeMap,
+			int nodeId) {
+		incrementNodeDegree(nodeDegreeMap, nodeId, -1);
+	}
+
+	protected void incrementNodeDegree(HashMap<Integer, Integer> nodeDegreeMap,
+			int nodeId) {
+		incrementNodeDegree(nodeDegreeMap, nodeId, 1);
+	}
+
+	protected void incrementNodeDegree(HashMap<Integer, Integer> nodeDegreeMap,
+			int nodeId, int count) {
+		if (nodeDegreeMap.containsKey(nodeId)) {
+			nodeDegreeMap.put(nodeId, nodeDegreeMap.get(nodeId) + count);
+		} else {
+			nodeDegreeMap.put(nodeId, count);
+		}
+	}
+
+	protected void addEdgeWeightDecrementalToQueue(NetflowEventReader r,
+			NetworkEdge e) {
+		r.addEdgeToQueue(new NetworkEdge(e.getSrc(), e.getDst(), e.getTime()
+				+ r.getEdgeLifeTimeSeconds() * 1000, e.getWeight() * -1));
+	}
+
+	protected void addEdge(ArrayList<NetworkEdge> addedEdges, NetworkEdge edge) {
+		addEdge(addedEdges, edge.getSrc(), edge.getDst(), edge.getTime(),
+				edge.getWeight());
 	}
 
 	protected void addEdge(ArrayList<NetworkEdge> addedEdges, int src, int dst,
@@ -251,8 +310,9 @@ public class NetflowBatch extends NetworkBatch2 {
 			}
 		}
 
-		if (!alreadyAdded)
+		if (!alreadyAdded) {
 			addedEdges.add(new NetworkEdge(src, dst, time, weight));
+		}
 	}
 
 	protected Node addNode(HashMap<Integer, Node> addedNodes, Batch b, Graph g,
@@ -349,11 +409,5 @@ public class NetflowBatch extends NetworkBatch2 {
 		}
 
 		return "unknown";
-	}
-
-	protected boolean debug;
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
 	}
 }

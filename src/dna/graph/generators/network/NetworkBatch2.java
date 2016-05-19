@@ -33,11 +33,12 @@ public abstract class NetworkBatch2 extends BatchGenerator {
 
 	protected NetworkEvent bufferedEvent;
 
+	protected boolean firstBatch = true;
+
 	public NetworkBatch2(String name, NetworkReader reader,
 			int batchIntervalSeconds) throws FileNotFoundException {
 		super(name, new Parameter[0]);
 		this.reader = reader;
-		System.out.println("init: " + batchIntervalSeconds);
 		this.batchIntervalSeconds = batchIntervalSeconds;
 
 		this.init = false;
@@ -45,7 +46,7 @@ public abstract class NetworkBatch2 extends BatchGenerator {
 	}
 
 	public abstract Batch craftBatch(Graph g, DateTime timestamp,
-			ArrayList<NetworkEvent> events,
+			ArrayList<NetworkEvent> events, ArrayList<NetworkEdge> otherEvents,
 			HashMap<String, Integer> edgeWeighChanges);
 
 	/** Increments the threshold by the given batchLength. **/
@@ -103,14 +104,15 @@ public abstract class NetworkBatch2 extends BatchGenerator {
 			}
 		}
 
-		// get weight changes from events in queue
-		HashMap<String, Integer> edgeWeightMap = reader
-				.getWeightDecrementals(decrementEdges);
-
 		// return crafted batch
-		if (!reader.isNextEventPossible() && reader.isEventQueueEmpty())
-			finished = true;
-		return craftBatch(graph, threshold, events, edgeWeightMap);
+		if (firstBatch)
+			firstBatch = false;
+		else {
+			if (!reader.isNextEventPossible() && reader.isEventQueueEmpty())
+				finished = true;
+		}
+
+		return craftBatch(graph, threshold, events, decrementEdges, null);
 	}
 
 	@Override
