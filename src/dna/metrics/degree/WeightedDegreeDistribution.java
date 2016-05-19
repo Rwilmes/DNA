@@ -8,6 +8,7 @@ import dna.graph.nodes.DirectedNode;
 import dna.graph.nodes.UndirectedNode;
 import dna.graph.weights.IWeightedEdge;
 import dna.graph.weights.Weight;
+import dna.graph.weights.doubleW.DoubleWeight;
 import dna.graph.weights.intW.IntWeight;
 import dna.metrics.IMetric;
 import dna.metrics.Metric;
@@ -127,13 +128,19 @@ public abstract class WeightedDegreeDistribution extends Metric {
 	@Override
 	public boolean isApplicable(Graph g) {
 		return g.getGraphDatastructures().isEdgeType(IWeightedEdge.class)
-				&& g.getGraphDatastructures().isEdgeWeightType(IntWeight.class);
+				&& (g.getGraphDatastructures()
+						.isEdgeWeightType(IntWeight.class) || g
+						.getGraphDatastructures().isEdgeWeightType(
+								DoubleWeight.class));
 	}
 
 	@Override
 	public boolean isApplicable(Batch b) {
 		return b.getGraphDatastructures().isEdgeType(IWeightedEdge.class)
-				&& b.getGraphDatastructures().isEdgeWeightType(IntWeight.class);
+				&& (b.getGraphDatastructures()
+						.isEdgeWeightType(IntWeight.class) || b
+						.getGraphDatastructures().isEdgeWeightType(
+								DoubleWeight.class));
 	}
 
 	protected boolean compute() {
@@ -159,6 +166,9 @@ public abstract class WeightedDegreeDistribution extends Metric {
 					Weight w = ((IWeightedEdge) iterator.next()).getWeight();
 					if (w instanceof IntWeight)
 						outWeight += ((IntWeight) w).getWeight();
+					if (w instanceof DoubleWeight)
+						outWeight += (int) Math.floor(((DoubleWeight) w)
+								.getWeight());
 				}
 
 				// incoming
@@ -167,6 +177,9 @@ public abstract class WeightedDegreeDistribution extends Metric {
 					Weight w = ((IWeightedEdge) iterator.next()).getWeight();
 					if (w instanceof IntWeight)
 						inWeight += ((IntWeight) w).getWeight();
+					if (w instanceof DoubleWeight)
+						inWeight += (int) Math.floor(((DoubleWeight) w)
+								.getWeight());
 				}
 
 				this.weightedDegree.incr((outWeight + inWeight));
@@ -193,6 +206,9 @@ public abstract class WeightedDegreeDistribution extends Metric {
 					Weight w = ((IWeightedEdge) iterator.next()).getWeight();
 					if (w instanceof IntWeight)
 						weight += ((IntWeight) w).getWeight();
+					if (w instanceof DoubleWeight)
+						weight += (int) Math.floor(((DoubleWeight) w)
+								.getWeight());
 				}
 
 				this.weightedDegree.incr(n.getDegree(), weight);
@@ -200,5 +216,4 @@ public abstract class WeightedDegreeDistribution extends Metric {
 		}
 		return true;
 	}
-
 }
