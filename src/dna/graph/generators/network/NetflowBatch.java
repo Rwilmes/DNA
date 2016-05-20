@@ -152,45 +152,6 @@ public class NetflowBatch extends NetworkBatch2 {
 		}
 	}
 
-	protected void addNodeRemovals(Batch b, Graph g) {
-		ArrayList<Integer> degreeList = new ArrayList<Integer>();
-		Iterator<EdgeAddition> itea = b.getEdgeAdditions().iterator();
-		while (itea.hasNext()) {
-			EdgeAddition ea = itea.next();
-			int src = ea.getEdge().getN1().getIndex();
-			if (degreeList.contains(src))
-				degreeList.set(src, degreeList.get(src) + 1);
-			else
-				degreeList.set(src, 1);
-
-			int dst = ea.getEdge().getN2().getIndex();
-			if (degreeList.contains(src))
-				degreeList.set(src, degreeList.get(src) + 1);
-			else
-				degreeList.set(src, 1);
-		}
-
-		Iterator<EdgeRemoval> iter = b.getEdgeRemovals().iterator();
-		while (itea.hasNext()) {
-			EdgeRemoval er = iter.next();
-			int src = er.getEdge().getN1().getIndex();
-			if (degreeList.contains(src))
-				degreeList.set(src, degreeList.get(src) - 1);
-			else
-				degreeList.set(src, -1);
-
-			int dst = er.getEdge().getN2().getIndex();
-			if (degreeList.contains(src))
-				degreeList.set(src, degreeList.get(src) - 1);
-			else
-				degreeList.set(src, -1);
-		}
-
-		for (Integer nodeId : degreeList) {
-
-		}
-	}
-
 	protected void processEvents(NetflowEvent event,
 			NetflowEventField[] eventFields, HashMap<Integer, Node> addedNodes,
 			ArrayList<NetworkEdge> addedEdges, Batch b, Graph g) {
@@ -222,8 +183,7 @@ public class NetflowBatch extends NetworkBatch2 {
 			addNode(addedNodes, b, g, mapping1, eventFields[i + 1]);
 
 			// add edge node i --> node i+1
-			addEdge(addedEdges, mapping0, mapping1,
-					event.getTime().getMillis(), 1.0);
+			addEdge(addedEdges, mapping0, mapping1, b.getTo() * 1000, 1.0);
 		}
 	}
 
@@ -291,8 +251,9 @@ public class NetflowBatch extends NetworkBatch2 {
 
 	protected void addEdgeWeightDecrementalToQueue(NetflowEventReader r,
 			NetworkEdge e) {
-		r.addEdgeToQueue(new NetworkEdge(e.getSrc(), e.getDst(), e.getTime()
-				+ r.getEdgeLifeTimeSeconds() * 1000, e.getWeight() * -1));
+		r.addEdgeToQueue(new NetworkEdge(e.getSrc(), e.getDst(),
+				(e.getTime() + r.getEdgeLifeTimeSeconds() * 1000), e
+						.getWeight() * -1));
 	}
 
 	protected void addEdge(ArrayList<NetworkEdge> addedEdges, NetworkEdge edge) {
