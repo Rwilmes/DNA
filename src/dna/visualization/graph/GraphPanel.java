@@ -569,7 +569,8 @@ public class GraphPanel extends JPanel {
 				if (shiftPressed && rightMouseButtonPressed) {
 					// calc new position
 					double rot = getRotation();
-					double rot_new = rot + (arg0.getY() - dragPos.getY()) * 0.5;
+					double rot_new = rot + (arg0.getY() - dragPos.getY())
+							* config.getRotationSpeed();
 
 					// set new position
 					setRotation(rot_new);
