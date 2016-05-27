@@ -66,17 +66,17 @@ public class NetflowTest2 {
 
 		// Config.overwrite("GRAPH_VIS_WAIT_ENABLED", "false");
 
-//		 enableGvis();
+		enableGvis();
 
 		DateTime from = null;
 		DateTime to = null;
 
 		String dateFrom = getDarpaDate(2, 2);
-		String dateTo = getDarpaDate(2, 3);
+		String dateTo = getDarpaDate(2, 2);
 
 		from = fmt.parseDateTime(dateFrom + "-" + "08:00:00");
 		from = from.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
-		to = fmt.parseDateTime(dateTo + "-" + "00:00:00");
+		to = fmt.parseDateTime(dateTo + "-" + "08:02:00");
 		to = to.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
 
 		System.out.println(from.toString());
@@ -98,7 +98,7 @@ public class NetflowTest2 {
 
 		// NetflowEventReader reader = new DefaultNetflowReader(dir, filename);
 		NetflowEventReader reader = new DarpaNetflowReader(dir, filename);
-reader.setDebug(debug);
+		reader.setDebug(debug);
 		reader.setBatchIntervalSeconds(1);
 		reader.setEdgeLifeTimeSeconds(edgeLifeTimeSeconds);
 
@@ -115,7 +115,9 @@ reader.setDebug(debug);
 				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		NetflowEventField edgeWeights[] = new NetflowEventField[0];
+		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.Bytes };
+		NetflowEventField backwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.Bytes };
+
 		NetflowEventField nodeWeights[] = new NetflowEventField[0];
 
 		NetflowEventField[] forward = new NetflowEventField[] {
@@ -128,7 +130,7 @@ reader.setDebug(debug);
 
 		// init batch generator
 		BatchGenerator bg = new NetflowBatch(name, reader, forward, backward,
-				edgeWeights, nodeWeights);
+				forwardEdgeWeights, backwardEdgeWeights, nodeWeights);
 
 		NetworkNodeKeyLabel.netflowBatchGenerator = (NetflowBatch) bg;
 		reader.setDebug(debug);
@@ -136,7 +138,7 @@ reader.setDebug(debug);
 		// init metrics
 		// Metric[] metrics = TEST.metrics_m1;
 		Metric[] metrics = metricsDefaultAll;
-//		metrics = metricsTesting;
+		// metrics = metricsTesting;
 
 		// init series
 		Series s = new Series(gg, bg, metrics, new Labeler[0], dstDir, name);

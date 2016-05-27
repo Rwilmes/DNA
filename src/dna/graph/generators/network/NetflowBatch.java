@@ -36,19 +36,22 @@ public class NetflowBatch extends NetworkBatch2 {
 	protected NetflowEventField destination;
 	protected NetflowEventField[] intermediateNodes;
 	protected NetflowEventField[] nodeWeights;
-	protected NetflowEventField[] edgeWeights;
+	protected NetflowEventField[] forwardEdgeWeights;
+	protected NetflowEventField[] backwardEdgeWeights;
 
 	protected NetflowEventField[] forward;
 	protected NetflowEventField[] backward;
 
 	public NetflowBatch(String name, NetflowEventReader reader,
 			NetflowEventField[] forward, NetflowEventField[] backward,
-			NetflowEventField[] edgeWeights, NetflowEventField[] nodeWeights)
-			throws FileNotFoundException {
+			NetflowEventField[] forwardEdgeWeights,
+			NetflowEventField[] backwardEdgeWeights,
+			NetflowEventField[] nodeWeights) throws FileNotFoundException {
 		super(name, reader, reader.getBatchIntervalSeconds());
 		this.forward = forward;
 		this.backward = backward;
-		this.edgeWeights = edgeWeights;
+		this.forwardEdgeWeights = forwardEdgeWeights;
+		this.backwardEdgeWeights = backwardEdgeWeights;
 		this.nodeWeights = nodeWeights;
 		this.map = new HashMap<String, Integer>();
 		this.intermediateMap = new HashMap<String, Integer>();
