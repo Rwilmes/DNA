@@ -16,17 +16,17 @@ public class NetworkEdge {
 	protected int src;
 	protected int dst;
 	protected long time;
-	protected double weight;
+	protected double[] weights;
 
 	public NetworkEdge(int src, int dst, long time) {
-		this(src, dst, time, 0);
+		this(src, dst, time, new double[] { 0 });
 	}
 
-	public NetworkEdge(int src, int dst, long time, double weight) {
+	public NetworkEdge(int src, int dst, long time, double[] weights) {
 		this.src = src;
 		this.dst = dst;
 		this.time = time;
-		this.weight = weight;
+		this.weights = weights;
 	}
 
 	public int getSrc() {
@@ -41,12 +41,12 @@ public class NetworkEdge {
 		return time;
 	}
 
-	public double getWeight() {
-		return weight;
+	public double[] getWeights() {
+		return weights;
 	}
 
-	public void setWeight(double weight) {
-		this.weight = weight;
+	public void setWeights(double[] weights) {
+		this.weights = weights;
 	}
 
 	public void setTime(long t) {
@@ -58,7 +58,7 @@ public class NetworkEdge {
 	}
 
 	public String toString() {
-		return "NetworkEdge: " + src + "\t=>\t" + dst + "\tw=" + weight
+		return "NetworkEdge: " + src + "\t=>\t" + dst + "\tw=" + weights
 				+ "\t@\t" + time;
 	}
 

@@ -60,7 +60,7 @@ public class NetflowTest2 {
 
 		String plotDir = dir + name + "_plots" + "/";
 
-		int edgeLifeTime = 300;
+		int edgeLifeTime = 30;
 
 		boolean debug = false;
 
@@ -76,7 +76,7 @@ public class NetflowTest2 {
 
 		from = fmt.parseDateTime(dateFrom + "-" + "08:00:00");
 		from = from.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
-		to = fmt.parseDateTime(dateTo + "-" + "08:02:00");
+		to = fmt.parseDateTime(dateTo + "-" + "08:10:00");
 		to = to.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
 
 		System.out.println(from.toString());
@@ -115,8 +115,8 @@ public class NetflowTest2 {
 				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.Bytes };
-		NetflowEventField backwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.Bytes };
+		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToDestination };
+		NetflowEventField backwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToSrc };
 
 		NetflowEventField nodeWeights[] = new NetflowEventField[0];
 
@@ -126,7 +126,7 @@ public class NetflowTest2 {
 		NetflowEventField[] backward = new NetflowEventField[] {
 				NetflowEventField.DstAddress, NetflowEventField.SrcPort,
 				NetflowEventField.SrcAddress };
-		backward = new NetflowEventField[0];
+//		backward = new NetflowEventField[0];
 
 		// init batch generator
 		BatchGenerator bg = new NetflowBatch(name, reader, forward, backward,

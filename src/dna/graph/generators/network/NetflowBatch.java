@@ -88,12 +88,14 @@ public class NetflowBatch extends NetworkBatch2 {
 				Log.warn("BACKWARD FLOW??");
 				break;
 			case bidirectional:
-				processEvents(event, this.forward, addedNodes, addedEdges, b, g);
-				processEvents(event, this.backward, addedNodes, addedEdges, b,
-						g);
+				processEvents(event, this.forward, this.forwardEdgeWeights,
+						addedNodes, addedEdges, b, g);
+				processEvents(event, this.backward, this.backwardEdgeWeights,
+						addedNodes, addedEdges, b, g);
 				break;
 			case forward:
-				processEvents(event, this.forward, addedNodes, addedEdges, b, g);
+				processEvents(event, this.forward, this.forwardEdgeWeights,
+						addedNodes, addedEdges, b, g);
 				break;
 			}
 		}
@@ -113,12 +115,12 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			if (!present)
 				addedEdges.add(new NetworkEdge(dne.getSrc(), dne.getDst(), 0,
-						0.0));
+						new double[0]));
 		}
 
 		for (NetworkEdge ne : addedEdges) {
 			NetworkEdge decrementNe = new NetworkEdge(ne.getSrc(), ne.getDst(),
-					0, 0.0);
+					0, new double[0]);
 			for (NetworkEdge dne : decrementEdges) {
 				if (ne.getSrc() == dne.getSrc() && ne.getDst() == dne.getDst()) {
 					decrementNe = dne;
@@ -133,6 +135,13 @@ public class NetflowBatch extends NetworkBatch2 {
 		computeNodeDegrees(nodesDegreeMap, g, b);
 
 		return b;
+	}
+
+	protected double[] getZeroArray(int length) {
+		double[] array = new double[length];
+		for (int i = 0; i < array.length; i++)
+			array[i] = 0.0;
+		return array;
 	}
 
 	protected void computeNodeDegrees(HashMap<Integer, Integer> nodeDegreeMap,
@@ -156,7 +165,8 @@ public class NetflowBatch extends NetworkBatch2 {
 	}
 
 	protected void processEvents(NetflowEvent event,
-			NetflowEventField[] eventFields, HashMap<Integer, Node> addedNodes,
+			NetflowEventField[] eventFields, NetflowEventField[] edgeWeights,
+			HashMap<Integer, Node> addedNodes,
 			ArrayList<NetworkEdge> addedEdges, Batch b, Graph g) {
 		if (eventFields == null || eventFields.length < 2)
 			return;
@@ -185,8 +195,13 @@ public class NetflowBatch extends NetworkBatch2 {
 			addNode(addedNodes, b, g, mapping0, eventFields[i]);
 			addNode(addedNodes, b, g, mapping1, eventFields[i + 1]);
 
+			double[] weights = new double[edgeWeights.length];
+			for (int j = 0; j < weights.length; j++) {
+				weights[j] = Double.parseDouble(event.get(edgeWeights[j]));
+			}
+
 			// add edge node i --> node i+1
-			addEdge(addedEdges, mapping0, mapping1, b.getTo() * 1000, 1.0);
+			addEdge(addedEdges, mapping0, mapping1, b.getTo() * 1000, weights);
 		}
 	}
 
@@ -202,12 +217,22 @@ public class NetflowBatch extends NetworkBatch2 {
 			dstNode = addedNodes.get(ne.getDst());
 
 		IWeightedEdge e = (IWeightedEdge) g.getEdge(srcNode, dstNode);
-		DoubleWeight w = new DoubleWeight(ne.getWeight() + dne.getWeight());
+
+		DoubleWeight[] w = new DoubleWeight[Math.max(ne.getWeights().length,
+				dne.getWeights().length)];
+		for (int i = 0; i < w.length; i++) {
+			double neWeight = (i < ne.getWeights().length) ? ne.getWeights()[i]
+					: 0;
+			double dneWeight = (i < dne.getWeights().length) ? dne.getWeights()[i]
+					: 0;
+
+			w[i] = new DoubleWeight(neWeight + dneWeight);
+		}
 
 		if (e == null) {
 			e = (IWeightedEdge) g.getGraphDatastructures().newEdgeInstance(
 					srcNode, dstNode);
-			e.setWeight(w);
+			e.setWeight(w[0]);
 			b.add(new EdgeAddition(e));
 			incrementNodeDegree(nodeDegreeMap, ne.getSrc());
 			incrementNodeDegree(nodeDegreeMap, ne.getDst());
@@ -215,20 +240,29 @@ public class NetflowBatch extends NetworkBatch2 {
 			if (reader instanceof NetflowEventReader)
 				addEdgeWeightDecrementalToQueue((NetflowEventReader) reader, ne);
 		} else {
-			w = (DoubleWeight) e.getWeight();
+			w[0] = (DoubleWeight) e.getWeight();
 
-			DoubleWeight wNew = new DoubleWeight(w.getWeight() + ne.getWeight()
-					+ dne.getWeight());
+			DoubleWeight[] wNew = new DoubleWeight[Math.max(
+					ne.getWeights().length, dne.getWeights().length)];
+			for (int i = 0; i < wNew.length; i++) {
+				double neWeight = (i < ne.getWeights().length) ? ne
+						.getWeights()[i] : 0;
+				double dneWeight = (i < dne.getWeights().length) ? dne
+						.getWeights()[i] : 0;
 
-			if (wNew.getWeight() == 0) {
+				wNew[i] = new DoubleWeight(w[i].getWeight() + neWeight
+						+ dneWeight);
+			}
+
+			if (wNew[0].getWeight() == 0) {
 				b.add(new EdgeRemoval(e));
 				decrementNodeDegree(nodeDegreeMap, ne.getSrc());
 				decrementNodeDegree(nodeDegreeMap, ne.getDst());
 			} else {
-				b.add(new EdgeWeight(e, wNew));
+				b.add(new EdgeWeight(e, wNew[0]));
 			}
 
-			if (ne.getWeight() > 0)
+			if (ne.getWeights().length > 0 && ne.getWeights()[0] > 0)
 				addEdgeWeightDecrementalToQueue((NetflowEventReader) reader, ne);
 		}
 	}
@@ -254,28 +288,34 @@ public class NetflowBatch extends NetworkBatch2 {
 
 	protected void addEdgeWeightDecrementalToQueue(NetflowEventReader r,
 			NetworkEdge e) {
+		double[] weightsArray = new double[e.getWeights().length];
+		for (int i = 0; i < weightsArray.length; i++) {
+			weightsArray[i] = (-1) * e.getWeights()[i];
+		}
 		r.addEdgeToQueue(new NetworkEdge(e.getSrc(), e.getDst(),
-				(e.getTime() + r.getEdgeLifeTimeSeconds() * 1000), e
-						.getWeight() * -1));
+				(e.getTime() + r.getEdgeLifeTimeSeconds() * 1000), weightsArray));
 	}
 
 	protected void addEdge(ArrayList<NetworkEdge> addedEdges, NetworkEdge edge) {
 		addEdge(addedEdges, edge.getSrc(), edge.getDst(), edge.getTime(),
-				edge.getWeight());
+				edge.getWeights());
 	}
 
 	protected void addEdge(ArrayList<NetworkEdge> addedEdges, int src, int dst,
-			long time, double weight) {
+			long time, double[] weights) {
 		boolean alreadyAdded = false;
 		for (NetworkEdge ne : addedEdges) {
 			if (ne.getSrc() == src && ne.getDst() == dst) {
 				alreadyAdded = true;
-				ne.setWeight(ne.getWeight() + weight);
+				double[] weightsNew = ne.getWeights();
+				for (int i = 0; i < weightsNew.length; i++)
+					weightsNew[i] += weights[i];
+				ne.setWeights(weightsNew);
 			}
 		}
 
 		if (!alreadyAdded) {
-			addedEdges.add(new NetworkEdge(src, dst, time, weight));
+			addedEdges.add(new NetworkEdge(src, dst, time, weights));
 		}
 	}
 
