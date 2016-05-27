@@ -23,7 +23,6 @@ import dna.updates.update.EdgeRemoval;
 import dna.updates.update.EdgeWeight;
 import dna.updates.update.NodeAddition;
 import dna.updates.update.NodeRemoval;
-import dna.util.Log;
 import dna.util.network.NetworkEvent;
 import dna.util.network.netflow.NetflowEvent;
 import dna.util.network.netflow.NetflowEvent.NetflowDirection;
@@ -85,7 +84,8 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			switch (direction) {
 			case backward:
-				Log.warn("BACKWARD FLOW??");
+				processEvents(event, this.backward, this.backwardEdgeWeights,
+						addedNodes, addedEdges, b, g);
 				break;
 			case bidirectional:
 				processEvents(event, this.forward, this.forwardEdgeWeights,
