@@ -18,6 +18,7 @@ import argList.types.atomic.StringArg;
 import dna.io.Writer;
 import dna.io.filesystem.Dir;
 import dna.labels.Label;
+import dna.labels.LabelList;
 import dna.plot.PlotConfig;
 import dna.series.aggdata.AggregatedBatch.BatchReadMode;
 import dna.series.data.BatchData;
@@ -184,11 +185,13 @@ public class DataCollector {
 		Writer w = new Writer("", outputPath);
 		w.writeln(header);
 
+		int counter = 0;
+
 		// iterate over batches
 		for (int i = 0; i < batches.length; i++) {
 			long timestamp = Dir.getTimestamp(batches[i]);
 
-			String line = "blub";
+			String line = "";
 
 			// iterate over series
 			for (int j = 0; j < seriesDirs.length; j++) {
@@ -199,6 +202,38 @@ public class DataCollector {
 							seriesDirs[j], runIds[j], timestamp), timestamp,
 							BatchReadMode.readAllValues);
 				} catch (FileNotFoundException e) {
+				}
+
+				for (int k = 0; k < labels.length; k++) {
+					String label = labels[k];
+
+					boolean matchType = false;
+					if (label.contains(":"))
+						matchType = true;
+
+					boolean contained = false;
+
+					LabelList labelList = batchData.getLabels();
+
+					for (Label l : labelList.getList()) {
+						String identifier = matchType ? l.getName() + ":"
+								+ l.getType() : l.getName();
+						if (identifier.equals(label))
+							contained = true;
+					}
+
+					if (contained) {
+						if (k == 0)
+							line += 1;
+						else
+							line += "\t" + 1;
+					} else {
+						if (k == 0)
+							line += 0;
+						else
+							line += "\t" + 0;
+					}
+
 				}
 
 				ArrayList<String> metrics = metricsList[j];
@@ -221,6 +256,9 @@ public class DataCollector {
 
 			}
 
+			if (counter % 1000 == 0)
+				System.out.println(counter);
+			counter++;
 			w.writeln(line);
 		}
 
