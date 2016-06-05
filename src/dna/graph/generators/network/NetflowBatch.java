@@ -83,10 +83,8 @@ public class NetflowBatch extends NetworkBatch2 {
 			NetflowDirection direction = event.getDirection();
 
 			// TODO: proper port/prot handling
-			if(event.getDstPort() == null || event.getDstPort().equals("null"))
+			if (event.getDstPort() == null || event.getDstPort().equals("null"))
 				continue;
-			
-			System.out.println("dstport:\t" + event.getDstPort());
 
 			switch (direction) {
 			case backward:
@@ -196,6 +194,9 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			int mapping0 = map(string0);
 			int mapping1 = map(string1);
+
+			System.out.println(string0 + " to " + mapping0);
+			System.out.println(string1 + " to " + mapping1);
 
 			// add node i and i+1
 			addNode(addedNodes, b, g, mapping0, eventFields[i]);
@@ -407,14 +408,16 @@ public class NetflowBatch extends NetworkBatch2 {
 		Set<String> keys = map.keySet();
 
 		for (String key : keys) {
-			if (map.get(key) == mapping)
+			System.out.println(map.get(key) + " == " + mapping + " ?  "
+					+ (map.get(key) == mapping));
+			if (map.get(key).intValue() == mapping.intValue())
 				return key;
 		}
 
 		keys = intermediateMap.keySet();
 
 		for (String key : keys) {
-			if (map.get(key) == mapping)
+			if (intermediateMap.get(key).intValue() == mapping.intValue())
 				return key;
 		}
 
