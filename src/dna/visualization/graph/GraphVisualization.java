@@ -26,6 +26,7 @@ import dna.util.Config;
 import dna.util.Log;
 import dna.visualization.graph.GraphPanel.PositionMode;
 import dna.visualization.graph.rules.NetworkNodeShape;
+import dna.visualization.graph.rules.NetworkPresentationRule;
 import dna.visualization.graph.rules.NodeColorByDegree;
 import dna.visualization.graph.rules.NodeSizeBy3dCoordinates;
 import dna.visualization.graph.rules.NodeSizeByDegree;
@@ -124,6 +125,9 @@ public class GraphVisualization {
 					"NODE_COLOR_BY_DEGREE"));
 		if (Config.getBoolean("GRAPH_VIS_NETWORK_NODE_SHAPE"))
 			panel.addGraphStyleRule(new NetworkNodeShape("NETWORK_NODE_SHAPE"));
+		if (Config.getBoolean("GRAPH_VIS_NETWORK_PRESENTATION"))
+			panel.addGraphStyleRule(new NetworkPresentationRule(
+					"NETWORK_PRESENTATION"));
 		if (Config.getBoolean("GRAPH_VIS_TOOLTIPS_ENABLED")) {
 			if (Config.getBoolean("GRAPH_VIS_NETFLOW_TOOLTIPS"))
 				panel.addToolTipManager(new NetflowToolTipManager(panel));

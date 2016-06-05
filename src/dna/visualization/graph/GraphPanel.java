@@ -847,7 +847,7 @@ public class GraphPanel extends JPanel {
 			r.onNodeAddition(node);
 
 		// update style
-		GraphStyleUtils.updateStyle(node);
+//		GraphStyleUtils.updateStyle(node);
 
 		// update node count
 		this.incrementNodesCount();
@@ -861,7 +861,7 @@ public class GraphPanel extends JPanel {
 			r.onNodeRemoval(node);
 
 		// update style
-		GraphStyleUtils.updateStyle(node);
+//		GraphStyleUtils.updateStyle(node);
 
 		// update node count
 		this.decrementNodesCount();
@@ -920,7 +920,7 @@ public class GraphPanel extends JPanel {
 			r.onNodeWeightChange(node, w, wOld);
 
 		// update style
-		GraphStyleUtils.updateStyle(node);
+//		GraphStyleUtils.updateStyle(node);
 	}
 
 	/*
@@ -974,8 +974,8 @@ public class GraphPanel extends JPanel {
 
 			// update styles
 			GraphStyleUtils.updateStyle(edge);
-			GraphStyleUtils.updateStyle(node1);
-			GraphStyleUtils.updateStyle(node2);
+//			GraphStyleUtils.updateStyle(node1);
+//			GraphStyleUtils.updateStyle(node2);
 		}
 
 		// update edge count
@@ -999,8 +999,8 @@ public class GraphPanel extends JPanel {
 			r.onEdgeRemoval(edge, node1, node2);
 
 		// update styles
-		GraphStyleUtils.updateStyle(node1);
-		GraphStyleUtils.updateStyle(node2);
+//		GraphStyleUtils.updateStyle(node1);
+//		GraphStyleUtils.updateStyle(node2);
 
 		// update edge count
 		this.decrementEdgesCount();

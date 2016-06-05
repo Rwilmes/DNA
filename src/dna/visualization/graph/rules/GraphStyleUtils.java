@@ -20,6 +20,14 @@ public class GraphStyleUtils {
 		e.setAttribute(GraphVisualization.colorKey, c);
 	}
 
+	public static void setLabel(Element e, String label) {
+		e.setAttribute(GraphVisualization.labelKey, label);
+	}
+
+	public static String getLabel(Element e) {
+		return e.getAttribute(GraphVisualization.labelKey);
+	}
+
 	/** Returns the size of the element. **/
 	public static double getSize(Element e) {
 		return e.getAttribute(GraphVisualization.sizeKey);

@@ -35,6 +35,7 @@ import dna.util.network.netflow.DarpaNetflowReader;
 import dna.util.network.netflow.NetflowEvent.NetflowEventField;
 import dna.util.network.netflow.NetflowEventReader;
 import dna.visualization.graph.GraphVisualization;
+import dna.visualization.graph.rules.NetworkPresentationRule;
 import dna.visualization.graph.toolTips.infoLabel.NetworkNodeKeyLabel;
 
 public class NetflowTest2 {
@@ -50,17 +51,17 @@ public class NetflowTest2 {
 
 		Config.zipBatches();
 
-		String dir = "data/models/";
-		String srcFile = "data_small.netflow";
+		String dir = "data/models/w2_2/";
+		String srcFile = "outside.netflow";
 
-		srcFile = "data.netflow";
+		srcFile = "outside.netflow";
 
 		String name = "mB_1_test_new";
 		String dstDir = dir + name + "/";
 
 		String plotDir = dir + name + "_plots" + "/";
 
-		int edgeLifeTime = 30;
+		int edgeLifeTime = 3600;
 
 		boolean debug = false;
 
@@ -74,9 +75,9 @@ public class NetflowTest2 {
 		String dateFrom = getDarpaDate(2, 2);
 		String dateTo = getDarpaDate(2, 2);
 
-		from = fmt.parseDateTime(dateFrom + "-" + "08:00:00");
+		from = fmt.parseDateTime(dateFrom + "-" + "19:15:00");
 		from = from.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
-		to = fmt.parseDateTime(dateTo + "-" + "08:10:00");
+		to = fmt.parseDateTime(dateTo + "-" + "19:30:00");
 		to = to.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
 
 		System.out.println(from.toString());
@@ -86,7 +87,7 @@ public class NetflowTest2 {
 				to, debug);
 
 		// SeriesData sd = SeriesData.read(dstDir, "mB", false, false);
-		plot(sd, plotDir);
+		// plot(sd, plotDir);
 	}
 
 	public static SeriesData test(String dir, String filename, String name,
@@ -94,7 +95,7 @@ public class NetflowTest2 {
 			boolean debug) throws IOException, ParseException,
 			AggregationException, MetricNotApplicableException,
 			InterruptedException, LabelerNotApplicableException {
-		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
+		// Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 
 		// NetflowEventReader reader = new DefaultNetflowReader(dir, filename);
 		NetflowEventReader reader = new DarpaNetflowReader(dir, filename);
@@ -115,7 +116,7 @@ public class NetflowTest2 {
 				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToDestination };
+		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.numberOfNetflows };
 		NetflowEventField backwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToSrc };
 
 		NetflowEventField nodeWeights[] = new NetflowEventField[0];
@@ -126,20 +127,30 @@ public class NetflowTest2 {
 		NetflowEventField[] backward = new NetflowEventField[] {
 				NetflowEventField.DstAddress, NetflowEventField.SrcPort,
 				NetflowEventField.SrcAddress };
-//		backward = new NetflowEventField[0];
+		// backward = new NetflowEventField[0];
+
+		backward = new NetflowEventField[0];
+		backwardEdgeWeights = new NetflowEventField[0];
 
 		// init batch generator
 		BatchGenerator bg = new NetflowBatch(name, reader, forward, backward,
 				forwardEdgeWeights, backwardEdgeWeights, nodeWeights);
 
+		NetworkPresentationRule.netflowBatchGenerator = (NetflowBatch) bg;
 		NetworkNodeKeyLabel.netflowBatchGenerator = (NetflowBatch) bg;
 		reader.setDebug(debug);
 
 		// init metrics
-		// Metric[] metrics = TEST.metrics_m1;
-		Metric[] metrics = metricsDefaultAll;
+		 Metric[] metrics = TEST.metrics_m1;
+//		Metric[] metrics = metricsDefaultAll;
 		// metrics = metricsTesting;
 
+		 
+		 metrics = new Metric[] {new EdgeWeightsR(1.0)};
+		 System.out.println(metrics);
+		 
+		 
+		 
 		// init series
 		Series s = new Series(gg, bg, metrics, new Labeler[0], dstDir, name);
 
@@ -165,10 +176,19 @@ public class NetflowTest2 {
 			new WeightedDegreeDistributionR() };
 
 	public static void setGraphVisSettings() {
+		Config.overwrite("GRAPH_VIS_COLOR_NODES_BY_DEGREE", "false");
+		Config.overwrite("GRAPH_VIS_SIZE_NODES_BY_DEGREE", "false");
+		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "false");
+		Config.overwrite("GRAPH_VIS_NETWORK_PRESENTATION", "true");
+
+		Config.overwrite("GRAPH_VIS_SHOW_EDGE_WEIGHTS", "false");
+		Config.overwrite("GRAPH_VIS_SHOW_NODE_WEIGHTS", "false");
+		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "false");
+
 		Config.overwrite("GRAPH_VIS_NETWORK_NODE_SHAPE", "true");
 		Config.overwrite("GRAPH_VIS_TIMESTAMP_IN_SECONDS", "true");
 		Config.overwrite("GRAPH_VIS_DATETIME_FORMAT", "HH:mm:ss");
-		Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (6 * hour));
+		Config.overwrite("GRAPH_VIS_TIMESTAMP_OFFSET", "-" + (int) (2 * hour));
 	}
 
 	public static void setGnuplotSettings() {

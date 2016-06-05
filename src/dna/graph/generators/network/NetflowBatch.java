@@ -82,6 +82,12 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			NetflowDirection direction = event.getDirection();
 
+			// TODO: proper port/prot handling
+			if(event.getDstPort() == null || event.getDstPort().equals("null"))
+				continue;
+			
+			System.out.println("dstport:\t" + event.getDstPort());
+
 			switch (direction) {
 			case backward:
 				processEvents(event, this.backward, this.backwardEdgeWeights,

@@ -15,12 +15,12 @@ public class NetflowToolTipManager extends ToolTipManager {
 				distance, offset, angle);
 
 		// add additional tooltips here
-		addToolTip("Node", ToolTipType.INFO_NETWORK_NODE_KEY);
+//		addToolTip("Node", ToolTipType.INFO_NETWORK_NODE_KEY);
 		addToolTip("Type", ToolTipType.INFO_NODE_TYPE_WEIGHT);
-		addToolTip("Degree", ToolTipType.INFO_NODE_DEGREE);
-		addToolTip("NodeID", ToolTipType.INFO_NODE_ID);
-		addToolTip("Freeze", ToolTipType.BUTTON_FREEZE);
-		addToolTip("Highlight", ToolTipType.BUTTON_HIGHLIGHT);
+//		addToolTip("Degree", ToolTipType.INFO_NODE_DEGREE);
+//		addToolTip("NodeID", ToolTipType.INFO_NODE_ID);
+//		addToolTip("Freeze", ToolTipType.BUTTON_FREEZE);
+//		addToolTip("Highlight", ToolTipType.BUTTON_HIGHLIGHT);
 	}
 
 }
