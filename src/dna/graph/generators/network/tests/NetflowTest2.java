@@ -75,9 +75,9 @@ public class NetflowTest2 {
 		String dateFrom = getDarpaDate(2, 2);
 		String dateTo = getDarpaDate(2, 2);
 
-		from = fmt.parseDateTime(dateFrom + "-" + "19:15:00");
+		from = fmt.parseDateTime(dateFrom + "-" + "08:00:00");
 		from = from.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
-		to = fmt.parseDateTime(dateTo + "-" + "19:30:00");
+		to = fmt.parseDateTime(dateTo + "-" + "08:10:00");
 		to = to.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
 
 		System.out.println(from.toString());
