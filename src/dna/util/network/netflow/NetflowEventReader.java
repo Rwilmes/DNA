@@ -473,4 +473,12 @@ public class NetflowEventReader extends NetworkReader {
 		this.maximumTimestamp = date;
 	}
 
+	public int getDataOffset() {
+		return this.dataOffsetSeconds;
+	}
+
+	public void setDataOffset(int seconds) {
+		this.dataOffsetSeconds = seconds;
+	}
+
 }
