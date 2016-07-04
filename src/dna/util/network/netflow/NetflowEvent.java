@@ -13,7 +13,7 @@ import dna.util.network.NetworkEvent;
 public class NetflowEvent extends NetworkEvent {
 
 	public enum NetflowEventField {
-		Date, Time, SrcAddress, DstAddress, Duration, Protocol, SrcPort, DstPort, Direction, None, Packets, PacketToSrc, PacketsToDestination, Bytes, BytesToSrc, BytesToDestination, Label, Flags, ConnectionState, numberOfNetflows
+		Date, Time, SrcAddress, DstAddress, Duration, Protocol, SrcPort, DstPort, Direction, None, Packets, PacketsToSrc, PacketsToDst, Bytes, BytesToSrc, BytesToDst, Label, Flags, ConnectionState, numberOfNetflows
 	}
 
 	public enum NetflowDirection {
@@ -147,7 +147,7 @@ public class NetflowEvent extends NetworkEvent {
 		switch (field) {
 		case Bytes:
 			return "" + this.bytes;
-		case BytesToDestination:
+		case BytesToDst:
 			return "" + this.bytesToDestination;
 		case BytesToSrc:
 			return "" + this.bytesToSrc;
@@ -169,9 +169,9 @@ public class NetflowEvent extends NetworkEvent {
 			return "" + 1;
 		case Packets:
 			return "" + this.packets;
-		case PacketsToDestination:
+		case PacketsToDst:
 			return "" + this.packetsToDestination;
-		case PacketToSrc:
+		case PacketsToSrc:
 			return "" + this.packetsToSrc;
 		case Protocol:
 			return this.protocol;

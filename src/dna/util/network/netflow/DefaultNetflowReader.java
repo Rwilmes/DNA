@@ -30,9 +30,9 @@ public class DefaultNetflowReader extends NetflowEventReader {
 			NetflowEventField.Flags, NetflowEventField.Protocol,
 			NetflowEventField.SrcAddress, NetflowEventField.Direction,
 			NetflowEventField.DstAddress,
-			NetflowEventField.PacketsToDestination,
-			NetflowEventField.PacketToSrc,
-			NetflowEventField.BytesToDestination, NetflowEventField.BytesToSrc,
+			NetflowEventField.PacketsToDst,
+			NetflowEventField.PacketsToSrc,
+			NetflowEventField.BytesToDst, NetflowEventField.BytesToSrc,
 			NetflowEventField.ConnectionState, NetflowEventField.Duration,
 			NetflowEventField.None, NetflowEventField.None,
 			NetflowEventField.SrcPort, NetflowEventField.DstPort };

@@ -87,7 +87,7 @@ public class NetflowAnalysis {
 				new IntArg("edgeLifeTime", "lifetime of an edge in seconds"),
 				new StringArrayArg(
 						"edges",
-						"edges to be added to the graph of format: NetflowEventField-NetflowEventField-...-NetflowEventField. Possible NetflowEventFields are: Bytes, BytesToDestination, BytesToSrc, ConnectionState, Date, Direction, DstAddress, DstPort, Duration, Flags, Label, None, numberOfNetflows, Packets, PacketsToDestination, PacketToSrc, Protocol, SrcAddress, SrcPort, Time",
+						"edges to be added to the graph of format: NetflowEventField-NetflowEventField-...-NetflowEventField. Possible NetflowEventFields are: Bytes, BytesToDst, BytesToSrc, ConnectionState, Date, Direction, DstAddress, DstPort, Duration, Flags, Label, None, numberOfNetflows, Packets, PacketsToDst, PacketsToSrc, Protocol, SrcAddress, SrcPort, Time",
 						";"),
 				new StringArrayArg(
 						"edgeDirections",
@@ -317,7 +317,13 @@ public class NetflowAnalysis {
 			Log.info("\t" + m.getName());
 		Log.infoSep();
 
-		generate(srcDir, srcFilename, dstDir, name + "_" + descr,
+		String destinationName = name;
+		if (this.descr != null && !this.descr.equals("null"))
+			destinationName += "_" + this.descr;
+
+		String destinationDir = dstDir + destinationName + "/";
+
+		generate(srcDir, srcFilename, destinationDir, destinationName,
 				dataOffsetSeconds, batchLengthSeconds, edgeLifeTimeSeconds,
 				from, to, attackListPath, enableVis, metrics, edges,
 				edgeDirections, edgeWeights, nodeWeights);
@@ -332,7 +338,13 @@ public class NetflowAnalysis {
 			NetflowEventField[][] edgeWeights, NetflowEventField[][] nodeWeights)
 			throws IOException, ParseException, AggregationException,
 			MetricNotApplicableException, LabelerNotApplicableException {
+		// vis
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
+		if (enableVis) {
+			DatasetUtils.setGraphVisSettings();
+			GraphVisualization.enable();
+		} else
+			GraphVisualization.disable();
 
 		// init reader
 		NetflowEventReader reader = new DarpaNetflowReader(srcDir, srcFilename);
@@ -573,7 +585,10 @@ public class NetflowAnalysis {
 			NetflowEventField[] fields = new NetflowEventField[splits.length];
 
 			for (int j = 0; j < splits.length; j++) {
-				fields[j] = NetflowEventField.valueOf(splits[j]);
+				if (splits[j] == null || splits[j].equals("null"))
+					fields[j] = NetflowEventField.None;
+				else
+					fields[j] = NetflowEventField.valueOf(splits[j]);
 			}
 
 			edges[i] = fields;
@@ -597,7 +612,7 @@ public class NetflowAnalysis {
 		switch (key) {
 		case Bytes:
 			return "b";
-		case BytesToDestination:
+		case BytesToDst:
 			return "bd";
 		case BytesToSrc:
 			return "bs";
@@ -623,9 +638,9 @@ public class NetflowAnalysis {
 			return "n";
 		case Packets:
 			return "p";
-		case PacketsToDestination:
+		case PacketsToDst:
 			return "pd";
-		case PacketToSrc:
+		case PacketsToSrc:
 			return "ps";
 		case Protocol:
 			return "pr";
@@ -646,7 +661,7 @@ public class NetflowAnalysis {
 		String name = "directed.";
 
 		for (int i = 0; i < edges.length; i++) {
-			String temp = edgeDirections[i] + "";
+			String temp = edgeDirections[i].toUpperCase() + "";
 
 			String[] splits = edges[i].split("-");
 
@@ -661,25 +676,33 @@ public class NetflowAnalysis {
 		}
 		name += "/" + batchLengthSeconds + "_" + edgeLifeTimeSeconds + "/";
 
-		if (edgeWeights.length == 0) {
+		if (edgeWeights.length == 0
+				|| (edgeWeights.length == 1 && (edgeWeights[0] == null || edgeWeights[0]
+						.equals("null")))) {
 			name += "none";
-		}
-
-		for (int i = 0; i < edgeWeights.length; i++) {
-			if (i > 0)
-				name += ".";
-			name += map(NetflowEventField.valueOf(edgeWeights[i]));
+		} else {
+			for (int i = 0; i < edgeWeights.length; i++) {
+				if (edgeWeights[i] != null && !edgeWeights[i].equals("null")) {
+					if (i > 0)
+						name += ".";
+					name += map(NetflowEventField.valueOf(edgeWeights[i]));
+				}
+			}
 		}
 
 		name += "_";
 
-		if (nodeWeights.length == 0) {
+		if (nodeWeights.length == 0
+				|| (nodeWeights.length == 1 && (nodeWeights[0] == null || nodeWeights[0]
+						.equals("null")))) {
 			name += "none";
 		} else {
 			for (int i = 0; i < nodeWeights.length; i++) {
-				if (i > 0)
-					name += ".";
-				name += map(NetflowEventField.valueOf(nodeWeights[i]));
+				if (nodeWeights[i] != null && !nodeWeights[i].equals("null")) {
+					if (i > 0)
+						name += ".";
+					name += map(NetflowEventField.valueOf(nodeWeights[i]));
+				}
 			}
 		}
 

@@ -116,7 +116,7 @@ public class NetflowTest2 {
 				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
 				timestampSeconds);
 
-		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToDestination };
+		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToDst };
 		NetflowEventField backwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToSrc };
 
 		NetflowEventField nodeWeights[][] = new NetflowEventField[0][];// {
@@ -136,7 +136,7 @@ public class NetflowTest2 {
 		edges[1] = backward;
 
 		NetflowEventField[][] edgeWeights = new NetflowEventField[2][];
-		edgeWeights[0] = new NetflowEventField[] { NetflowEventField.BytesToDestination };
+		edgeWeights[0] = new NetflowEventField[] { NetflowEventField.BytesToDst };
 		edgeWeights[1] = new NetflowEventField[] { NetflowEventField.BytesToSrc };
 
 		NetflowDirection[] edgeDirections = new NetflowDirection[] {

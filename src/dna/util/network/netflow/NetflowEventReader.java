@@ -300,7 +300,7 @@ public class NetflowEventReader extends NetworkReader {
 			case Bytes:
 				bytes = Integer.parseInt(x);
 				break;
-			case BytesToDestination:
+			case BytesToDst:
 				bytesToDestination = Integer.parseInt(x);
 				break;
 			case BytesToSrc:
@@ -342,10 +342,10 @@ public class NetflowEventReader extends NetworkReader {
 			case Packets:
 				packets = Integer.parseInt(x);
 				break;
-			case PacketsToDestination:
+			case PacketsToDst:
 				packetsToDestination = Integer.parseInt(x);
 				break;
-			case PacketToSrc:
+			case PacketsToSrc:
 				packetsToSrc = Integer.parseInt(x);
 				break;
 			case Protocol:
