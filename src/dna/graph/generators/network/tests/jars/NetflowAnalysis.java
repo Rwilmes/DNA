@@ -297,17 +297,26 @@ public class NetflowAnalysis {
 			buff = "\t\t";
 
 			buff += "\t\tEW: ";
-			for (int j = 0; j < edgeWeights[i].length; j++) {
-				if (j > 0)
-					buff += ", ";
-				buff += edgeWeights[i][j].toString();
+			if (edgeWeights.length > i) {
+				for (int j = 0; j < edgeWeights[i].length; j++) {
+					if (j > 0)
+						buff += ", ";
+					buff += edgeWeights[i][j].toString();
+				}
+			} else {
+				buff += "None";
 			}
 			Log.info(buff);
+
 			buff = "\t\tNW: ";
-			for (int j = 0; j < nodeWeights[i].length; j++) {
-				if (j > 0)
-					buff += ", ";
-				buff += nodeWeights[i][j].toString();
+			if (nodeWeights.length > i) {
+				for (int j = 0; j < nodeWeights[i].length; j++) {
+					if (j > 0)
+						buff += ", ";
+					buff += nodeWeights[i][j].toString();
+				}
+			} else {
+				buff += "None";
 			}
 			Log.info(buff);
 		}
