@@ -31,26 +31,33 @@ import dna.util.network.netflow.NetflowEventReader;
 
 public class NetflowBatch extends NetworkBatch2 {
 
-	protected NetflowEventField source;
-	protected NetflowEventField destination;
-	protected NetflowEventField[] intermediateNodes;
-	protected NetflowEventField[] nodeWeights;
-	protected NetflowEventField[] forwardEdgeWeights;
-	protected NetflowEventField[] backwardEdgeWeights;
+	// protected NetflowEventField source;
+	// protected NetflowEventField destination;
+	// protected NetflowEventField[] intermediateNodes;
 
-	protected NetflowEventField[] forward;
-	protected NetflowEventField[] backward;
+	protected NetflowEventField[][] edges;
+	protected NetflowDirection[] edgeDirections;
+	protected NetflowEventField[][] edgeWeights;
+	protected NetflowEventField[][] nodeWeights;
+
+	// protected NetflowEventField[] forwardEdgeWeights;
+	// protected NetflowEventField[] backwardEdgeWeights;
+
+	// protected NetflowEventField[] forward;
+	// protected NetflowEventField[] backward;
 
 	public NetflowBatch(String name, NetflowEventReader reader,
-			NetflowEventField[] forward, NetflowEventField[] backward,
-			NetflowEventField[] forwardEdgeWeights,
-			NetflowEventField[] backwardEdgeWeights,
-			NetflowEventField[] nodeWeights) throws FileNotFoundException {
+			NetflowEventField[][] edges, NetflowDirection[] edgeDirections,
+			NetflowEventField[][] edgeWeights, NetflowEventField[][] nodeWeights)
+			throws FileNotFoundException {
 		super(name, reader, reader.getBatchIntervalSeconds());
-		this.forward = forward;
-		this.backward = backward;
-		this.forwardEdgeWeights = forwardEdgeWeights;
-		this.backwardEdgeWeights = backwardEdgeWeights;
+		this.edges = edges;
+		this.edgeDirections = edgeDirections;
+		this.edgeWeights = edgeWeights;
+		// this.forward = forward;
+		// this.backward = backward;
+		// this.forwardEdgeWeights = forwardEdgeWeights;
+		// this.backwardEdgeWeights = backwardEdgeWeights;
 		this.nodeWeights = nodeWeights;
 		this.map = new HashMap<String, Integer>();
 		this.intermediateMap = new HashMap<String, Integer>();
@@ -82,22 +89,35 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			NetflowDirection direction = event.getDirection();
 
-			switch (direction) {
-			case backward:
-				processEvents(event, this.backward, this.backwardEdgeWeights,
-						addedNodes, addedEdges, b, g);
-				break;
-			case bidirectional:
-				processEvents(event, this.forward, this.forwardEdgeWeights,
-						addedNodes, addedEdges, b, g);
-				processEvents(event, this.backward, this.backwardEdgeWeights,
-						addedNodes, addedEdges, b, g);
-				break;
-			case forward:
-				processEvents(event, this.forward, this.forwardEdgeWeights,
-						addedNodes, addedEdges, b, g);
-				break;
+			for (int i = 0; i < this.edgeDirections.length; i++) {
+				NetflowDirection edgeDir = this.edgeDirections[i];
+
+				if (edgeDir.equals(direction)
+						|| direction.equals(NetflowDirection.bidirectional)) {
+					processEvents(event, this.edges[i], this.edgeWeights[i],
+							addedNodes, addedEdges, b, g);
+				}
 			}
+			//
+			// switch (direction) {
+			// case backward:
+			// processBackward(event, addedNodes, addedEdges, b, g);
+			// // processEvents(event, this.backward, this.backwardEdgeWeights,
+			// // addedNodes, addedEdges, b, g);
+			// break;
+			// case bidirectional:
+			// processBidirectional(event, addedNodes, addedEdges, b, g);
+			// // processEvents(event, this.forward, this.forwardEdgeWeights,
+			// // addedNodes, addedEdges, b, g);
+			// // processEvents(event, this.backward, this.backwardEdgeWeights,
+			// // addedNodes, addedEdges, b, g);
+			// break;
+			// case forward:
+			// processForward(event, addedNodes, addedEdges, b, g);
+			// // processEvents(event, this.forward, this.forwardEdgeWeights,
+			// // addedNodes, addedEdges, b, g);
+			// break;
+			// }
 		}
 
 		for (Integer nodeId : addedNodes.keySet()) {

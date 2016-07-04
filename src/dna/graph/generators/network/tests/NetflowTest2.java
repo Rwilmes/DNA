@@ -32,6 +32,7 @@ import dna.updates.generators.BatchGenerator;
 import dna.util.Config;
 import dna.util.Log;
 import dna.util.network.netflow.DarpaNetflowReader;
+import dna.util.network.netflow.NetflowEvent.NetflowDirection;
 import dna.util.network.netflow.NetflowEvent.NetflowEventField;
 import dna.util.network.netflow.NetflowEventReader;
 import dna.visualization.graph.GraphVisualization;
@@ -60,7 +61,7 @@ public class NetflowTest2 {
 
 		String plotDir = dir + name + "_plots" + "/";
 
-		int edgeLifeTime = 30;
+		int edgeLifeTime = 3000;
 
 		boolean debug = false;
 
@@ -76,7 +77,7 @@ public class NetflowTest2 {
 
 		from = fmt.parseDateTime(dateFrom + "-" + "08:00:00");
 		from = from.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
-		to = fmt.parseDateTime(dateTo + "-" + "08:10:00");
+		to = fmt.parseDateTime(dateTo + "-" + "08:01:00");
 		to = to.plusSeconds(Config.getInt("GNUPLOT_TIMESTAMP_OFFSET"));
 
 		System.out.println(from.toString());
@@ -86,7 +87,7 @@ public class NetflowTest2 {
 				to, debug);
 
 		// SeriesData sd = SeriesData.read(dstDir, "mB", false, false);
-		plot(sd, plotDir);
+//		plot(sd, plotDir);
 	}
 
 	public static SeriesData test(String dir, String filename, String name,
@@ -118,7 +119,9 @@ public class NetflowTest2 {
 		NetflowEventField forwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToDestination };
 		NetflowEventField backwardEdgeWeights[] = new NetflowEventField[] { NetflowEventField.BytesToSrc };
 
-		NetflowEventField nodeWeights[] = new NetflowEventField[0];
+		NetflowEventField nodeWeights[][] = new NetflowEventField[0][];// {
+																		// NetflowEventField.Bytes
+																		// };
 
 		NetflowEventField[] forward = new NetflowEventField[] {
 				NetflowEventField.SrcAddress, NetflowEventField.DstPort,
@@ -126,11 +129,25 @@ public class NetflowTest2 {
 		NetflowEventField[] backward = new NetflowEventField[] {
 				NetflowEventField.DstAddress, NetflowEventField.SrcPort,
 				NetflowEventField.SrcAddress };
-//		backward = new NetflowEventField[0];
+		// backward = new NetflowEventField[0];
+
+		NetflowEventField[][] edges = new NetflowEventField[2][];
+		edges[0] = forward;
+		edges[1] = backward;
+
+		NetflowEventField[][] edgeWeights = new NetflowEventField[2][];
+		edgeWeights[0] = new NetflowEventField[] { NetflowEventField.BytesToDestination };
+		edgeWeights[1] = new NetflowEventField[] { NetflowEventField.BytesToSrc };
+
+		NetflowDirection[] edgeDirections = new NetflowDirection[] {
+				NetflowDirection.forward, NetflowDirection.backward };
 
 		// init batch generator
-		BatchGenerator bg = new NetflowBatch(name, reader, forward, backward,
-				forwardEdgeWeights, backwardEdgeWeights, nodeWeights);
+		// BatchGenerator bg = new NetflowBatch(name, reader, forward, backward,
+		// forwardEdgeWeights, backwardEdgeWeights, nodeWeights);
+
+		BatchGenerator bg = new NetflowBatch(name, reader, edges, edgeDirections, edgeWeights,
+				nodeWeights);
 
 		NetworkNodeKeyLabel.netflowBatchGenerator = (NetflowBatch) bg;
 		reader.setDebug(debug);
@@ -142,7 +159,7 @@ public class NetflowTest2 {
 
 		// init series
 		Series s = new Series(gg, bg, metrics, new Labeler[0], dstDir, name);
-
+		
 		// generate
 		SeriesData sd = s.generate(1, 100000, false, false, true, 0);
 
