@@ -87,7 +87,7 @@ public class NetflowAnalysis {
 				new IntArg("edgeLifeTime", "lifetime of an edge in seconds"),
 				new StringArrayArg(
 						"edges",
-						"edges to be added to the graph of format: NetflowEventField-NetflowEventField-...-NetflowEventField",
+						"edges to be added to the graph of format: NetflowEventField-NetflowEventField-...-NetflowEventField. Possible NetflowEventFields are: Bytes, BytesToDestination, BytesToSrc, ConnectionState, Date, Direction, DstAddress, DstPort, Duration, Flags, Label, None, numberOfNetflows, Packets, PacketsToDestination, PacketToSrc, Protocol, SrcAddress, SrcPort, Time",
 						";"),
 				new StringArrayArg(
 						"edgeDirections",
