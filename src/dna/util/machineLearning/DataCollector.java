@@ -48,6 +48,9 @@ public class DataCollector {
 				new StringArg("from", "starting timestamp"),
 				new StringArg("to", "maximum timestamp"),
 				new StringArg("output", "path of the output file"),
+				new EnumArg("label-mode",
+						"manages how the extracted features will be labeled",
+						LabelMode.values()),
 				new StringArrayArg(
 						"labels",
 						"list of labels to be included of format: <label>:<type>",
@@ -75,10 +78,16 @@ public class DataCollector {
 	protected String[] labels;
 	protected String[] metrics;
 
+	public enum LabelMode {
+		labels, timestamps
+	};
+
+	protected LabelMode labelMode;
+
 	public DataCollector(String[] seriesDirs, Integer[] runIds, String zipMode,
 			Boolean includeUnavailable, String notAvailableChar,
 			String timestampFormat, String from, String to, String outputPath,
-			String[] labels, String[] metrics) {
+			String labelMode, String[] labels, String[] metrics) {
 		this.seriesDirs = seriesDirs;
 		this.runIds = runIds;
 		this.zipMode = zipMode;
@@ -86,6 +95,7 @@ public class DataCollector {
 		this.timestampFormat = timestampFormat;
 		this.outputPath = outputPath;
 		this.notAvailableChar = notAvailableChar;
+		this.labelMode = LabelMode.valueOf(labelMode);
 		this.labels = labels;
 		this.metrics = metrics;
 
@@ -128,6 +138,8 @@ public class DataCollector {
 		// start time
 		long start = System.currentTimeMillis();
 
+		boolean times = (this.labelMode.equals(LabelMode.timestamps)) ? true
+				: false;
 		Log.infoSep();
 
 		String[] runDirs = new String[seriesDirs.length];
@@ -174,7 +186,7 @@ public class DataCollector {
 			}
 		}
 
-		String header = "Labels";
+		String header = (times) ? "Timestamp" : "Labels";
 
 		for (int i = 0; i < metricsList.length; i++) {
 			for (String s : metricsList[i]) {
@@ -192,6 +204,9 @@ public class DataCollector {
 			long timestamp = Dir.getTimestamp(batches[i]);
 
 			String line = "";
+			
+			if(times)
+				line += timestamp;
 
 			// iterate over series
 			for (int j = 0; j < seriesDirs.length; j++) {
@@ -204,36 +219,37 @@ public class DataCollector {
 				} catch (FileNotFoundException e) {
 				}
 
-				for (int k = 0; k < labels.length; k++) {
-					String label = labels[k];
+				if (!times) {
+					for (int k = 0; k < labels.length; k++) {
+						String label = labels[k];
 
-					boolean matchType = false;
-					if (label.contains(":"))
-						matchType = true;
+						boolean matchType = false;
+						if (label.contains(":"))
+							matchType = true;
 
-					boolean contained = false;
+						boolean contained = false;
 
-					LabelList labelList = batchData.getLabels();
+						LabelList labelList = batchData.getLabels();
 
-					for (Label l : labelList.getList()) {
-						String identifier = matchType ? l.getName() + ":"
-								+ l.getType() : l.getName();
-						if (identifier.equals(label))
-							contained = true;
+						for (Label l : labelList.getList()) {
+							String identifier = matchType ? l.getName() + ":"
+									+ l.getType() : l.getName();
+							if (identifier.equals(label))
+								contained = true;
+						}
+
+						if (contained) {
+							if (k == 0)
+								line += 1;
+							else
+								line += "\t" + 1;
+						} else {
+							if (k == 0)
+								line += 0;
+							else
+								line += "\t" + 0;
+						}
 					}
-
-					if (contained) {
-						if (k == 0)
-							line += 1;
-						else
-							line += "\t" + 1;
-					} else {
-						if (k == 0)
-							line += 0;
-						else
-							line += "\t" + 0;
-					}
-
 				}
 
 				ArrayList<String> metrics = metricsList[j];
