@@ -14,6 +14,7 @@ import argList.types.array.IntArrayArg;
 import argList.types.array.StringArrayArg;
 import argList.types.atomic.BooleanArg;
 import argList.types.atomic.EnumArg;
+import argList.types.atomic.IntArg;
 import argList.types.atomic.StringArg;
 import dna.io.Writer;
 import dna.io.filesystem.Dir;
@@ -51,6 +52,8 @@ public class DataCollector {
 				new EnumArg("label-mode",
 						"manages how the extracted features will be labeled",
 						LabelMode.values()),
+				new IntArg("outputOffset",
+						"offset of the output data in seconds (only applies to timestamps-mode)"),
 				new StringArrayArg(
 						"labels",
 						"list of labels to be included of format: <label>:<type>",
@@ -75,6 +78,7 @@ public class DataCollector {
 	protected DateTime to;
 	protected String outputPath;
 	protected String notAvailableChar;
+	protected Integer outputOffset;
 	protected String[] labels;
 	protected String[] metrics;
 
@@ -87,7 +91,8 @@ public class DataCollector {
 	public DataCollector(String[] seriesDirs, Integer[] runIds, String zipMode,
 			Boolean includeUnavailable, String notAvailableChar,
 			String timestampFormat, String from, String to, String outputPath,
-			String labelMode, String[] labels, String[] metrics) {
+			String labelMode, Integer outputOffset, String[] labels,
+			String[] metrics) {
 		this.seriesDirs = seriesDirs;
 		this.runIds = runIds;
 		this.zipMode = zipMode;
@@ -96,6 +101,7 @@ public class DataCollector {
 		this.outputPath = outputPath;
 		this.notAvailableChar = notAvailableChar;
 		this.labelMode = LabelMode.valueOf(labelMode);
+		this.outputOffset = outputOffset;
 		this.labels = labels;
 		this.metrics = metrics;
 
@@ -204,9 +210,9 @@ public class DataCollector {
 			long timestamp = Dir.getTimestamp(batches[i]);
 
 			String line = "";
-			
-			if(times)
-				line += timestamp;
+
+			if (times)
+				line += (timestamp + this.outputOffset);
 
 			// iterate over series
 			for (int j = 0; j < seriesDirs.length; j++) {
