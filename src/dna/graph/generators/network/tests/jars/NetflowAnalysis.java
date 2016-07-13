@@ -80,6 +80,8 @@ public class NetflowAnalysis {
 				new StringArg(
 						"descr",
 						"description/version of the generated run, will be added as suffix to the destination name"),
+				new BooleanArg("writeDistributions",
+						"if true distributions will be written to fs"),
 				new IntArg("dataOffset",
 						"offset to be added to the data timestamps in seconds"),
 				new IntArg("batchWindow",
@@ -130,6 +132,7 @@ public class NetflowAnalysis {
 	protected String dstDir;
 	protected String name;
 	protected String descr;
+	protected Boolean writeDistributions;
 
 	// modeling
 	protected int batchLengthSeconds;
@@ -156,9 +159,10 @@ public class NetflowAnalysis {
 
 	/** Constructor **/
 	public NetflowAnalysis(String srcDir, String srcFilename, String dstDir,
-			String name, String descr, Integer dataOffsetSeconds,
-			Integer batchLengthSeconds, Integer edgeLifeTimeSeconds,
-			String[] edges, String[] edgeDirections, String[] edgeWeights,
+			String name, String descr, Boolean writeDistributions,
+			Integer dataOffsetSeconds, Integer batchLengthSeconds,
+			Integer edgeLifeTimeSeconds, String[] edges,
+			String[] edgeDirections, String[] edgeWeights,
 			String[] nodeWeights, String timestampFormat, String from,
 			String to, String attackListPath, Boolean enableVis,
 			String zipMode, String[] metrics) {
@@ -173,6 +177,7 @@ public class NetflowAnalysis {
 		}
 
 		this.descr = descr;
+		this.writeDistributions = writeDistributions;
 		this.dataOffsetSeconds = dataOffsetSeconds;
 		this.batchLengthSeconds = batchLengthSeconds;
 		this.edgeLifeTimeSeconds = edgeLifeTimeSeconds;
@@ -267,6 +272,7 @@ public class NetflowAnalysis {
 		Log.info("batch window:\t" + batchLengthSeconds + "s");
 		Log.info("edgeLifeTime:\t" + edgeLifeTimeSeconds + "s");
 		Log.info("descr:\t" + descr);
+		Log.info("write dists:\t" + writeDistributions);
 		if (from != null)
 			Log.info("from:\t\t" + from.toString());
 		if (to != null)
@@ -333,17 +339,17 @@ public class NetflowAnalysis {
 		String destinationDir = dstDir + destinationName + "/";
 
 		generate(srcDir, srcFilename, destinationDir, destinationName,
-				dataOffsetSeconds, batchLengthSeconds, edgeLifeTimeSeconds,
-				from, to, attackListPath, enableVis, metrics, edges,
-				edgeDirections, edgeWeights, nodeWeights);
+				writeDistributions, dataOffsetSeconds, batchLengthSeconds,
+				edgeLifeTimeSeconds, from, to, attackListPath, enableVis,
+				metrics, edges, edgeDirections, edgeWeights, nodeWeights);
 	}
 
 	public static SeriesData generate(String srcDir, String srcFilename,
-			String dstDir, String name, int dataOffsetSeconds,
-			int batchLengthSeconds, int edgeLifeTimeSeconds, DateTime from,
-			DateTime to, String attackListPath, boolean enableVis,
-			Metric[] metrics, NetflowEventField[][] edges,
-			NetflowDirection[] edgeDirections,
+			String dstDir, String name, boolean writeDistributions,
+			int dataOffsetSeconds, int batchLengthSeconds,
+			int edgeLifeTimeSeconds, DateTime from, DateTime to,
+			String attackListPath, boolean enableVis, Metric[] metrics,
+			NetflowEventField[][] edges, NetflowDirection[] edgeDirections,
 			NetflowEventField[][] edgeWeights, NetflowEventField[][] nodeWeights)
 			throws IOException, ParseException, AggregationException,
 			MetricNotApplicableException, LabelerNotApplicableException {
@@ -354,6 +360,16 @@ public class NetflowAnalysis {
 			GraphVisualization.enable();
 		} else
 			GraphVisualization.disable();
+
+		// IO settings
+		Config.overwrite("GENERATION_WRITE_DISTRIBUTONS",
+				String.valueOf(writeDistributions));
+		Config.overwrite("GENERATION_WRITE_NVL", "false");
+		Config.overwrite("GENERATION_WRITE_NNVL", "false");
+
+		// additional values
+		Config.overwrite("GENERATE_VALUES_FROM_DISTRIBUTION", "true");
+		Config.overwrite("GENERATE_DISTRIBUTION_PERCENT_VALUES", "true");
 
 		// init reader
 		NetflowEventReader reader = new DarpaNetflowReader(srcDir, srcFilename);
