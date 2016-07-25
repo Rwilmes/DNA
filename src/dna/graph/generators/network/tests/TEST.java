@@ -428,7 +428,7 @@ public class TEST {
 
 		Log.infoSep();
 		Log.info("events between: " + start + " - " + end);
-		for (NetworkEdge e : r.getDecrementEdges(end))
+		for (NetworkEdge e : r.getDecrementEvents(end))
 			System.out.println("\t" + e.toString());
 		Log.infoSep();
 	}

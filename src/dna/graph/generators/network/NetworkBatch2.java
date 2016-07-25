@@ -46,7 +46,7 @@ public abstract class NetworkBatch2 extends BatchGenerator {
 	}
 
 	public abstract Batch craftBatch(Graph g, DateTime timestamp,
-			ArrayList<NetworkEvent> events, ArrayList<NetworkEdge> otherEvents,
+			ArrayList<NetworkEvent> events, ArrayList<UpdateEvent> otherEvents,
 			HashMap<String, Integer> edgeWeighChanges);
 
 	/** Increments the threshold by the given batchLength. **/
@@ -71,19 +71,17 @@ public abstract class NetworkBatch2 extends BatchGenerator {
 
 		// get events
 		ArrayList<NetworkEvent> events = reader.getEventsUntil(threshold);
-		ArrayList<NetworkEdge> decrementEdges = reader
-				.getDecrementEdges(threshold.getMillis());
-
-		
+		ArrayList<UpdateEvent> decrementEvents = reader
+				.getDecrementEvents(threshold.getMillis());
 
 		// if both empty -> increase threshold and call generate again
-		if (events.isEmpty() && decrementEdges.isEmpty()) {
+		if (events.isEmpty() && decrementEvents.isEmpty()) {
 			if (reader.isGenerateEmptyBatches()) {
 				incrementThreshold();
 			} else {
 				long nextEventTimestamp = reader.getNextEventTimestamp();
 				long nextDecrementTimestamp = reader
-						.getNextDecrementEdgesTimestamp();
+						.getNextDecrementEventsTimestamp();
 
 				if (nextEventTimestamp > -1 && nextDecrementTimestamp > -1) {
 					// both evens valid -> step to next timestamp
@@ -114,7 +112,7 @@ public abstract class NetworkBatch2 extends BatchGenerator {
 				finished = true;
 		}
 
-		return craftBatch(graph, threshold, events, decrementEdges, null);
+		return craftBatch(graph, threshold, events, decrementEvents, null);
 	}
 
 	@Override

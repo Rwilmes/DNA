@@ -376,7 +376,7 @@ public class M1Batch extends NetworkBatch {
 
 		// get all edges to decrement
 		ArrayList<NetworkEdge> decrementEdges = reader
-				.getDecrementEdges(lastTime);
+				.getDecrementEvents(lastTime);
 
 		// get the amount of weight-decrements per edge
 		HashMap<String, Integer> weightChangesMap = getWeightDecrementals(decrementEdges);

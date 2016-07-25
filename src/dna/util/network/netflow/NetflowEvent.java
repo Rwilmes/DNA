@@ -179,6 +179,8 @@ public class NetflowEvent extends NetworkEvent {
 			return this.srcAddress;
 		case SrcPort:
 			return this.srcPort;
+		case None:
+			return "" + 0;
 		}
 
 		return null;

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.joda.time.DateTime;
 
 import dna.graph.generators.network.NetworkEdge;
+import dna.graph.generators.network.UpdateEvent;
 import dna.io.Reader;
 
 public abstract class NetworkReader extends Reader {
@@ -20,7 +21,7 @@ public abstract class NetworkReader extends Reader {
 	public abstract ArrayList<NetworkEvent> getEventsUntil(DateTime threshold);
 
 	/** Returns all decrement events until the threshold. **/
-	public abstract ArrayList<NetworkEdge> getDecrementEdges(long threshold);
+	public abstract ArrayList<UpdateEvent> getDecrementEvents(long threshold);
 
 	/** Returns the timestamp of the next event or -1 if no event is buffered. **/
 	public abstract long getNextEventTimestamp();
@@ -29,7 +30,7 @@ public abstract class NetworkReader extends Reader {
 	 * Returns the timestamp of the next decrement-edge event or -1 if queue is
 	 * empty.
 	 **/
-	public abstract long getNextDecrementEdgesTimestamp();
+	public abstract long getNextDecrementEventsTimestamp();
 
 	/** Returns a map with the sum of all weight decrementals per edge. **/
 	public abstract HashMap<String, Integer> getWeightDecrementals(

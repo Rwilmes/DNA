@@ -11,22 +11,21 @@ import java.util.ArrayList;
  * @author Rwilmes
  * 
  */
-public class NetworkEdge {
+public class NetworkEdge extends UpdateEvent {
 
 	protected int src;
 	protected int dst;
-	protected long time;
-	protected double[] weights;
+	protected double[] edgeWeights;
 
 	public NetworkEdge(int src, int dst, long time) {
 		this(src, dst, time, new double[] { 0 });
 	}
 
-	public NetworkEdge(int src, int dst, long time, double[] weights) {
+	public NetworkEdge(int src, int dst, long time, double[] edgeWeights) {
+		super(time);
 		this.src = src;
 		this.dst = dst;
-		this.time = time;
-		this.weights = weights;
+		this.edgeWeights = edgeWeights;
 	}
 
 	public int getSrc() {
@@ -37,20 +36,12 @@ public class NetworkEdge {
 		return dst;
 	}
 
-	public long getTime() {
-		return time;
+	public double[] getEdgeWeights() {
+		return edgeWeights;
 	}
 
-	public double[] getWeights() {
-		return weights;
-	}
-
-	public void setWeights(double[] weights) {
-		this.weights = weights;
-	}
-
-	public void setTime(long t) {
-		this.time = t;
+	public void setEdgeWeights(double[] edgeWeights) {
+		this.edgeWeights = edgeWeights;
 	}
 
 	public boolean sameEdge(NetworkEdge e) {
@@ -58,7 +49,7 @@ public class NetworkEdge {
 	}
 
 	public String toString() {
-		return "NetworkEdge: " + src + "\t=>\t" + dst + "\tw=" + weights
+		return "NetworkEdge: " + src + "\t=>\t" + dst + "\tw=" + edgeWeights
 				+ "\t@\t" + time;
 	}
 

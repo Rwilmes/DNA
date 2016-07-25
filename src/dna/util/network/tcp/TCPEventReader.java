@@ -568,7 +568,7 @@ public class TCPEventReader extends NetworkReader {
 	 * Returns the timestamp of the next decrement-edge event or -1 if queue is
 	 * empty.
 	 **/
-	public long getNextDecrementEdgesTimestamp() {
+	public long getNextDecrementEventsTimestamp() {
 		if (isEventQueueEmpty())
 			return -1;
 		else
@@ -576,7 +576,7 @@ public class TCPEventReader extends NetworkReader {
 	}
 
 	/** Returns all decrement events until the threshold. **/
-	public ArrayList<NetworkEdge> getDecrementEdges(long threshold) {
+	public ArrayList<NetworkEdge> getDecrementEvents(long threshold) {
 		ArrayList<NetworkEdge> list = new ArrayList<NetworkEdge>();
 
 		boolean finished = false;

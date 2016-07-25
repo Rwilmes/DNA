@@ -79,7 +79,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 		// get events
 		ArrayList<TCPEvent> events = reader.getEventsUntil(threshold);
 		ArrayList<NetworkEdge> decrementEdges = reader
-				.getDecrementEdges(threshold.getMillis());
+				.getDecrementEvents(threshold.getMillis());
 
 		// if both empty -> increase threshold and call generate again
 		if (events.isEmpty() && decrementEdges.isEmpty()) {
@@ -88,7 +88,7 @@ public abstract class NetworkBatch extends BatchGenerator {
 			} else {
 				long nextEventTimestamp = reader.getNextEventTimestamp();
 				long nextDecrementTimestamp = reader
-						.getNextDecrementEdgesTimestamp();
+						.getNextDecrementEventsTimestamp();
 
 				if (nextEventTimestamp > -1 && nextDecrementTimestamp > -1) {
 					// both evens valid -> step to next timestamp

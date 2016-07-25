@@ -10,6 +10,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import dna.graph.generators.network.NetworkEdge;
+import dna.graph.generators.network.UpdateEvent;
 import dna.util.Config;
 import dna.util.network.NetworkEventOld.NetworkEventField;
 
@@ -142,7 +143,7 @@ public class NetworkEventReader extends NetworkReader {
 	}
 
 	@Override
-	public ArrayList<NetworkEdge> getDecrementEdges(long threshold) {
+	public ArrayList<UpdateEvent> getDecrementEvents(long threshold) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -154,7 +155,7 @@ public class NetworkEventReader extends NetworkReader {
 	}
 
 	@Override
-	public long getNextDecrementEdgesTimestamp() {
+	public long getNextDecrementEventsTimestamp() {
 		// TODO Auto-generated method stub
 		return 0;
 	}

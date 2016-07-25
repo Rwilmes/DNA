@@ -25,9 +25,9 @@ import dna.graph.generators.network.tests.DatasetUtils;
 import dna.graph.generators.network.tests.DatasetUtils.TimestampFormat;
 import dna.graph.generators.network.tests.DatasetUtils.ZipMode;
 import dna.graph.generators.network.tests.Evaluation;
-import dna.graph.weights.TypedWeight;
 import dna.graph.weights.Weight.WeightSelection;
 import dna.graph.weights.intW.IntWeight;
+import dna.graph.weights.multi.NetworkMultiWeight;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.labels.labeler.darpa.DarpaAttackLabeler;
@@ -354,6 +354,7 @@ public class NetflowAnalysis {
 			throws IOException, ParseException, AggregationException,
 			MetricNotApplicableException, LabelerNotApplicableException {
 		// vis
+		Config.overwrite("GRAPH_VIS_SHOW_NODE_WEIGHTS", "true");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
 		if (enableVis) {
 			DatasetUtils.setGraphVisSettings();
@@ -386,9 +387,14 @@ public class NetflowAnalysis {
 		long timestampMillis = reader.getInitTimestamp().getMillis();
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
-		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(TypedWeight.class,
-				WeightSelection.None, IntWeight.class, WeightSelection.Zero),
-				timestampSeconds);
+
+		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(
+				NetworkMultiWeight.class, WeightSelection.None,
+				IntWeight.class, WeightSelection.Zero), timestampSeconds);
+		// GraphGenerator gg = new
+		// EmptyNetwork(GDS.directedVE(TypedWeight.class,
+		// WeightSelection.None, IntWeight.class, WeightSelection.Zero),
+		// timestampSeconds);
 
 		// init batch generator
 		BatchGenerator bg = new NetflowBatch(name, reader, edges,

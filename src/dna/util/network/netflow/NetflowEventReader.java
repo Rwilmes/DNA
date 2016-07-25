@@ -11,6 +11,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import dna.graph.generators.network.NetworkEdge;
+import dna.graph.generators.network.UpdateEvent;
 import dna.labels.labeler.darpa.EntryBasedAttackLabeler;
 import dna.util.Config;
 import dna.util.network.NetworkEvent;
@@ -43,8 +44,8 @@ public class NetflowEventReader extends NetworkReader {
 	protected EntryBasedAttackLabeler labeler;
 	protected ArrayList<String> labelsOccuredInCurrentBatch;
 
-	// edge queue
-	public LinkedList<NetworkEdge> edgeQueue = new LinkedList<NetworkEdge>();
+	// event queue
+	public LinkedList<UpdateEvent> eventQueue = new LinkedList<UpdateEvent>();
 
 	protected boolean debug;;
 
@@ -86,7 +87,7 @@ public class NetflowEventReader extends NetworkReader {
 
 		this.finished = false;
 
-		this.edgeQueue = new LinkedList<NetworkEdge>();
+		this.eventQueue = new LinkedList<UpdateEvent>();
 
 		skipToInitEvent();
 
@@ -148,7 +149,7 @@ public class NetflowEventReader extends NetworkReader {
 	 * Returns the timestamp of the next decrement-edge event or -1 if queue is
 	 * empty.
 	 **/
-	public long getNextDecrementEdgesTimestamp() {
+	public long getNextDecrementEventsTimestamp() {
 		// System.out.println("getting next decr edge timestamp");
 		// System.out.println("\tdecredges: " + this.edgeQueue.size());
 		// if(this.edgeQueue.size() > 0)
@@ -157,20 +158,20 @@ public class NetflowEventReader extends NetworkReader {
 		if (isEventQueueEmpty())
 			return -1;
 		else
-			return getFirstEdgeFromQueue().getTime();
+			return getFirstEventFromQueue().getTime();
 	}
 
 	/** Returns all decrement events until the threshold. **/
-	public ArrayList<NetworkEdge> getDecrementEdges(long threshold) {
-		ArrayList<NetworkEdge> list = new ArrayList<NetworkEdge>();
+	public ArrayList<UpdateEvent> getDecrementEvents(long threshold) {
+		ArrayList<UpdateEvent> list = new ArrayList<UpdateEvent>();
 
 		boolean finished = false;
-		while (!finished && !edgeQueue.isEmpty()) {
-			NetworkEdge e = getFirstEdgeFromQueue();
+		while (!finished && !eventQueue.isEmpty()) {
+			UpdateEvent e = getFirstEventFromQueue();
 			long t = e.getTime();
 
 			if (t <= threshold)
-				list.add(popFirstEdgeFromQueue());
+				list.add(popFirstEventFromQueue());
 			else
 				finished = true;
 		}
@@ -178,25 +179,25 @@ public class NetflowEventReader extends NetworkReader {
 		return list;
 	}
 
-	public void addEdgeToQueue(NetworkEdge e) {
+	public void addUpdateEventToQueue(UpdateEvent e) {
 		// only add events that are before maximumTimestamp
 		if (this.maximumTimestamp != null)
 			if (e.getTime() > this.maximumTimestamp.getMillis())
 				return;
 
-		edgeQueue.add(e);
+		eventQueue.add(e);
 	}
 
-	public NetworkEdge getFirstEdgeFromQueue() {
-		return edgeQueue.getFirst();
+	public UpdateEvent getFirstEventFromQueue() {
+		return eventQueue.getFirst();
 	}
 
-	public NetworkEdge popFirstEdgeFromQueue() {
-		return edgeQueue.removeFirst();
+	public UpdateEvent popFirstEventFromQueue() {
+		return eventQueue.removeFirst();
 	}
 
 	public boolean isEventQueueEmpty() {
-		return edgeQueue.isEmpty();
+		return eventQueue.isEmpty();
 	}
 
 	/** Returns the timestamp of the next event or -1 if no event is buffered. **/
