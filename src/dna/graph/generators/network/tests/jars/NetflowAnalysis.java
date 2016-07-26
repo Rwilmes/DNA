@@ -237,23 +237,40 @@ public class NetflowAnalysis {
 			} else if (classPath.equals("metricsDefaultPorts")) {
 				addMetricsToList(metricList,
 						NetflowAnalysis.metricsDefaultPortOnly);
-
-				// normal metric-cases
-			} else if (classPath.endsWith("_host")) {
-				metricList.add(instantiateMetric(
-						classPath.replaceAll("_host", ""), "HOST"));
-			} else if (classPath.endsWith("_port")) {
-				metricList.add(instantiateMetric(
-						classPath.replaceAll("_port", ""), "PORT"));
-			} else if (classPath.endsWith("_all")) {
-				metricList.add(instantiateMetric(
-						classPath.replaceAll("_all", ""), null));
-				metricList.add(instantiateMetric(
-						classPath.replaceAll("_all", ""), "HOST"));
-				metricList.add(instantiateMetric(
-						classPath.replaceAll("_all", ""), "PORT"));
 			} else {
-				metricList.add(instantiateMetric(classPath, null));
+				// normal metric-cases
+				double binsize = 0;
+				if (classPath.contains("_bs")) {
+
+					String[] splits = classPath.split("_");
+					binsize = Double.parseDouble(splits[splits.length - 1]
+							.replaceAll("bs", ""));
+					classPath = splits[0];
+					for (int j = 1; j < splits.length - 1; j++) {
+						classPath += "_" + splits[j];
+					}
+				}
+
+				if (classPath.endsWith("_host")) {
+					metricList
+							.add(instantiateMetric(
+									classPath.replaceAll("_host", ""), "HOST",
+									binsize));
+				} else if (classPath.endsWith("_port")) {
+					metricList
+							.add(instantiateMetric(
+									classPath.replaceAll("_port", ""), "PORT",
+									binsize));
+				} else if (classPath.endsWith("_all")) {
+					metricList.add(instantiateMetric(
+							classPath.replaceAll("_all", ""), null, binsize));
+					metricList.add(instantiateMetric(
+							classPath.replaceAll("_all", ""), "HOST", binsize));
+					metricList.add(instantiateMetric(
+							classPath.replaceAll("_all", ""), "PORT", binsize));
+				} else {
+					metricList.add(instantiateMetric(classPath, null, binsize));
+				}
 			}
 		}
 
@@ -516,22 +533,41 @@ public class NetflowAnalysis {
 	 * UTLITY & STATICS
 	 */
 	/**
-	 * Instantiates a metric by the given classPath and nodeType. nodeType may
-	 * be null to instantiate without.
+	 * Instantiates a metric by the given classPath, nodeType and binsize.
+	 * nodeType may be null to instantiate without. Binsize should be set to
+	 * zero for metrics without binsize.
 	 **/
-	public static Metric instantiateMetric(String classPath, String nodeType) {
+	public static Metric instantiateMetric(String classPath, String nodeType,
+			double binsize) {
 		Metric m = null;
+
+		System.out.println("______");
+		System.out.println(classPath);
+		System.out.println(nodeType);
+		System.out.println(binsize);
 
 		try {
 			Class<?> cl = Class.forName(classPath);
 			Constructor<?> cons;
-			if (nodeType == null) {
+			if (nodeType == null && binsize > 0) {
+				cons = cl.getConstructor(double.class);
+				m = (Metric) cons.newInstance(binsize);
+			}
+			if (nodeType == null && binsize <= 0) {
 				cons = cl.getConstructor();
 				m = (Metric) cons.newInstance();
-			} else {
+			}
+			if (nodeType != null && binsize > 0) {
+				cons = cl.getConstructor(String[].class, double.class);
+				m = (Metric) cons.newInstance(
+						(Object) new String[] { nodeType }, binsize);
+			}
+			if (nodeType != null && binsize <= 0) {
 				cons = cl.getConstructor(String[].class);
 				m = (Metric) cons
 						.newInstance((Object) new String[] { nodeType });
+			} else {
+
 			}
 		} catch (ClassNotFoundException | NoSuchMethodException
 				| SecurityException | InstantiationException
