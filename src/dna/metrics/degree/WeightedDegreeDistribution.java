@@ -41,6 +41,11 @@ public abstract class WeightedDegreeDistribution extends Metric {
 		this.binsize = 1;
 	}
 
+	public WeightedDegreeDistribution(String name, int binsize) {
+		this(name);
+		this.binsize = binsize;
+	}
+
 	public WeightedDegreeDistribution(String name, String[] nodeTypes,
 			int binsize, Parameter... p) {
 		super(name, MetricType.exact, nodeTypes, p);
