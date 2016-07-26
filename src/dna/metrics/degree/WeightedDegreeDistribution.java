@@ -28,13 +28,23 @@ public abstract class WeightedDegreeDistribution extends Metric {
 	protected BinnedIntDistr weightedDegreeBalancePos;
 	protected BinnedIntDistr weightedDegreeBalanceNeg;
 
+	protected int binsize;
+
 	public WeightedDegreeDistribution(String name, Parameter... p) {
 		super(name, MetricType.exact, p);
+		this.binsize = 1;
 	}
 
 	public WeightedDegreeDistribution(String name, String[] nodeTypes,
 			Parameter... p) {
 		super(name, MetricType.exact, nodeTypes, p);
+		this.binsize = 1;
+	}
+
+	public WeightedDegreeDistribution(String name, String[] nodeTypes,
+			int binsize, Parameter... p) {
+		super(name, MetricType.exact, nodeTypes, p);
+		this.binsize = binsize;
 	}
 
 	@Override
@@ -146,15 +156,15 @@ public abstract class WeightedDegreeDistribution extends Metric {
 	protected boolean compute() {
 		if (this.g.isDirected()) {
 			this.weightedDegree = new BinnedIntDistr(
-					"WeightedDegreeDistribution");
+					"WeightedDegreeDistribution", binsize);
 			this.weightedInDegree = new BinnedIntDistr(
-					"WeightedInDegreeDistribution");
+					"WeightedInDegreeDistribution", binsize);
 			this.weightedOutDegree = new BinnedIntDistr(
-					"WeightedOutDegreeDistribution");
+					"WeightedOutDegreeDistribution", binsize);
 			this.weightedDegreeBalancePos = new BinnedIntDistr(
-					"WeightedDegreePosBalanceDistribution");
+					"WeightedDegreePosBalanceDistribution", binsize);
 			this.weightedDegreeBalanceNeg = new BinnedIntDistr(
-					"WeightedDegreeNegBalanceDistribution");
+					"WeightedDegreeNegBalanceDistribution", binsize);
 			for (IElement n_ : this.getNodesOfAssignedTypes()) {
 				DirectedNode n = (DirectedNode) n_;
 				int inWeight = 0;
@@ -195,7 +205,7 @@ public abstract class WeightedDegreeDistribution extends Metric {
 			}
 		} else {
 			this.weightedDegree = new BinnedIntDistr(
-					"WeightedDegreeDistribution");
+					"WeightedDegreeDistribution", binsize);
 			this.weightedInDegree = null;
 			this.weightedOutDegree = null;
 			for (IElement n_ : this.getNodesOfAssignedTypes()) {

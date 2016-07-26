@@ -16,6 +16,11 @@ public class WeightedDegreeDistributionR extends WeightedDegreeDistribution
 		super("WeightedDegreeDistributionR", nodeTypes);
 	}
 
+	public WeightedDegreeDistributionR(String[] nodeTypes, double binsize) {
+		super("WeightedDegreeDistributionR-" + (int) Math.ceil(binsize),
+				nodeTypes, (int) Math.ceil(binsize));
+	}
+
 	@Override
 	public boolean recompute() {
 		return this.compute();
