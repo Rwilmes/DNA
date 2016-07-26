@@ -6,6 +6,8 @@ import dna.graph.nodes.INode;
 import dna.graph.weights.IWeightedNode;
 import dna.graph.weights.doubleW.DoubleWeight;
 import dna.graph.weights.intW.IntWeight;
+import dna.graph.weights.multi.MultiWeight;
+import dna.graph.weights.multi.NetworkMultiWeight;
 import dna.metrics.IMetric;
 import dna.series.data.distr.BinnedDoubleDistr;
 import dna.updates.batch.Batch;
@@ -34,14 +36,14 @@ public abstract class NodeWeights extends Weights {
 	public boolean isApplicable(Graph g) {
 		return g.getGraphDatastructures().isNodeType(IWeightedNode.class)
 				&& g.getGraphDatastructures().isNodeWeightType(IntWeight.class,
-						DoubleWeight.class);
+						DoubleWeight.class, NetworkMultiWeight.class);
 	}
 
 	@Override
 	public boolean isApplicable(Batch b) {
 		return b.getGraphDatastructures().isNodeType(IWeightedNode.class)
 				&& b.getGraphDatastructures().isNodeWeightType(IntWeight.class,
-						DoubleWeight.class);
+						DoubleWeight.class, NetworkMultiWeight.class);
 	}
 
 	protected double getWeight(INode n) {
