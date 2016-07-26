@@ -97,11 +97,6 @@ public class NetflowBatch extends NetworkBatch2 {
 				decrementNodes.add((NodeUpdate) ue);
 		}
 
-		System.out.println("NEW BATCH");
-		System.out.println("# events: " + decrementEvents.size());
-		System.out.println("# edge updates: " + decrementEdges.size());
-		System.out.println("node updates: " + decrementNodes.size());
-
 		for (NetworkEvent networkEvent : events) {
 			NetflowEvent event = (NetflowEvent) networkEvent;
 
@@ -175,8 +170,8 @@ public class NetflowBatch extends NetworkBatch2 {
 		}
 
 		// compute node degrees and weights and delete zero degree nodes
-		computeNodeDegreesAndWeights(nodesDegreeMap, nodesWeightMap,
-				decrementNodes, g, b);
+		computeNodeDegreesAndWeights(addedNodes, nodesDegreeMap,
+				nodesWeightMap, decrementNodes, g, b);
 
 		return b;
 	}
@@ -189,14 +184,32 @@ public class NetflowBatch extends NetworkBatch2 {
 	}
 
 	protected void computeNodeDegreesAndWeights(
+			HashMap<Integer, Node> addedNodes,
 			HashMap<Integer, Integer> nodeDegreeMap,
 			HashMap<Integer, double[]> nodesWeightMap,
 			ArrayList<NodeUpdate> decrementNodeUpdates, Graph g, Batch b) {
+		// lit of all nodes to be updated
+		ArrayList<Integer> nodes = new ArrayList<Integer>();
+
+		for (Integer index : addedNodes.keySet()) {
+			if (!nodes.contains(index))
+				nodes.add(index);
+		}
+
+		for (Integer index : nodesWeightMap.keySet()) {
+			if (!nodes.contains(index))
+				nodes.add(index);
+		}
+
+		for (NodeUpdate nu : decrementNodeUpdates) {
+			if (!nodes.contains(nu.getIndex()))
+				nodes.add(nu.getIndex());
+		}
+
 		Iterator<IElement> ite = g.getNodes().iterator();
 		while (ite.hasNext()) {
 			Node n = (Node) ite.next();
 			int index = n.getIndex();
-
 			incrementNodeDegree(nodeDegreeMap, index, n.getDegree());
 
 			int degree = nodeDegreeMap.get(index);
@@ -204,21 +217,53 @@ public class NetflowBatch extends NetworkBatch2 {
 			if (degree == 0) {
 				if (reader instanceof NetflowEventReader
 						&& ((NetflowEventReader) reader)
-								.isRemoveZeroDegreeNodes())
+								.isRemoveZeroDegreeNodes()) {
+					// remove node from graph
 					b.add(new NodeRemoval(n));
-			} else {
-				if (nodesWeightMap.containsKey(index)) {
-					IWeightedNode wn = (IWeightedNode) n;
-					NetworkMultiWeight oldW = (NetworkMultiWeight) wn
-							.getWeight();
 
+					// remove node index from considered nodes
+					if (nodes.contains(index))
+						nodes.remove(new Integer(index));
+				}
+			} else {
+				if (!nodes.contains(index))
+					nodes.add(index);
+			}
+		}
+
+		for (Integer index : nodes) {
+			boolean added = addedNodes.containsKey(index);
+			boolean weightChanged = nodesWeightMap.containsKey(index);
+			boolean updated = false;
+			for (NodeUpdate nu : decrementNodeUpdates) {
+				if (nu.getIndex() == index)
+					updated = true;
+			}
+
+			// get node from graph
+			Node n = g.getNode(index);
+
+			// if not in graph it must be newly added
+			if (n == null)
+				n = addedNodes.get(index);
+
+			IWeightedNode wn = (IWeightedNode) n;
+			NetworkMultiWeight oldW = (NetworkMultiWeight) wn.getWeight();
+
+			if (added) {
+				double[] weightChanges = nodesWeightMap.get(index);
+				addNodeWeightDecrementalToQueue((NetflowEventReader) reader,
+						new NodeUpdate(index, b.getTo() * 1000, weightChanges));
+			} else {
+				if (weightChanged) {
+					// case: node not newly added, weight changed during batch
+					// and updated
 					double[] weightChanges = nodesWeightMap.get(index);
 					addNodeWeightDecrementalToQueue(
 							(NetflowEventReader) reader, new NodeUpdate(index,
 									b.getTo() * 1000, weightChanges));
 
 					double[] decrement = new double[weightChanges.length];
-
 					for (NodeUpdate nu : decrementNodeUpdates) {
 						if (nu.getIndex() == index) {
 							decrement = nu.getUpdates();
@@ -231,31 +276,21 @@ public class NetflowBatch extends NetworkBatch2 {
 					NetworkMultiWeight newW = NetworkMultiWeight.addition(oldW,
 							weightChanges);
 
-					System.out.println(index + "\t" + oldW.toString() + "\t"
-							+ "to" + "\t" + newW.toString());
-
 					b.add(new NodeWeight(wn, newW));
 				} else {
-					IWeightedNode wn = (IWeightedNode) n;
-					NetworkMultiWeight oldW = (NetworkMultiWeight) wn
-							.getWeight();
+					if (updated) {
+						// case: node not newly added, update
+						double[] decrement = null;
 
-					double[] decrement = null;
-
-					for (NodeUpdate nu : decrementNodeUpdates) {
-						if (nu.getIndex() == index) {
-							decrement = nu.getUpdates();
-							break;
+						for (NodeUpdate nu : decrementNodeUpdates) {
+							if (nu.getIndex() == index) {
+								decrement = nu.getUpdates();
+								break;
+							}
 						}
-					}
 
-					if (decrement != null) {
 						NetworkMultiWeight newW = NetworkMultiWeight.addition(
 								oldW, decrement);
-
-						System.out.println(index + "\t" + oldW.toString()
-								+ "\t" + "to" + "\t" + newW.toString());
-
 						b.add(new NodeWeight(wn, newW));
 					}
 				}
