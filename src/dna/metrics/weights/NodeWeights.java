@@ -46,6 +46,10 @@ public abstract class NodeWeights extends Weights {
 						DoubleWeight.class, NetworkMultiWeight.class);
 	}
 
+	protected double getWeight(INode n, int index) {
+		return this.getWeight(((IWeightedNode) n).getWeight(), index);
+	}
+	
 	protected double getWeight(INode n) {
 		return this.getWeight(((IWeightedNode) n).getWeight());
 	}
