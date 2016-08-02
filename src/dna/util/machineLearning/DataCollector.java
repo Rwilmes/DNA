@@ -16,6 +16,7 @@ import argList.types.atomic.BooleanArg;
 import argList.types.atomic.EnumArg;
 import argList.types.atomic.IntArg;
 import argList.types.atomic.StringArg;
+import dna.io.Reader;
 import dna.io.Writer;
 import dna.io.filesystem.Dir;
 import dna.labels.Label;
@@ -60,7 +61,7 @@ public class DataCollector {
 						","),
 				new StringArrayArg(
 						"metrics",
-						"list of metrics to be included of format: <metric>~<value>. Use <seriesId>:<metric>~<value> to only include the metric-value pair of a specific series.",
+						"list of metrics to be included of format: <metric>~<value>. Use <seriesId>:<metric>~<value> to only include the metric-value pair of a specific series. If you want to pass the metric argument as contend of a file put it this way: F:<file-path>",
 						","));
 		DataCollector d = argList.getInstance(args);
 		d.collect();
@@ -92,7 +93,7 @@ public class DataCollector {
 			Boolean includeUnavailable, String notAvailableChar,
 			String timestampFormat, String from, String to, String outputPath,
 			String labelMode, Integer outputOffset, String[] labels,
-			String[] metrics) {
+			String[] metrics) throws IOException {
 		this.seriesDirs = seriesDirs;
 		this.runIds = runIds;
 		this.zipMode = zipMode;
@@ -103,7 +104,10 @@ public class DataCollector {
 		this.labelMode = LabelMode.valueOf(labelMode);
 		this.outputOffset = outputOffset;
 		this.labels = labels;
-		this.metrics = metrics;
+		if (metrics.length == 1 && metrics[0].startsWith("F:"))
+			this.metrics = readMetricsFromFile(metrics[0].substring(2));
+		else
+			this.metrics = metrics;
 
 		// zip mode
 		switch (this.zipMode) {
@@ -133,6 +137,21 @@ public class DataCollector {
 					Integer.parseInt("" + to.charAt(2)));
 			this.to = this.fmt.parseDateTime(dateTo + "-" + to.substring(4));
 		}
+	}
+
+	public static String[] readMetricsFromFile(String path) throws IOException {
+		Reader r = new Reader("", path);
+
+		String buff = "";
+		String line = r.readString();
+		while (line != null) {
+			buff += line;
+			line = r.readString();
+		}
+
+		r.close();
+
+		return buff.split(",");
 	}
 
 	/**
