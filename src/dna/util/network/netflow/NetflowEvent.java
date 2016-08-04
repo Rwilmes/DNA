@@ -2,6 +2,8 @@ package dna.util.network.netflow;
 
 import org.joda.time.DateTime;
 
+import dna.graph.generators.network.tests.jars.NetflowAnalysis.NodeWeightValue;
+import dna.util.Log;
 import dna.util.network.NetworkEvent;
 
 /**
@@ -185,4 +187,77 @@ public class NetflowEvent extends NetworkEvent {
 
 		return null;
 	}
+
+
+	public double getSrcNodeWeight(NodeWeightValue value,
+			NetflowDirection edgeDir) {
+		switch (value) {
+		case BytesIn:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.bytesToDestination;
+			else
+				return this.bytesToSrc;
+		case BytesOut:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.bytesToDestination;
+			else
+				return this.bytesToSrc;
+		case numberOfNetflowsIn:
+			return 1;
+		case numberOfNetflowsOut:
+			return 1;
+		case PacketsIn:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+			else
+				return this.packetsToSrc;
+		case PacketsOut:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+			else
+				return this.packetsToSrc;
+		}
+		Log.warn("getIntermediateNodeWeight problem: no matching case!");
+		return 0;
+	}
+	
+	public double getIntermediateNodeWeight(NodeWeightValue value,
+			NetflowDirection edgeDir) {
+		switch (value) {
+		case BytesIn:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.bytesToDestination;
+			else
+				return this.bytesToSrc;
+		case BytesOut:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.bytesToDestination;
+			else
+				return this.bytesToSrc;
+		case numberOfNetflowsIn:
+			return 1;
+		case numberOfNetflowsOut:
+			return 1;
+		case PacketsIn:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+			else
+				return this.packetsToSrc;
+		case PacketsOut:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+			else
+				return this.packetsToSrc;
+		}
+		Log.warn("getIntermediateNodeWeight problem: no matching case!");
+		return 0;
+	}
+	
+
+	public double getDstNodeWeight(NodeWeightValue value,
+			NetflowDirection edgeDir) {
+		return 0;
+	}
+
+	
 }

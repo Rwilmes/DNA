@@ -11,6 +11,7 @@ import org.joda.time.DateTime;
 
 import dna.graph.Graph;
 import dna.graph.IElement;
+import dna.graph.generators.network.tests.jars.NetflowAnalysis.NodeWeightValue;
 import dna.graph.generators.network.weights.NetworkWeight.ElementType;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedEdge;
@@ -44,7 +45,9 @@ public class NetflowBatch extends NetworkBatch2 {
 	protected NetflowEventField[][] edges;
 	protected NetflowDirection[] edgeDirections;
 	protected NetflowEventField[][] edgeWeights;
-	protected NetflowEventField[][] nodeWeights;
+	// protected NetflowEventField[][] nodeWeights;
+
+	protected NodeWeightValue[] nodeWeights;
 
 	// protected NetflowEventField[] forwardEdgeWeights;
 	// protected NetflowEventField[] backwardEdgeWeights;
@@ -54,7 +57,7 @@ public class NetflowBatch extends NetworkBatch2 {
 
 	public NetflowBatch(String name, NetflowEventReader reader,
 			NetflowEventField[][] edges, NetflowDirection[] edgeDirections,
-			NetflowEventField[][] edgeWeights, NetflowEventField[][] nodeWeights)
+			NetflowEventField[][] edgeWeights, NodeWeightValue[] nodeWeights)
 			throws FileNotFoundException {
 		super(name, reader, reader.getBatchIntervalSeconds());
 		this.edges = edges;
@@ -112,8 +115,8 @@ public class NetflowBatch extends NetworkBatch2 {
 				if (edgeDir.equals(direction)
 						|| direction.equals(NetflowDirection.bidirectional)) {
 					processEvents(event, this.edges[i], this.edgeWeights[i],
-							this.nodeWeights[i], addedNodes, nodesWeightMap,
-							addedEdges, b, g);
+							edgeDir, this.nodeWeights, addedNodes,
+							nodesWeightMap, addedEdges, b, g);
 				}
 			}
 			//
@@ -298,9 +301,15 @@ public class NetflowBatch extends NetworkBatch2 {
 		}
 	}
 
+	/**
+	 * This method is called for each NetflowEvent of a batch and creates the
+	 * respective edges and nodes and updates their weights in case they already
+	 * got created.
+	 **/
 	protected void processEvents(NetflowEvent event,
 			NetflowEventField[] eventFields, NetflowEventField[] edgeWeights,
-			NetflowEventField[] nodeWeights, HashMap<Integer, Node> addedNodes,
+			NetflowDirection edgeDir, NodeWeightValue[] nodeWeights,
+			HashMap<Integer, Node> addedNodes,
 			HashMap<Integer, double[]> nodeWeightMap,
 			ArrayList<NetworkEdge> addedEdges, Batch b, Graph g) {
 		if (eventFields == null || eventFields.length < 2)
@@ -327,6 +336,24 @@ public class NetflowBatch extends NetworkBatch2 {
 			int mapping1 = map(string1);
 
 			// get node weights
+
+			double[] srcNw = new double[nodeWeights.length];
+			double[] dstNw = new double[nodeWeights.length];
+
+			for (int j = 0; j < nodeWeights.length; j++) {
+				if (i == 0)
+					srcNw[j] = event.getSrcNodeWeight(nodeWeights[j], edgeDir);
+				else
+					srcNw[j] = event.getIntermediateNodeWeight(nodeWeights[j],
+							edgeDir);
+
+				if (i + 1 == eventFields.length - 1)
+					dstNw[j] = event.getDstNodeWeight(nodeWeights[j], edgeDir);
+				else
+					dstNw[j] = event.getIntermediateNodeWeight(nodeWeights[j],
+							edgeDir);
+			}
+
 			double[] nw = new double[nodeWeights.length];
 			for (int j = 0; j < nw.length; j++) {
 				nw[j] = Double.parseDouble(event.get(nodeWeights[j]));
