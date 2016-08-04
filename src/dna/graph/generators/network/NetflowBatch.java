@@ -407,7 +407,9 @@ public class NetflowBatch extends NetworkBatch2 {
 			incrementNodeDegree(nodeDegreeMap, ne.getDst());
 
 			if (reader instanceof NetflowEventReader)
-				addEdgeWeightDecrementalToQueue((NetflowEventReader) reader, ne);
+				if (ne.getEdgeWeights().length > 0)
+					addEdgeWeightDecrementalToQueue(
+							(NetflowEventReader) reader, ne);
 		} else {
 			w[0] = (DoubleWeight) e.getWeight();
 

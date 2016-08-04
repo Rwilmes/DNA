@@ -45,7 +45,7 @@ public class NetflowEventReader extends NetworkReader {
 	protected ArrayList<String> labelsOccuredInCurrentBatch;
 
 	// event queue
-	public LinkedList<UpdateEvent> eventQueue = new LinkedList<UpdateEvent>();
+	protected LinkedList<UpdateEvent> eventQueue = new LinkedList<UpdateEvent>();
 
 	protected boolean debug;;
 
