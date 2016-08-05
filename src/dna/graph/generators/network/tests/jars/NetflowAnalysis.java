@@ -66,6 +66,10 @@ public class NetflowAnalysis {
 		numberOfNetflowsIn, numberOfNetflowsOut, PacketsIn, PacketsOut, BytesIn, BytesOut
 	};
 
+	public enum EdgeWeightValue {
+		numberOfNetflows, Packets, Bytes
+	};
+
 	/*
 	 * MAIN
 	 */
@@ -101,7 +105,7 @@ public class NetflowAnalysis {
 						";"),
 				new StringArrayArg(
 						"edgeWeights",
-						"edgeWeights to be added to the graph, same format as 'edges'",
+						"edgeWeights to be added to the graph, possible values: numberOfNetflows, Packets, Bytes",
 						";"),
 				new StringArrayArg(
 						"nodeWeights",
@@ -144,7 +148,7 @@ public class NetflowAnalysis {
 
 	protected NetflowEventField[][] edges;
 	protected NetflowDirection[] edgeDirections;
-	protected NetflowEventField[][] edgeWeights;
+	protected EdgeWeightValue[] edgeWeights;
 	protected NodeWeightValue[] nodeWeights;
 
 	// timestamp
@@ -188,7 +192,7 @@ public class NetflowAnalysis {
 
 		this.edges = parseNetflowEventFields(edges);
 		this.edgeDirections = parseEdgeDirections(edgeDirections);
-		this.edgeWeights = parseNetflowEventFields(edgeWeights);
+		this.edgeWeights = parseEdgeWeightValues(edgeWeights);
 		this.nodeWeights = parseNodeWeightValues(nodeWeights);
 
 		// timestamps
@@ -321,20 +325,13 @@ public class NetflowAnalysis {
 				buff += edges[i][j].toString();
 			}
 			Log.info(buff);
-			buff = "\t\t";
-
-			buff += "\t\tEW: ";
-			if (edgeWeights.length > i) {
-				for (int j = 0; j < edgeWeights[i].length; j++) {
-					if (j > 0)
-						buff += ", ";
-					buff += edgeWeights[i][j].toString();
-				}
-			} else {
-				buff += "None";
-			}
-			Log.info(buff);
 		}
+
+		Log.info("edgeWeights:");
+		for (int i = 0; i < this.edgeWeights.length; i++) {
+			Log.info("\t" + i + "\t" + this.edgeWeights[i].toString());
+		}
+
 		Log.info("nodeWeights:");
 		for (int i = 0; i < this.nodeWeights.length; i++) {
 			Log.info("\t" + i + "\t" + this.nodeWeights[i].toString());
@@ -363,10 +360,9 @@ public class NetflowAnalysis {
 			int edgeLifeTimeSeconds, DateTime from, DateTime to,
 			String attackListPath, boolean enableVis, Metric[] metrics,
 			NetflowEventField[][] edges, NetflowDirection[] edgeDirections,
-			NetflowEventField[][] edgeWeights, NodeWeightValue[] nodeWeights)
+			EdgeWeightValue[] edgeWeights, NodeWeightValue[] nodeWeights)
 			throws IOException, ParseException, AggregationException,
 			MetricNotApplicableException, LabelerNotApplicableException {
-		enableVis = true;
 		// vis
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_WEIGHTS", "true");
 		Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
@@ -426,7 +422,7 @@ public class NetflowAnalysis {
 		Series s = new Series(gg, bg, metrics, labeler, dstDir, name);
 
 		// generate
-		SeriesData sd = s.generate(1,Integer.MAX_VALUE, false, false, true, 0);
+		SeriesData sd = s.generate(1, Integer.MAX_VALUE, false, false, true, 0);
 
 		GraphVisualization.setText("Finished");
 		Log.infoSep();
@@ -659,6 +655,14 @@ public class NetflowAnalysis {
 		}
 
 		return edges;
+	}
+
+	protected EdgeWeightValue[] parseEdgeWeightValues(String[] input) {
+		EdgeWeightValue[] edgeWeights = new EdgeWeightValue[input.length];
+		for (int i = 0; i < input.length; i++) {
+			edgeWeights[i] = EdgeWeightValue.valueOf(input[i]);
+		}
+		return edgeWeights;
 	}
 
 	protected NodeWeightValue[] parseNodeWeightValues(String[] input) {

@@ -2,8 +2,8 @@ package dna.util.network.netflow;
 
 import org.joda.time.DateTime;
 
+import dna.graph.generators.network.tests.jars.NetflowAnalysis.EdgeWeightValue;
 import dna.graph.generators.network.tests.jars.NetflowAnalysis.NodeWeightValue;
-import dna.util.Log;
 import dna.util.network.NetworkEvent;
 
 /**
@@ -188,33 +188,26 @@ public class NetflowEvent extends NetworkEvent {
 		return null;
 	}
 
-	public double getSrcNodeWeight(NodeWeightValue value,
-			NetflowDirection edgeDir) {
+	public double getEdgeWeight(EdgeWeightValue value,
+			NetflowDirection direction) {
 		switch (value) {
-		case numberOfNetflowsOut:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return 1;
-			else
-				return 1;
-		case PacketsOut:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.packetsToDestination;
-		case BytesOut:
-			if (edgeDir.equals(NetflowDirection.forward))
+		case Bytes:
+			if (direction.equals(NetflowDirection.forward))
 				return this.bytesToDestination;
 			else
 				return this.bytesToSrc;
-		case numberOfNetflowsIn:
-			if (edgeDir.equals(NetflowDirection.backward))
+		case numberOfNetflows:
+			if (this.direction.equals(NetflowDirection.backward)
+					|| this.direction.equals(direction))
 				return 1;
-		case PacketsIn:
-			if (edgeDir.equals(NetflowDirection.backward))
+		case Packets:
+			if (direction.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+			else
 				return this.packetsToSrc;
-		case BytesIn:
-			if (edgeDir.equals(NetflowDirection.backward))
-				return this.bytesToSrc;
+		default:
+			return 0;
 		}
-		return 0;
 	}
 
 	public double getSrcNodeWeight2(NodeWeightValue value,
@@ -261,63 +254,6 @@ public class NetflowEvent extends NetworkEvent {
 		default:
 			return 0;
 		}
-	}
-
-	public double getIntermediateNodeWeight(NodeWeightValue value,
-			NetflowDirection edgeDir) {
-		switch (value) {
-		case BytesIn:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.bytesToDestination;
-			else
-				return this.bytesToSrc;
-		case BytesOut:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.bytesToDestination;
-			else
-				return this.bytesToSrc;
-		case numberOfNetflowsIn:
-			return 1;
-		case numberOfNetflowsOut:
-			return 1;
-		case PacketsIn:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.packetsToDestination;
-			else
-				return this.packetsToSrc;
-		case PacketsOut:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.packetsToDestination;
-			else
-				return this.packetsToSrc;
-		}
-		Log.warn("getIntermediateNodeWeight problem: no matching case!");
-		return 0;
-	}
-
-	public double getDstNodeWeight(NodeWeightValue value,
-			NetflowDirection edgeDir) {
-		switch (value) {
-		case numberOfNetflowsIn:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return 1;
-		case PacketsIn:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.packetsToDestination;
-		case BytesIn:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.bytesToDestination;
-		case numberOfNetflowsOut:
-			if (edgeDir.equals(NetflowDirection.backward))
-				return 1;
-		case PacketsOut:
-			if (edgeDir.equals(NetflowDirection.backward))
-				return this.packetsToSrc;
-		case BytesOut:
-			if (edgeDir.equals(NetflowDirection.backward))
-				return this.bytesToSrc;
-		}
-		return 0;
 	}
 
 }

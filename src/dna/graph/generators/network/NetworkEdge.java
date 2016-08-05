@@ -17,10 +17,6 @@ public class NetworkEdge extends UpdateEvent {
 	protected int dst;
 	protected double[] edgeWeights;
 
-	public NetworkEdge(int src, int dst, long time) {
-		this(src, dst, time, new double[] { 0 });
-	}
-
 	public NetworkEdge(int src, int dst, long time, double[] edgeWeights) {
 		super(time);
 		this.src = src;
@@ -66,5 +62,9 @@ public class NetworkEdge extends UpdateEvent {
 		}
 
 		return added;
+	}
+
+	public boolean isZero() {
+		return (this.edgeWeights[0] == 0);
 	}
 }

@@ -11,12 +11,13 @@ import org.joda.time.DateTime;
 
 import dna.graph.Graph;
 import dna.graph.IElement;
+import dna.graph.generators.network.tests.jars.NetflowAnalysis.EdgeWeightValue;
 import dna.graph.generators.network.tests.jars.NetflowAnalysis.NodeWeightValue;
 import dna.graph.generators.network.weights.NetworkWeight.ElementType;
 import dna.graph.nodes.Node;
 import dna.graph.weights.IWeightedEdge;
 import dna.graph.weights.IWeightedNode;
-import dna.graph.weights.doubleW.DoubleWeight;
+import dna.graph.weights.multi.NetworkEdgeWeight;
 import dna.graph.weights.multi.NetworkNodeWeight;
 import dna.updates.batch.Batch;
 import dna.updates.update.EdgeAddition;
@@ -39,14 +40,14 @@ public class NetflowBatch extends NetworkBatch2 {
 
 	protected NetflowEventField[][] edges;
 	protected NetflowDirection[] edgeDirections;
-	protected NetflowEventField[][] edgeWeights;
+	protected EdgeWeightValue[] edgeWeights;
 	protected NodeWeightValue[] nodeWeights;
 
 	protected boolean substituteMissingPortsAsProtocols = false;
 
 	public NetflowBatch(String name, NetflowEventReader reader,
 			NetflowEventField[][] edges, NetflowDirection[] edgeDirections,
-			NetflowEventField[][] edgeWeights, NodeWeightValue[] nodeWeights)
+			EdgeWeightValue[] edgeWeights, NodeWeightValue[] nodeWeights)
 			throws FileNotFoundException {
 		this(name, reader, edges, edgeDirections, edgeWeights, nodeWeights,
 				true);
@@ -54,7 +55,7 @@ public class NetflowBatch extends NetworkBatch2 {
 
 	public NetflowBatch(String name, NetflowEventReader reader,
 			NetflowEventField[][] edges, NetflowDirection[] edgeDirections,
-			NetflowEventField[][] edgeWeights, NodeWeightValue[] nodeWeights,
+			EdgeWeightValue[] edgeWeights, NodeWeightValue[] nodeWeights,
 			boolean substituteMissingPortsAsProtocols)
 			throws FileNotFoundException {
 		super(name, reader, reader.getBatchIntervalSeconds());
@@ -108,7 +109,7 @@ public class NetflowBatch extends NetworkBatch2 {
 
 				if (edgeDir.equals(direction)
 						|| direction.equals(NetflowDirection.bidirectional)) {
-					processEvents(event, this.edges[i], this.edgeWeights[i],
+					processEvents(event, this.edges[i], this.edgeWeights,
 							edgeDir, this.nodeWeights, addedNodes,
 							nodesWeightMap, addedEdges, b, g);
 				}
@@ -130,12 +131,12 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			if (!present)
 				addedEdges.add(new NetworkEdge(dne.getSrc(), dne.getDst(), 0,
-						new double[0]));
+						new double[this.edgeWeights.length]));
 		}
 
 		for (NetworkEdge ne : addedEdges) {
 			NetworkEdge decrementNe = new NetworkEdge(ne.getSrc(), ne.getDst(),
-					0, new double[0]);
+					0, new double[this.edgeWeights.length]);
 			for (NetworkEdge dne : decrementEdges) {
 				if (ne.getSrc() == dne.getSrc() && ne.getDst() == dne.getDst()) {
 					decrementNe = dne;
@@ -275,7 +276,7 @@ public class NetflowBatch extends NetworkBatch2 {
 	 * got created.
 	 **/
 	protected void processEvents(NetflowEvent event,
-			NetflowEventField[] eventFields, NetflowEventField[] edgeWeights,
+			NetflowEventField[] eventFields, EdgeWeightValue[] edgeWeights,
 			NetflowDirection edgeDir, NodeWeightValue[] nodeWeights,
 			HashMap<Integer, Node> addedNodes,
 			HashMap<Integer, double[]> nodeWeightMap,
@@ -327,9 +328,8 @@ public class NetflowBatch extends NetworkBatch2 {
 
 			// get edge weights
 			double[] ew = new double[edgeWeights.length];
-			for (int j = 0; j < ew.length; j++) {
-				ew[j] = Double.parseDouble(event.get(edgeWeights[j]));
-			}
+			for (int j = 0; j < ew.length; j++)
+				ew[j] = event.getEdgeWeight(edgeWeights[j], edgeDir);
 
 			// add edge node i --> node i+1
 			addEdge(addedEdges, mapping0, mapping1, b.getTo() * 1000, ew);
@@ -349,55 +349,41 @@ public class NetflowBatch extends NetworkBatch2 {
 
 		IWeightedEdge e = (IWeightedEdge) g.getEdge(srcNode, dstNode);
 
-		DoubleWeight[] w = new DoubleWeight[Math.max(
-				ne.getEdgeWeights().length, dne.getEdgeWeights().length)];
-		for (int i = 0; i < w.length; i++) {
-			double neWeight = (i < ne.getEdgeWeights().length) ? ne
-					.getEdgeWeights()[i] : 0;
-			double dneWeight = (i < dne.getEdgeWeights().length) ? dne
-					.getEdgeWeights()[i] : 0;
+		// check if weight changed
+		boolean weightChange = !ne.isZero();
+		boolean decrement = !dne.isZero();
 
-			w[i] = new DoubleWeight(neWeight + dneWeight);
-		}
+		if (reader instanceof NetflowEventReader && weightChange)
+			addEdgeWeightDecrementalToQueue((NetflowEventReader) reader, ne);
 
 		// check if edge exists, if not create new edge instance
 		if (e == null) {
 			e = (IWeightedEdge) g.getGraphDatastructures().newEdgeInstance(
 					srcNode, dstNode);
-			e.setWeight(w[0]);
+
+			e.setWeight(new NetworkEdgeWeight(addition(ne.getEdgeWeights(),
+					dne.getEdgeWeights())));
 			b.add(new EdgeAddition(e));
 			incrementNodeDegree(nodeDegreeMap, ne.getSrc());
 			incrementNodeDegree(nodeDegreeMap, ne.getDst());
-
-			if (reader instanceof NetflowEventReader)
-				if (ne.getEdgeWeights().length > 0)
-					addEdgeWeightDecrementalToQueue(
-							(NetflowEventReader) reader, ne);
 		} else {
-			w[0] = (DoubleWeight) e.getWeight();
+			// edge exists --> update weights and degrees
+			NetworkEdgeWeight wOld = (NetworkEdgeWeight) ((IWeightedEdge) e)
+					.getWeight();
+			double[] weightsNew = addition(wOld.getWeights(),
+					ne.getEdgeWeights());
+			if (decrement)
+				weightsNew = addition(weightsNew, dne.getEdgeWeights());
 
-			DoubleWeight[] wNew = new DoubleWeight[Math.max(
-					ne.getEdgeWeights().length, dne.getEdgeWeights().length)];
-			for (int i = 0; i < wNew.length; i++) {
-				double neWeight = (i < ne.getEdgeWeights().length) ? ne
-						.getEdgeWeights()[i] : 0;
-				double dneWeight = (i < dne.getEdgeWeights().length) ? dne
-						.getEdgeWeights()[i] : 0;
+			NetworkEdgeWeight wNew = new NetworkEdgeWeight(weightsNew);
 
-				wNew[i] = new DoubleWeight(w[i].getWeight() + neWeight
-						+ dneWeight);
-			}
-
-			if (wNew[0].getWeight() == 0) {
+			if (wNew.getWeight(0) == 0) {
 				b.add(new EdgeRemoval(e));
 				decrementNodeDegree(nodeDegreeMap, ne.getSrc());
 				decrementNodeDegree(nodeDegreeMap, ne.getDst());
 			} else {
-				b.add(new EdgeWeight(e, wNew[0]));
+				b.add(new EdgeWeight(e, wNew));
 			}
-
-			if (ne.getEdgeWeights().length > 0 && ne.getEdgeWeights()[0] > 0)
-				addEdgeWeightDecrementalToQueue((NetflowEventReader) reader, ne);
 		}
 	}
 
@@ -452,10 +438,7 @@ public class NetflowBatch extends NetworkBatch2 {
 				alreadyAdded = true;
 
 				// compute new edge weights
-				double[] edgeWeightsNew = ne.getEdgeWeights();
-				for (int i = 0; i < edgeWeightsNew.length; i++)
-					edgeWeightsNew[i] += edgeWeights[i];
-				ne.setEdgeWeights(edgeWeightsNew);
+				ne.setEdgeWeights(addition(edgeWeights, ne.getEdgeWeights()));
 			}
 		}
 
