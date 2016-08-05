@@ -6,6 +6,7 @@ import dna.graph.edges.IEdge;
 import dna.graph.weights.IWeightedEdge;
 import dna.graph.weights.doubleW.DoubleWeight;
 import dna.graph.weights.intW.IntWeight;
+import dna.graph.weights.multi.NetworkEdgeWeight;
 import dna.metrics.IMetric;
 import dna.series.data.distr.BinnedDoubleDistr;
 import dna.updates.batch.Batch;
@@ -34,14 +35,14 @@ public abstract class EdgeWeights extends Weights {
 	public boolean isApplicable(Graph g) {
 		return g.getGraphDatastructures().isEdgeType(IWeightedEdge.class)
 				&& g.getGraphDatastructures().isEdgeWeightType(IntWeight.class,
-						DoubleWeight.class);
+						DoubleWeight.class, NetworkEdgeWeight.class);
 	}
 
 	@Override
 	public boolean isApplicable(Batch b) {
 		return b.getGraphDatastructures().isEdgeType(IWeightedEdge.class)
 				&& b.getGraphDatastructures().isEdgeWeightType(IntWeight.class,
-						DoubleWeight.class);
+						DoubleWeight.class, NetworkEdgeWeight.class);
 	}
 
 	protected double getWeight(IEdge e, int index) {

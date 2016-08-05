@@ -26,8 +26,8 @@ import dna.graph.generators.network.tests.DatasetUtils.TimestampFormat;
 import dna.graph.generators.network.tests.DatasetUtils.ZipMode;
 import dna.graph.generators.network.tests.Evaluation;
 import dna.graph.weights.Weight.WeightSelection;
-import dna.graph.weights.intW.IntWeight;
-import dna.graph.weights.multi.NetworkMultiWeight;
+import dna.graph.weights.multi.NetworkEdgeWeight;
+import dna.graph.weights.multi.NetworkNodeWeight;
 import dna.labels.labeler.Labeler;
 import dna.labels.labeler.LabelerNotApplicableException;
 import dna.labels.labeler.darpa.DarpaAttackLabeler;
@@ -248,8 +248,9 @@ public class NetflowAnalysis {
 			} else {
 				// normal metric-cases
 				double binsize = 0;
-				if (classPath.contains("_bs")) {
+				int index = -1;
 
+				if (classPath.contains("_bs")) {
 					String[] splits = classPath.split("_");
 					binsize = Double.parseDouble(splits[splits.length - 1]
 							.replaceAll("bs", ""));
@@ -259,25 +260,37 @@ public class NetflowAnalysis {
 					}
 				}
 
+				if (classPath.contains("_i")) {
+					String[] splits = classPath.split("_");
+					index = Integer.parseInt(splits[splits.length - 1]
+							.replaceAll("i", ""));
+					classPath = splits[0];
+					for (int j = 1; j < splits.length - 1; j++) {
+						classPath += "_" + splits[j];
+					}
+				}
+
 				if (classPath.endsWith("_host")) {
-					metricList
-							.add(instantiateMetric(
-									classPath.replaceAll("_host", ""), "HOST",
-									binsize));
+					metricList.add(instantiateMetric(
+							classPath.replaceAll("_host", ""), "HOST", binsize,
+							index));
 				} else if (classPath.endsWith("_port")) {
-					metricList
-							.add(instantiateMetric(
-									classPath.replaceAll("_port", ""), "PORT",
-									binsize));
+					metricList.add(instantiateMetric(
+							classPath.replaceAll("_port", ""), "PORT", binsize,
+							index));
 				} else if (classPath.endsWith("_all")) {
 					metricList.add(instantiateMetric(
-							classPath.replaceAll("_all", ""), null, binsize));
+							classPath.replaceAll("_all", ""), null, binsize,
+							index));
 					metricList.add(instantiateMetric(
-							classPath.replaceAll("_all", ""), "HOST", binsize));
+							classPath.replaceAll("_all", ""), "HOST", binsize,
+							index));
 					metricList.add(instantiateMetric(
-							classPath.replaceAll("_all", ""), "PORT", binsize));
+							classPath.replaceAll("_all", ""), "PORT", binsize,
+							index));
 				} else {
-					metricList.add(instantiateMetric(classPath, null, binsize));
+					metricList.add(instantiateMetric(classPath, null, binsize,
+							index));
 				}
 			}
 		}
@@ -342,16 +355,21 @@ public class NetflowAnalysis {
 			Log.info("\t" + m.getName());
 		Log.infoSep();
 
+		// limit extra value generation
+		Config.overwrite("EXTRA_VALUE_DISTRIBUTION_PERCENT",
+				"99, 98, 97, 96, 95, 90, 85, 80, 70");
+
 		String destinationName = name;
 		if (this.descr != null && !this.descr.equals("null"))
 			destinationName += "_" + this.descr;
 
 		String destinationDir = dstDir + destinationName + "/";
 
-		generate(srcDir, srcFilename, destinationDir, destinationName,
-				writeDistributions, dataOffsetSeconds, batchLengthSeconds,
-				edgeLifeTimeSeconds, from, to, attackListPath, enableVis,
-				metrics, edges, edgeDirections, edgeWeights, nodeWeights);
+		SeriesData sd = generate(srcDir, srcFilename, destinationDir,
+				destinationName, writeDistributions, dataOffsetSeconds,
+				batchLengthSeconds, edgeLifeTimeSeconds, from, to,
+				attackListPath, enableVis, metrics, edges, edgeDirections,
+				edgeWeights, nodeWeights);
 	}
 
 	public static SeriesData generate(String srcDir, String srcFilename,
@@ -399,8 +417,9 @@ public class NetflowAnalysis {
 				.toSeconds(timestampMillis);
 
 		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(
-				NetworkMultiWeight.class, WeightSelection.None,
-				IntWeight.class, WeightSelection.Zero), timestampSeconds);
+				NetworkNodeWeight.class, WeightSelection.None,
+				NetworkEdgeWeight.class, WeightSelection.None),
+				timestampSeconds);
 		// GraphGenerator gg = new
 		// EmptyNetwork(GDS.directedVE(TypedWeight.class,
 		// WeightSelection.None, IntWeight.class, WeightSelection.Zero),
@@ -430,98 +449,6 @@ public class NetflowAnalysis {
 		return sd;
 	}
 
-	/** Model A generation method. **/
-	// public static SeriesData generate2(String srcDir, String srcFilename,
-	// DatasetType datasetType, ModelType modelType,
-	// String attackListPath, int batchLengthSeconds,
-	// long edgeLifeTimeSeconds, DateTime from, DateTime to, String descr,
-	// int dataOffset, boolean enableVis, Metric[] metrics)
-	// throws IOException, ParseException, AggregationException,
-	// MetricNotApplicableException, LabelerNotApplicableException {
-	// int maxBatches = 1000000;
-	//
-	// // vis
-	// Config.overwrite("GRAPH_VIS_SHOW_NODE_INDEX", "true");
-	// if (enableVis) {
-	// DatasetUtils.setGraphVisSettings();
-	// GraphVisualization.enable();
-	// } else
-	// GraphVisualization.disable();
-	//
-	// // set offset
-	// TCPEventReader.timestampOffset = dataOffset;
-	// TCPEventReader reader = null;
-	//
-	// // init labeler
-	// Labeler[] labeler = new Labeler[0];
-	//
-	// switch (datasetType) {
-	// case netflow:
-	// if (attackListPath != null && !attackListPath.equals("null"))
-	// labeler = new Labeler[] { new DarpaAttackLabeler(
-	// attackListPath, "") };
-	// reader = new NetFlowReader2(srcDir, srcFilename);
-	// break;
-	// case packet:
-	// if (attackListPath != null && !attackListPath.equals("null"))
-	// labeler = new Labeler[] { new DarpaAttackLabeler(
-	// attackListPath, "") };
-	// reader = new TCPPacketReader(srcDir, srcFilename, null);
-	// break;
-	// case session:
-	// reader = new DefaultTCPEventReader(srcDir, srcFilename);
-	// EntryBasedAttackLabeler ebal = new EntryBasedAttackLabeler();
-	// labeler = new Labeler[] { ebal };
-	// reader.setDarpaLabeler(ebal);
-	// break;
-	// case botnet:
-	// reader = new NetFlowReader(srcDir, srcFilename, null);
-	// EntryBasedAttackLabeler ebal2 = new EntryBasedAttackLabeler();
-	// labeler = new Labeler[] { ebal2 };
-	// reader.setDarpaLabeler(ebal2);
-	// break;
-	// }
-	//
-	// // additional reader settings
-	// reader.setBatchInterval(batchLengthSeconds);
-	// reader.setEdgeLifeTime(edgeLifeTimeSeconds * 1000);
-	// reader.setRemoveInactiveEdges(true);
-	// reader.setRemoveZeroDegreeNodes(true);
-	//
-	// // if (from != null)
-	// // reader.setMinimumTimestamp(from);
-	// // if (to != null)
-	// // reader.setMaximumTimestamp(to);
-	//
-	// // init graph generator
-	// long timestampMillis = reader.getInitTimestamp().getMillis();
-	// long timestampSeconds = TimeUnit.MILLISECONDS
-	// .toSeconds(timestampMillis);
-	// GraphGenerator gg = new EmptyNetwork(GDS.directedVE(TypedWeight.class,
-	// WeightSelection.None, IntWeight.class, WeightSelection.Zero),
-	// timestampSeconds);
-	//
-	// // init batch generator
-	// BatchGenerator bg = null;
-	//
-	// switch (modelType) {
-	// case modelA:
-	// bg = new M1Batch(reader);
-	// break;
-	// }
-	//
-	// // init series
-	// Series s = new Series(gg, bg, metrics, labeler, srcDir
-	// + DatasetUtils.getName(batchLengthSeconds, edgeLifeTimeSeconds,
-	// descr) + "/", "s1");
-	//
-	// // generate
-	// SeriesData sd = s.generate(1, maxBatches, false);
-	// GraphVisualization.setText("Finished generation");
-	// Log.infoSep();
-	// return sd;
-	// }
-
 	/*
 	 * UTLITY & STATICS
 	 */
@@ -531,34 +458,52 @@ public class NetflowAnalysis {
 	 * zero for metrics without binsize.
 	 **/
 	public static Metric instantiateMetric(String classPath, String nodeType,
-			double binsize) {
+			double binsize, int index) {
 		Metric m = null;
-
-		System.out.println("______");
-		System.out.println(classPath);
-		System.out.println(nodeType);
-		System.out.println(binsize);
+//
+//		System.out.println("______");
+//		System.out.println(classPath);
+//		System.out.println(nodeType);
+//		System.out.println(binsize);
+//		System.out.println(index);
 
 		try {
 			Class<?> cl = Class.forName(classPath);
 			Constructor<?> cons;
-			if (nodeType == null && binsize > 0) {
+			if (nodeType == null && binsize > 0 && index >= 0) {
+				cons = cl.getConstructor(int.class, double.class);
+				m = (Metric) cons.newInstance(index, binsize);
+			}
+			if (nodeType == null && binsize > 0 && index < 0) {
 				cons = cl.getConstructor(double.class);
 				m = (Metric) cons.newInstance(binsize);
 			}
-			if (nodeType == null && binsize <= 0) {
+			if (nodeType == null && binsize <= 0 && index >= 0) {
+				cons = cl.getConstructor(int.class);
+				m = (Metric) cons.newInstance(index);
+			}
+			if (nodeType == null && binsize <= 0 && index < 0) {
 				cons = cl.getConstructor();
 				m = (Metric) cons.newInstance();
 			}
-			if (nodeType != null && binsize > 0) {
+			if (nodeType != null && binsize > 0 && index >= 0) {
+				cons = cl.getConstructor(String[].class, int.class,
+						double.class);
+				m = (Metric) cons.newInstance(
+						(Object) new String[] { nodeType }, index, binsize);
+			}
+			if (nodeType != null && binsize > 0 && index < 0) {
 				cons = cl.getConstructor(String[].class, double.class);
 				m = (Metric) cons.newInstance(
 						(Object) new String[] { nodeType }, binsize);
 			}
-			if (nodeType != null && binsize <= 0) {
+			if (nodeType != null && binsize <= 0 && index >= 0) {
+				cons = cl.getConstructor(String[].class, int.class);
+				m = (Metric) cons.newInstance(
+						(Object) new String[] { nodeType }, index);
+			}
+			if (nodeType != null && binsize <= 0 && index < 0) {
 				cons = cl.getConstructor(String[].class);
-				m = (Metric) cons
-						.newInstance((Object) new String[] { nodeType });
 			} else {
 
 			}

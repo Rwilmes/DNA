@@ -29,4 +29,8 @@ public class NetworkEdgeWeight extends Weight {
 			buff += ", " + this.weights[i];
 		return buff;
 	}
+
+	public NetworkEdgeWeight(WeightSelection ws) {
+		this(new double[0]);
+	}
 }

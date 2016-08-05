@@ -19,7 +19,7 @@ public class EdgeWeightsMultiU extends EdgeWeights implements IBeforeEA,
 	protected String name;
 
 	public EdgeWeightsMultiU(int index, double binSize) {
-		this("EdgeWeightsU-" + index, index, binSize);
+		this("EdgeWeightsU-" + index + "-" + binSize, index, binSize);
 	}
 
 	public EdgeWeightsMultiU(String name, int index, double binSize) {

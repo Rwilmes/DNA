@@ -62,9 +62,9 @@ public abstract class Weights extends Metric {
 
 	protected double getWeight(Weight w, int index) {
 		if (w instanceof NetworkEdgeWeight) {
-			return ((NetworkEdgeWeight) w).getWeight(index).getWeight();
+			return ((NetworkEdgeWeight) w).getWeight(index);
 		} else if (w instanceof NetworkNodeWeight) {
-			return ((NetworkNodeWeight) w).getWeight(index).getWeight();
+			return ((NetworkNodeWeight) w).getWeight(index);
 		} else {
 			return Double.NaN;
 		}

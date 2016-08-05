@@ -14,7 +14,7 @@ public class NodeWeightsMultiU extends NodeWeights implements IBeforeNA,
 	protected String name;
 
 	public NodeWeightsMultiU(int index, double binSize) {
-		this("NodeWeightsU-" + index, index, binSize);
+		this("NodeWeightsU-" + index + "-" + binSize, index, binSize);
 	}
 
 	public NodeWeightsMultiU(String name, int index, double binSize) {

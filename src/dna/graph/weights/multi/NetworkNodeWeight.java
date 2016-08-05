@@ -27,4 +27,8 @@ public class NetworkNodeWeight extends TypedWeight {
 		return buff;
 	}
 
+	public NetworkNodeWeight(WeightSelection ws) {
+		this("unknown", new double[0]);
+	}
+
 }
