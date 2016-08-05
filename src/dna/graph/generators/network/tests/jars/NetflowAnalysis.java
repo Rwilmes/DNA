@@ -426,7 +426,7 @@ public class NetflowAnalysis {
 		Series s = new Series(gg, bg, metrics, labeler, dstDir, name);
 
 		// generate
-		SeriesData sd = s.generate(1, 10, false, false, true, 0);
+		SeriesData sd = s.generate(1,Integer.MAX_VALUE, false, false, true, 0);
 
 		GraphVisualization.setText("Finished");
 		Log.infoSep();
@@ -680,6 +680,25 @@ public class NetflowAnalysis {
 		return directions;
 	}
 
+	protected String map(NodeWeightValue key) {
+		switch (key) {
+		case BytesIn:
+			return "bi";
+		case BytesOut:
+			return "bo";
+		case numberOfNetflowsIn:
+			return "fi";
+		case numberOfNetflowsOut:
+			return "fo";
+		case PacketsIn:
+			return "pi";
+		case PacketsOut:
+			return "po";
+		default:
+			return "unknown";
+		}
+	}
+
 	protected String map(NetflowEventField key) {
 		switch (key) {
 		case Bytes:
@@ -773,7 +792,7 @@ public class NetflowAnalysis {
 				if (nodeWeights[i] != null && !nodeWeights[i].equals("null")) {
 					if (i > 0)
 						name += ".";
-					name += map(NetflowEventField.valueOf(nodeWeights[i]));
+					name += map(NodeWeightValue.valueOf(nodeWeights[i]));
 				}
 			}
 		}

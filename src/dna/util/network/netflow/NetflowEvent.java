@@ -188,39 +188,81 @@ public class NetflowEvent extends NetworkEvent {
 		return null;
 	}
 
-
 	public double getSrcNodeWeight(NodeWeightValue value,
 			NetflowDirection edgeDir) {
 		switch (value) {
-		case BytesIn:
+		case numberOfNetflowsOut:
 			if (edgeDir.equals(NetflowDirection.forward))
-				return this.bytesToDestination;
+				return 1;
 			else
-				return this.bytesToSrc;
+				return 1;
+		case PacketsOut:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
 		case BytesOut:
 			if (edgeDir.equals(NetflowDirection.forward))
 				return this.bytesToDestination;
 			else
 				return this.bytesToSrc;
 		case numberOfNetflowsIn:
-			return 1;
-		case numberOfNetflowsOut:
-			return 1;
+			if (edgeDir.equals(NetflowDirection.backward))
+				return 1;
 		case PacketsIn:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.packetsToDestination;
-			else
+			if (edgeDir.equals(NetflowDirection.backward))
 				return this.packetsToSrc;
-		case PacketsOut:
-			if (edgeDir.equals(NetflowDirection.forward))
-				return this.packetsToDestination;
-			else
-				return this.packetsToSrc;
+		case BytesIn:
+			if (edgeDir.equals(NetflowDirection.backward))
+				return this.bytesToSrc;
 		}
-		Log.warn("getIntermediateNodeWeight problem: no matching case!");
 		return 0;
 	}
-	
+
+	public double getSrcNodeWeight2(NodeWeightValue value,
+			NetflowDirection direction) {
+		switch (value) {
+		case numberOfNetflowsOut:
+			if (this.direction.equals(NetflowDirection.bidirectional)
+					|| this.direction.equals(direction)) {
+				return 1;
+			}
+		case PacketsOut:
+			if (direction.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+			else
+				return this.packetsToSrc;
+		case BytesOut:
+			if (direction.equals(NetflowDirection.forward))
+				return this.bytesToDestination;
+			else
+				return this.bytesToSrc;
+		default:
+			return 0;
+		}
+	}
+
+	public double getDstNodeWeight2(NodeWeightValue value,
+			NetflowDirection direction) {
+		switch (value) {
+		case numberOfNetflowsIn:
+			if (this.direction.equals(NetflowDirection.bidirectional)
+					|| this.direction.equals(direction)) {
+				return 1;
+			}
+		case PacketsIn:
+			if (direction.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+			else
+				return this.packetsToSrc;
+		case BytesIn:
+			if (direction.equals(NetflowDirection.forward))
+				return this.bytesToDestination;
+			else
+				return this.bytesToSrc;
+		default:
+			return 0;
+		}
+	}
+
 	public double getIntermediateNodeWeight(NodeWeightValue value,
 			NetflowDirection edgeDir) {
 		switch (value) {
@@ -252,12 +294,30 @@ public class NetflowEvent extends NetworkEvent {
 		Log.warn("getIntermediateNodeWeight problem: no matching case!");
 		return 0;
 	}
-	
 
 	public double getDstNodeWeight(NodeWeightValue value,
 			NetflowDirection edgeDir) {
+		switch (value) {
+		case numberOfNetflowsIn:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return 1;
+		case PacketsIn:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.packetsToDestination;
+		case BytesIn:
+			if (edgeDir.equals(NetflowDirection.forward))
+				return this.bytesToDestination;
+		case numberOfNetflowsOut:
+			if (edgeDir.equals(NetflowDirection.backward))
+				return 1;
+		case PacketsOut:
+			if (edgeDir.equals(NetflowDirection.backward))
+				return this.packetsToSrc;
+		case BytesOut:
+			if (edgeDir.equals(NetflowDirection.backward))
+				return this.bytesToSrc;
+		}
 		return 0;
 	}
 
-	
 }
