@@ -197,7 +197,7 @@ public class NetflowEvent extends NetworkEvent {
 			else
 				return this.bytesToSrc;
 		case numberOfNetflows:
-			if (this.direction.equals(NetflowDirection.backward)
+			if (this.direction.equals(NetflowDirection.bidirectional)
 					|| this.direction.equals(direction))
 				return 1;
 		case Packets:
