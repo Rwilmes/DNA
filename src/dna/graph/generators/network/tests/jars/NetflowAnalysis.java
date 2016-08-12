@@ -460,12 +460,12 @@ public class NetflowAnalysis {
 	public static Metric instantiateMetric(String classPath, String nodeType,
 			double binsize, int index) {
 		Metric m = null;
-//
-//		System.out.println("______");
-//		System.out.println(classPath);
-//		System.out.println(nodeType);
-//		System.out.println(binsize);
-//		System.out.println(index);
+		//
+		// System.out.println("______");
+		// System.out.println(classPath);
+		// System.out.println(nodeType);
+		// System.out.println(binsize);
+		// System.out.println(index);
 
 		try {
 			Class<?> cl = Class.forName(classPath);
@@ -504,6 +504,8 @@ public class NetflowAnalysis {
 			}
 			if (nodeType != null && binsize <= 0 && index < 0) {
 				cons = cl.getConstructor(String[].class);
+				m = (Metric) cons
+						.newInstance((Object) new String[] { nodeType });
 			} else {
 
 			}
