@@ -278,6 +278,10 @@ public class NetflowAnalysis {
 					metricList.add(instantiateMetric(
 							classPath.replaceAll("_port", ""), "PORT", binsize,
 							index));
+				} else if (classPath.endsWith("_prot")) {
+					metricList.add(instantiateMetric(
+							classPath.replaceAll("_prot", ""), "PROT", binsize,
+							index));
 				} else if (classPath.endsWith("_all")) {
 					metricList.add(instantiateMetric(
 							classPath.replaceAll("_all", ""), null, binsize,
@@ -287,6 +291,9 @@ public class NetflowAnalysis {
 							index));
 					metricList.add(instantiateMetric(
 							classPath.replaceAll("_all", ""), "PORT", binsize,
+							index));
+					metricList.add(instantiateMetric(
+							classPath.replaceAll("_all", ""), "PROT", binsize,
 							index));
 				} else {
 					metricList.add(instantiateMetric(classPath, null, binsize,
@@ -416,10 +423,19 @@ public class NetflowAnalysis {
 		long timestampSeconds = TimeUnit.MILLISECONDS
 				.toSeconds(timestampMillis);
 
+		// new data structures
+		// Log.info("using new datastructure gds2");
+		// GraphGenerator gg = new EmptyNetwork(GDS2.directedVE(
+		// NetworkNodeWeight.class, WeightSelection.None,
+		// NetworkEdgeWeight.class, WeightSelection.None),
+		// timestampSeconds);
+
+		// normal
 		GraphGenerator gg = new EmptyNetwork(GDS.directedVE(
 				NetworkNodeWeight.class, WeightSelection.None,
 				NetworkEdgeWeight.class, WeightSelection.None),
 				timestampSeconds);
+
 		// GraphGenerator gg = new
 		// EmptyNetwork(GDS.directedVE(TypedWeight.class,
 		// WeightSelection.None, IntWeight.class, WeightSelection.Zero),
