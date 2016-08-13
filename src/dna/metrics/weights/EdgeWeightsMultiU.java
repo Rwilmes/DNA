@@ -36,7 +36,7 @@ public class EdgeWeightsMultiU extends EdgeWeights implements IBeforeEA,
 	@Override
 	public boolean applyBeforeUpdate(EdgeWeight ew) {
 		this.distr.decr(this.getWeight(ew.getEdge()));
-		this.distr.incr(this.getWeight(ew.getWeight()));
+		this.distr.incr(this.getWeight(ew.getWeight(), this.index));
 		return true;
 	}
 
