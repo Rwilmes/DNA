@@ -15,6 +15,15 @@ import dna.updates.batch.Batch;
 public abstract class UnweightedAllPairsShortestPaths extends
 		AllPairsShortestPaths {
 
+	public UnweightedAllPairsShortestPaths(String name, MetricType metricType,
+			String[] nodeTypes) {
+		super(name, metricType, nodeTypes);
+	}
+
+	public UnweightedAllPairsShortestPaths(String name, MetricType metricType) {
+		super(name, metricType);
+	}
+
 	public UnweightedAllPairsShortestPaths(String name) {
 		super(name);
 	}

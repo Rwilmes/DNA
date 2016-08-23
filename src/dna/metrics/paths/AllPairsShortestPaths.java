@@ -11,6 +11,15 @@ import dna.util.parameters.Parameter;
 
 public abstract class AllPairsShortestPaths extends Metric {
 
+	public AllPairsShortestPaths(String name, MetricType metricType,
+			String[] nodeTypes) {
+		super(name, metricType, nodeTypes);
+	}
+
+	public AllPairsShortestPaths(String name, MetricType metricType) {
+		super(name, metricType);
+	}
+
 	// TODO INIT!!!
 	// this.apsp = new DistributionLong("APSP");
 
