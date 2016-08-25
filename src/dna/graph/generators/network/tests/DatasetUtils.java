@@ -49,6 +49,15 @@ public class DatasetUtils {
 			d += days;
 		}
 
+		// dirty hack
+		if (m == 6 && d > 30) {
+			d = d - 30;
+			m = 7;
+		} else if (m == 7 && d > 31) {
+			d = d - 31;
+			m = 8;
+		}
+
 		String ds = (d > 9) ? "" + d : "0" + d;
 		String ms = (m > 9) ? "" + m : "0" + m;
 		String ys = "1998";
