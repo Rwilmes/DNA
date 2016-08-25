@@ -2,9 +2,14 @@ package dna.graph.generators.network.tests.jars;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.joda.time.DateTime;
 
+import argList.ArgList;
+import argList.types.array.IntArrayArg;
+import argList.types.array.StringArrayArg;
+import argList.types.atomic.StringArg;
 import dna.io.Writer;
 import dna.util.Log;
 import dna.util.network.hosts.Host;
@@ -21,25 +26,67 @@ public class NetflowNaiveFeatures {
 	};
 
 	public static void main(String[] args) throws IOException {
+		ArgList<NetflowNaiveFeatures> argList = new ArgList<NetflowNaiveFeatures>(
+				NetflowNaiveFeatures.class,
+				new StringArg("srcDir", "dir of the source data"),
+				new StringArg("srcFilename",
+						"filename of the netflow sourcefile"),
+				new StringArg("dstPath", "path to the destination data"),
+				new IntArrayArg("windowSizes",
+						"sizes of the time windows to be monitored", ","),
+				new StringArrayArg(
+						"features",
+						"features to be computed for each window size. Possibel values: flowsIn, flowsOut, flowsTotal, packetsIn, packetsOut, packetsTotal, bytesIn, bytesOut, bytesTotal, portsIn, portsOut, portsTotal, flowsInPerPort, flowsOutPerPort.",
+						","),
+				new StringArrayArg(
+						"extraPercentValues",
+						"extra percent values to be computed for each feature. Example: 99;95;50 will compute top 99 and 95 percent boundary and median.",
+						","));
+		NetflowNaiveFeatures d = argList.getInstance(args);
 
-		String dir = "data/naive-netflow/";
-		String filename = "2_2.netflow";
-		// filename = "2_2_small.netflow";
+		long start = System.currentTimeMillis();
 
-		String dstPath = "data/naive-netflow/test1.features";
+		d.generate();
 
-		int windowSize = 10;
-
-		Integer[] windowSizes = new Integer[] { 5, 10, 15, 30, 60, 120, 300,
-				600 };
-
-		Integer[] indizes = new Integer[] { 2, 4, 6 };
-		String[] features = new String[] { "portsIn", "portsIn", "portsIn" };
-
-		NetflowNaiveFeatures n = new NetflowNaiveFeatures(dir, filename,
-				dstPath, windowSizes, indizes, features);
-		n.generate();
+		long end = System.currentTimeMillis();
+		System.out.println("seconds passed:\t" + (end - start * 1.0) / 1000);
 	}
+
+	// public static void main(String[] args) throws IOException {
+	// long start = System.currentTimeMillis();
+	// String dir = "data/naive-netflow/";
+	// String filename = "2_2.netflow";
+	// // filename = "2_2_small.netflow";
+	//
+	// String dstPath = "data/naive-netflow/test2.features";
+	//
+	// int windowSize = 10;
+	//
+	// String input = "flowsIn_5;flowsOut_5";
+	//
+	// // flowsIn, flowsOut, flowsTotal, packetsIn, packetsOut, packetsTotal,
+	// // bytesIn, bytesOut, bytesTotal, portsIn, portsOut, portsTotal,
+	// // flowsInPerPort, flowsOutPerPort
+	//
+	// Integer[] windowSizes = new Integer[] { 5, 10, 15, 30, 60, 120, 300,
+	// 600, 900, 1800, 3600 };
+	//
+	// String[] extraPercentValues = new String[] { "99", "98", "97", "96",
+	// "95", "90", "85", "80", "70", "50" };
+	// Integer[] indizes = new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7 };
+	// String[] features = new String[] { "flowsIn", "flowsIn", "flowsIn",
+	// "flowsIn", "flowsIn", "flowsIn", "flowsOut", "flowsTotal" };
+	//
+	// indizes = new Integer[] { 6 };
+	// features = new String[] { "packetsTotal" };
+	//
+	// NetflowNaiveFeatures n = new NetflowNaiveFeatures(dir, filename,
+	// dstPath, windowSizes, indizes, features, extraPercentValues);
+	// n.generate();
+	// long end = System.currentTimeMillis();
+	// System.out.println("seconds passed:\t" + (end - start * 1.0) / 1000);
+	//
+	// }
 
 	protected String dir;
 	protected String filename;
@@ -53,17 +100,45 @@ public class NetflowNaiveFeatures {
 	protected Integer[] featureHostListIndizes;
 	protected NetflowFeature[] features;
 
+	protected String[] extraPercentValues;
+
+	// new StringArg("dstPath", "path to the destination data"),
+	// new IntArrayArg("windowSizes",
+	// "sizes of the time windows to be monitored", ";"),
+	// new StringArrayArg(
+	// "features",
+	// "features to be computed for each window size. Possibel values: flowsIn, flowsOut, flowsTotal, packetsIn, packetsOut, packetsTotal, bytesIn, bytesOut, bytesTotal, portsIn, portsOut, portsTotal, flowsInPerPort, flowsOutPerPort.",
+	// ";"),
+	// new StringArrayArg(
+
 	public NetflowNaiveFeatures(String dir, String filename, String dstPath,
-			Integer[] windowSizes, Integer[] featureListIndizes,
-			String[] features) {
+			Integer[] windowSizes, String[] features,
+			String[] extraPercentValues) {
 		this.dir = dir;
 		this.filename = filename;
 		this.windowSizes = windowSizes;
+		this.extraPercentValues = extraPercentValues;
 
 		this.dstPath = dstPath;
 
-		this.featureHostListIndizes = featureListIndizes;
-		this.features = new NetflowFeature[features.length];
+		// this array holds which features to be computed
+		this.features = new NetflowFeature[windowSizes.length * features.length];
+
+		// this array will hold the window-size index for the given feature
+		this.featureHostListIndizes = new Integer[windowSizes.length
+				* features.length];
+
+		// this.featureHostListIndizes = featureListIndizes;
+
+		for (int i = 0; i < features.length; i++) {
+			for (int j = 0; j < windowSizes.length; j++) {
+				int index = i * windowSizes.length + j;
+				// System.out.println(i +"\t" + j + "\t" + index);
+				this.features[index] = NetflowFeature.valueOf(features[i]);
+				this.featureHostListIndizes[index] = j;
+			}
+		}
+
 		for (int i = 0; i < features.length; i++) {
 			this.features[i] = NetflowFeature.valueOf(features[i]);
 		}
@@ -86,7 +161,10 @@ public class NetflowNaiveFeatures {
 		for (Integer i : windowSizes)
 			Log.info("\t" + i + " s");
 		Log.info("");
-
+		Log.info("Percentages:");
+		for (String s : extraPercentValues)
+			Log.info("\t" + s);
+		Log.info("");
 	}
 
 	public void generate() throws IOException {
@@ -105,8 +183,10 @@ public class NetflowNaiveFeatures {
 		String header = "Timestamp";
 		for (int i = 0; i < this.features.length; i++) {
 			header += "\t"
-					+ getHeader(this.features[i],
-							this.expireList.get(this.featureHostListIndizes[i]));
+					+ getHeader(
+							this.features[i],
+							this.expireList.get(this.featureHostListIndizes[i]),
+							this.extraPercentValues);
 		}
 
 		w.writeln(header);
@@ -161,10 +241,14 @@ public class NetflowNaiveFeatures {
 		Log.infoSep();
 	}
 
-	public String getHeader(NetflowFeature feature, Integer time) {
-		return feature.toString() + "_" + time + "_MIN" + "\t"
+	public String getHeader(NetflowFeature feature, Integer time,
+			String[] extraPercentValues) {
+		String buff = feature.toString() + "_" + time + "_MIN" + "\t"
 				+ feature.toString() + "_" + time + "_MAX" + "\t"
 				+ feature.toString() + "_" + time + "_AVG";
+		for (String p : extraPercentValues)
+			buff += "\t" + feature.toString() + "_" + time + "_p" + p;
+		return buff;
 	}
 
 	public String getLine(DateTime time) {
@@ -190,7 +274,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getBytesIn());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case bytesOut:
 			values = new ArrayList<Long>();
@@ -198,7 +283,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getBytesOut());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case bytesTotal:
 			values = new ArrayList<Long>();
@@ -206,7 +292,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getBytesOut() + h.getBytesIn());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case flowsIn:
 			values = new ArrayList<Long>();
@@ -214,7 +301,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getFlowsIn());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case flowsInPerPort:
 			valuesD = new ArrayList<Double>();
@@ -222,7 +310,8 @@ public class NetflowNaiveFeatures {
 				valuesD.add(1.0 * h.getFlowsIn() / h.getPortsIn().size());
 			}
 			val += getMinD(valuesD) + "\t" + getMaxD(valuesD) + "\t"
-					+ getAvgD(valuesD);
+					+ getAvgD(valuesD)
+					+ getPercentValuesD(valuesD, extraPercentValues);
 			break;
 		case flowsOut:
 			values = new ArrayList<Long>();
@@ -230,7 +319,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getFlowsOut());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case flowsOutPerPort:
 			valuesD = new ArrayList<Double>();
@@ -238,7 +328,8 @@ public class NetflowNaiveFeatures {
 				valuesD.add(1.0 * h.getFlowsOut() / h.getPortsOut().size());
 			}
 			val += getMinD(valuesD) + "\t" + getMaxD(valuesD) + "\t"
-					+ getAvgD(valuesD);
+					+ getAvgD(valuesD)
+					+ getPercentValuesD(valuesD, extraPercentValues);
 			break;
 		case flowsTotal:
 			values = new ArrayList<Long>();
@@ -246,7 +337,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getFlowsOut() + h.getFlowsIn());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case packetsIn:
 			values = new ArrayList<Long>();
@@ -254,7 +346,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getPacketsIn());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case packetsOut:
 			values = new ArrayList<Long>();
@@ -262,7 +355,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getPacketsOut());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case packetsTotal:
 			values = new ArrayList<Long>();
@@ -270,7 +364,8 @@ public class NetflowNaiveFeatures {
 				values.add(h.getPacketsIn() + h.getPacketsOut());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case portsIn:
 			values = new ArrayList<Long>();
@@ -278,7 +373,8 @@ public class NetflowNaiveFeatures {
 				values.add((long) h.getPortsIn().size());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case portsOut:
 			values = new ArrayList<Long>();
@@ -286,7 +382,8 @@ public class NetflowNaiveFeatures {
 				values.add((long) h.getPortsOut().size());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		case portsTotal:
 			values = new ArrayList<Long>();
@@ -295,7 +392,8 @@ public class NetflowNaiveFeatures {
 						+ h.getPortsOut().size());
 			}
 			val += getMin(values) + "\t" + getMax(values) + "\t"
-					+ getAvg(values);
+					+ getAvg(values)
+					+ getPercentValues(values, extraPercentValues);
 			break;
 		default:
 			break;
@@ -353,5 +451,51 @@ public class NetflowNaiveFeatures {
 			sum += v;
 		}
 		return 1.0 * sum / values.size();
+	}
+
+	public String getPercentValues(ArrayList<Long> values,
+			String[] extraPercentValues) {
+		long[] v = new long[values.size()];
+		for (int i = 0; i < v.length; i++) {
+			v[i] = values.get(i);
+		}
+		Arrays.sort(v);
+
+		String buff = "";
+
+		// for each percent value calculate upper bound
+		for (String p : extraPercentValues) {
+			double percent = Double.parseDouble(p) / 100;
+			int index = (int) Math.ceil(v.length * percent);
+			// System.out.println("perc: " + p);
+			// System.out.println("percD: " + percent);
+			// System.out.println("index: " + index + "\tfrom: " + v.length);
+			// System.out.println("");
+			if (index >= v.length)
+				index = v.length - 1;
+			buff += "\t" + v[index];
+		}
+		return buff;
+	}
+
+	public String getPercentValuesD(ArrayList<Double> values,
+			String[] extraPercentValues) {
+		double[] v = new double[values.size()];
+		for (int i = 0; i < v.length; i++) {
+			v[i] = values.get(i);
+		}
+		Arrays.sort(v);
+
+		String buff = "";
+
+		// for each percent value calculate upper bound
+		for (String p : extraPercentValues) {
+			double percent = Double.parseDouble(p) / 100;
+			int index = (int) Math.ceil(v.length * percent);
+			if (index >= v.length)
+				index = v.length - 1;
+			buff += "\t" + v[index];
+		}
+		return buff;
 	}
 }
