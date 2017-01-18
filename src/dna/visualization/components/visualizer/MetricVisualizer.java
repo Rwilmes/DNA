@@ -1,23 +1,5 @@
 package dna.visualization.components.visualizer;
 
-import info.monitorenter.gui.chart.IAxis;
-import info.monitorenter.gui.chart.IAxis.AxisTitle;
-import info.monitorenter.gui.chart.ITrace2D;
-import info.monitorenter.gui.chart.ITracePainter;
-import info.monitorenter.gui.chart.ITracePoint2D;
-import info.monitorenter.gui.chart.axis.scalepolicy.AxisScalePolicyAutomaticBestFit;
-import info.monitorenter.gui.chart.labelformatters.LabelFormatterDate;
-import info.monitorenter.gui.chart.rangepolicies.RangePolicyFixedViewport;
-import info.monitorenter.gui.chart.rangepolicies.RangePolicyUnbounded;
-import info.monitorenter.gui.chart.traces.Trace2DLtd;
-import info.monitorenter.gui.chart.traces.Trace2DSimple;
-import info.monitorenter.gui.chart.traces.painters.TracePainterDisc;
-import info.monitorenter.gui.chart.traces.painters.TracePainterFill;
-import info.monitorenter.gui.chart.traces.painters.TracePainterLine;
-import info.monitorenter.gui.chart.traces.painters.TracePainterPolyline;
-import info.monitorenter.gui.chart.traces.painters.TracePainterVerticalBar;
-import info.monitorenter.util.Range;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
@@ -36,11 +18,29 @@ import dna.series.data.BatchData;
 import dna.series.data.MetricData;
 import dna.series.data.RunTime;
 import dna.series.data.Value;
+import dna.util.Config;
 import dna.visualization.MainDisplay;
 import dna.visualization.config.ConfigItem;
 import dna.visualization.config.MetricVisualizerItem;
 import dna.visualization.config.VisualizerListConfig;
 import dna.visualization.config.components.MetricVisualizerConfig;
+import info.monitorenter.gui.chart.IAxis;
+import info.monitorenter.gui.chart.IAxis.AxisTitle;
+import info.monitorenter.gui.chart.ITrace2D;
+import info.monitorenter.gui.chart.ITracePainter;
+import info.monitorenter.gui.chart.ITracePoint2D;
+import info.monitorenter.gui.chart.axis.scalepolicy.AxisScalePolicyAutomaticBestFit;
+import info.monitorenter.gui.chart.labelformatters.LabelFormatterDate;
+import info.monitorenter.gui.chart.rangepolicies.RangePolicyFixedViewport;
+import info.monitorenter.gui.chart.rangepolicies.RangePolicyUnbounded;
+import info.monitorenter.gui.chart.traces.Trace2DLtd;
+import info.monitorenter.gui.chart.traces.Trace2DSimple;
+import info.monitorenter.gui.chart.traces.painters.TracePainterDisc;
+import info.monitorenter.gui.chart.traces.painters.TracePainterFill;
+import info.monitorenter.gui.chart.traces.painters.TracePainterLine;
+import info.monitorenter.gui.chart.traces.painters.TracePainterPolyline;
+import info.monitorenter.gui.chart.traces.painters.TracePainterVerticalBar;
+import info.monitorenter.util.Range;
 
 @SuppressWarnings("serial")
 public class MetricVisualizer extends Visualizer {
@@ -117,7 +117,7 @@ public class MetricVisualizer extends Visualizer {
 					ITracePoint2D tempPointFinder = chart.getPointFinder()
 							.getNearestPoint(e, chart);
 					menuBar.updateCoordsPanel(
-							(int) Math.floor(tempPointFinder.getX()),
+							tempPointFinder.getX(),
 							tempPointFinder.getY());
 				}
 			}
@@ -173,6 +173,10 @@ public class MetricVisualizer extends Visualizer {
 		long timestamp = b.getTimestamp();
 		double timestampDouble = timestamp;
 
+		if (Config.getBoolean("VISUALIZATION_TIMESTAMP_AS_SECOND")) {
+			timestampDouble = (timestampDouble + Config.getInt("VISUALIZATION_TIMESTAMP_OFFSET")) * 1000;
+		}
+		
 		// check if new batch is before last one which means time slided
 		// backwards
 		if (timestamp < this.currentTimestamp) {
