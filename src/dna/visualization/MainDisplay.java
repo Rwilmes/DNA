@@ -249,9 +249,11 @@ public class MainDisplay extends JFrame {
 		this(liveDisplay, zipMode, MainDisplayConfig.readConfig(configPath));
 	}
 
-	public MainDisplay(boolean liveDisplay, ZipMode zipMode, MainDisplayConfig config) {
+	public MainDisplay(boolean liveDisplay, ZipMode zipMode,
+			MainDisplayConfig config) {
+		// set config
 		MainDisplay.config = config;
-
+		
 		// init
 		setTitle(config.getName());
 		setSize(config.getSize());
